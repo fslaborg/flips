@@ -5,7 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Domain.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Math.fs" />
   </ItemGroup>
+
+  <ItemGroup />
 
 </Project>

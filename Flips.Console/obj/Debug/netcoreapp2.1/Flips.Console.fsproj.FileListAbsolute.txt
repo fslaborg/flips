@@ -1,0 +1,11 @@
+C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.fsprojAssemblyReference.cache
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.deps.json
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.runtimeconfig.json
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.runtimeconfig.dev.json
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.dll
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.pdb
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.dll
+C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.pdb
+C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.fsproj.CopyComplete
+C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.dll
+C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.pdb
