@@ -1,2 +1,4 @@
 # flips
-Fsharp LInear Programming Solver
+**F**sharp **LI**near **P**rogramming **S**olver
+
+This project is an exercise in writing a Linear Programming solver in F#. I have always wanted to write my own solver for my own understanding. Eventually I am hoping to turn this into an online course where I walk through both the theory of LP and the engineering of implementing the algorithm. I fully realize that this will likely never approach the performance industrial solvers. The point of this is for me to understand LP and eventually MIP at a fundamental level and to then create a map for others to follow. I have found there is much written on the theory of LP/MIP but there is a lack of resources to help people to get from the theory to practice. Much of the writing regarding the implementation of LP algorithms is quite dense and hard to follow. This will be documentation for myself and others to see the theory put into practice.
