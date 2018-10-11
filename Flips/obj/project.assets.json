@@ -788,11 +788,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\source\\flips\\Flips\\Flips.fsproj",
+      "projectUniqueName": "C:\\Users\\matth\\source\\repos\\flips\\Flips\\Flips.fsproj",
       "projectName": "Flips",
-      "projectPath": "C:\\source\\flips\\Flips\\Flips.fsproj",
+      "projectPath": "C:\\Users\\matth\\source\\repos\\flips\\Flips\\Flips.fsproj",
       "packagesPath": "C:\\Users\\matth\\.nuget\\packages\\",
-      "outputPath": "C:\\source\\flips\\Flips\\obj\\",
+      "outputPath": "C:\\Users\\matth\\source\\repos\\flips\\Flips\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

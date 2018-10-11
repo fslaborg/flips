@@ -1,4 +1,4 @@
-﻿module Math
+﻿module Flips.LinearAlgebra
 
 open Flips.Types
 
@@ -35,33 +35,36 @@ module Matrix =
             Factorization.DenseLU lu
 
 
-module LinearSystem =
 
-    module internal Dense =
+module internal Dense =
     
-        let luSolve (lu:DenseMatrix) (rhs:DenseVector) =
-            let n = rhs.GetLength(0)
-            let y = Array.zeroCreate n
-            let x = Array.zeroCreate n
-            let mutable sum = 0.0
+    let luSolve (lu:DenseMatrix) (rhs:DenseVector) =
+        let n = rhs.GetLength(0)
+        let y = DenseVector n
+        let x = DenseVector n
+        let mutable sum = 0.0
 
-            // Solve Ly = b
-            for i = 0 to n-1 do
-                sum <- 0.0
-                for k = 0 to i-1 do
-                    sum <- sum + lu.[i, k] * y.[k]
-                y.[i] <- rhs.[i] - sum
+        // Solve Ly = b
+        for i = 0 to n-1 do
+            sum <- 0.0
+            for k = 0 to i-1 do
+                sum <- sum + lu.[i, k] * y.[k]
+            y.[i] <- rhs.[i] - sum
 
-            // Solve Ux = y
-            for i = n-1 downto 0 do
-                sum <- 0.0
-                for k = i+1 to n-1 do
-                    sum <- sum + lu.[i, k] * x.[k]
-                x.[i] <- (1.0 / lu.[i, i]) * (y.[i] - sum)
+        // Solve Ux = y
+        for i = n-1 downto 0 do
+            sum <- 0.0
+            for k = i+1 to n-1 do
+                sum <- sum + lu.[i, k] * x.[k]
+            x.[i] <- (1.0 / lu.[i, i]) * (y.[i] - sum)
 
-            x
+        Vector.Dense x
 
 
-    let solve (A:Factorization) (rhs:Vector) =
-        match A, rhs with
-        | DenseLU lu, Vector.Dense v -> Dense.luSolve lu v
+let factorize (matrix:Matrix) =
+    match matrix with
+    | Dense m -> Matrix.Dense.createLU m
+
+let solve (A:Factorization) (rhs:Vector) =
+    match A, rhs with
+    | DenseLU lu, Vector.Dense v -> Dense.luSolve lu v

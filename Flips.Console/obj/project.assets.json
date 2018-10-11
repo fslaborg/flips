@@ -807,11 +807,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\source\\flips\\Flips.Console\\Flips.Console.fsproj",
+      "projectUniqueName": "C:\\Users\\matth\\source\\repos\\flips\\Flips.Console\\Flips.Console.fsproj",
       "projectName": "Flips.Console",
-      "projectPath": "C:\\source\\flips\\Flips.Console\\Flips.Console.fsproj",
+      "projectPath": "C:\\Users\\matth\\source\\repos\\flips\\Flips.Console\\Flips.Console.fsproj",
       "packagesPath": "C:\\Users\\matth\\.nuget\\packages\\",
-      "outputPath": "C:\\source\\flips\\Flips.Console\\obj\\",
+      "outputPath": "C:\\Users\\matth\\source\\repos\\flips\\Flips.Console\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -830,8 +830,8 @@
       "frameworks": {
         "netcoreapp2.1": {
           "projectReferences": {
-            "C:\\source\\flips\\Flips\\Flips.fsproj": {
-              "projectPath": "C:\\source\\flips\\Flips\\Flips.fsproj"
+            "C:\\Users\\matth\\source\\repos\\flips\\Flips\\Flips.fsproj": {
+              "projectPath": "C:\\Users\\matth\\source\\repos\\flips\\Flips\\Flips.fsproj"
             }
           }
         }

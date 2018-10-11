@@ -14,6 +14,9 @@ type DenseVector (values:float []) =
     member this.GetLength(n) =
         data.GetLength(n)
 
+    override this.ToString() =
+        sprintf "%O" data
+
 
 type DenseMatrix (values:float [,]) =
     let mutable data = values
@@ -27,12 +30,22 @@ type DenseMatrix (values:float [,]) =
 
     member this.GetLength dimension =
         data.GetLength dimension
+        
+    member this.UpdateColumn(colIdx: int, column:DenseVector) =
+        for i = 0 to data.GetLength(1) do
+            data.[i, colIdx] <- column.[i]
+
+    override this.ToString() =
+        sprintf "%O" data
 
 
 
 
 type Vector =
     | Dense of DenseVector
+    override this.ToString() =
+        match this with
+        | Dense v -> sprintf "%O" v
 
 
 type Matrix =
