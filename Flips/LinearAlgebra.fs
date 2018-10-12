@@ -10,34 +10,27 @@ module Matrix =
 
             let n = matrix.GetLength(0)
             let lu = DenseMatrix(n, n)
-            let mutable sum = 0.0
 
-            for i = 0 to n-1 do // Index across each row
-                for j = i to n-1 do // Index from Col = Row to the end. This will be diagnoal
-                    sum <- 0.0  // For each column we are going to be keeping track of a sum
+            // Copy the values from the origin matrix
+            for rowIdx = 0 to n-1 do
+                for colIdx = 0 to n-1 do
+                    lu.[rowIdx, colIdx] <- matrix.[rowIdx, colIdx]
 
-                    for k = 0 to i-1 do // Index from the beginning of the matrix to the value of the row index
-                        sum <- sum + lu.[i, k] * lu.[k, j]
-
-                    lu.[i, j] <- matrix.[i, j] - sum // This is setting the value of U upper matrix
-                    printfn "%A" lu
-
-                for j = i+1 to n-1 do // Index the Columns from Row Index + 1 to the right side of the matrix
-                    sum <- 0.0 // Start a summation for the L matrix entry
-
-                    for k = 0 to i-1 do
-                        sum <- sum + lu.[j, k] * lu.[k, i]
-
-                    printfn "i:%A j:%A" i j
-                    lu.[j, i] <- (1.0 / lu.[i, i]) * (matrix.[j, i] - sum) // This is setting the value of the L lower matrix
-                    printfn "%A" lu
+            for workingIdx = 0 to n-2 do
+                for rowIdx = workingIdx+1 to n-1 do
+                    let pivotValue = lu.[rowIdx, workingIdx] / lu.[workingIdx, workingIdx]
+                    for colIdx = workingIdx to n-1 do
+                        if colIdx = workingIdx then
+                            lu.[rowIdx, colIdx] <- pivotValue
+                        else
+                            lu.[rowIdx, colIdx] <- lu.[rowIdx, colIdx] - pivotValue * lu.[workingIdx, colIdx]
+                            
 
             Factorization.DenseLU lu
 
 
+module Dense =
 
-module internal Dense =
-    
     let luSolve (lu:DenseMatrix) (rhs:DenseVector) =
         let n = rhs.GetLength(0)
         let y = DenseVector n

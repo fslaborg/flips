@@ -9,3 +9,14 @@ C:\source\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.pdb
 C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.fsproj.CopyComplete
 C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.dll
 C:\source\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.pdb
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.deps.json
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.runtimeconfig.json
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.runtimeconfig.dev.json
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.dll
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.Console.pdb
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.dll
+C:\Users\matth\source\repos\flips\Flips.Console\bin\Debug\netcoreapp2.1\Flips.pdb
+C:\Users\matth\source\repos\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.fsprojAssemblyReference.cache
+C:\Users\matth\source\repos\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.fsproj.CopyComplete
+C:\Users\matth\source\repos\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.dll
+C:\Users\matth\source\repos\flips\Flips.Console\obj\Debug\netcoreapp2.1\Flips.Console.pdb

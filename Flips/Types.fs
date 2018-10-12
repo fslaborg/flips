@@ -36,7 +36,7 @@ type DenseMatrix (values:float [,]) =
             data.[i, colIdx] <- column.[i]
 
     override this.ToString() =
-        sprintf "%O" data
+        sprintf "%A" data
 
 
 
