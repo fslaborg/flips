@@ -15,7 +15,7 @@ type DenseVector (values:float []) =
         data.GetLength(n)
 
     override this.ToString() =
-        sprintf "%O" data
+        sprintf "%A" data
 
 
 type DenseMatrix (values:float [,]) =

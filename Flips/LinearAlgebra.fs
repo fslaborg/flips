@@ -41,17 +41,18 @@ module Dense =
         for i = 0 to n-1 do
             sum <- 0.0
             for k = 0 to i-1 do
-                sum <- sum + lu.[i, k] * y.[k]
+                sum <- sum + y.[k] * lu.[i, k]
             y.[i] <- rhs.[i] - sum
+
 
         // Solve Ux = y
         for i = n-1 downto 0 do
             sum <- 0.0
-            for k = i+1 to n-1 do
-                sum <- sum + lu.[i, k] * x.[k]
-            x.[i] <- (1.0 / lu.[i, i]) * (y.[i] - sum)
+            for k = n-1 downto i do
+                sum <- sum + x.[k] * lu.[i, k]
+            x.[i] <- (y.[i] - sum) / lu.[i, i]
 
-        Vector.Dense x
+        x
 
 
 let factorize (matrix:Matrix) =
