@@ -9,12 +9,12 @@ open Flips.Types
 let main argv =
 
 
-    let rhs = Vector.Dense (DenseVector [|2.0; 3.0; 4.0|])
-    let A = Matrix.Dense (DenseMatrix (array2D [[5.0; 1.0; 2.0]; [3.0; 1.0; 4.0]; [2.0; 6.0; 2.0]]))
-    let lu = LinearAlgebra.factorize A
-    let x = LinearAlgebra.solve lu rhs
+    let rhs = Vector.Dense [|3.0; 3.0; 4.0|]
+    let A = Matrix.Dense (array2D [[5.0; 1.0; 2.0]; [3.0; 1.0; 4.0]; [2.0; 6.0; 2.0]])
+    let plu = LinearAlgebra.factorize A
+    let x = LinearAlgebra.solve plu rhs
 
-    printfn "%A" lu
+    printfn "%A" plu
     printfn "%A" x
 
     printfn "Press any key to close..."
