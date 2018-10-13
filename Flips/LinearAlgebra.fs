@@ -32,15 +32,15 @@ module Matrix =
                 arr.[idx2, j] <- row1.[j]
 
 
-        let private indexOfMaxValueInColumnStartingAt colIdx startingIdx (matrix:float [,]) =
+        let private indexOfMaxAbsValueInColumnStartingAt colIdx startingIdx (matrix:float [,]) =
             let n = Array2D.length2 matrix
             let mutable maxIndex = startingIdx
-            let mutable maxValue = matrix.[startingIdx, colIdx]
+            let mutable maxAbsValue = abs matrix.[startingIdx, colIdx]
 
             for i = startingIdx to n-1 do
-                if matrix.[i, colIdx] > maxValue then
+                if abs matrix.[i, colIdx] > maxAbsValue then
                     maxIndex <- i
-                    maxValue <- matrix.[i, colIdx]
+                    maxAbsValue <- matrix.[i, colIdx]
 
             maxIndex
 
@@ -67,7 +67,7 @@ module Matrix =
             let p = [|0..n-1|]
 
             for k = 0 to n-1 do
-                let maxValueRowIdx = indexOfMaxValueInColumnStartingAt k k matrix
+                let maxValueRowIdx = indexOfMaxAbsValueInColumnStartingAt k k lu
                 if k <> maxValueRowIdx then
                     swapRows k maxValueRowIdx lu
                     swapValues k maxValueRowIdx p
