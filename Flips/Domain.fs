@@ -27,6 +27,9 @@ with
     static member (+) (decision:Decision, constant:float) =
         constant + decision
 
+    static member (+) (leftDecision:Decision, rightDecision:Decision) =
+        Elements [Variable (1.0, leftDecision); Variable (1.0, rightDecision)]
+
     static member (+) (decision:Decision, expr:LinearExpression) =
         match expr with
         | Empty -> Element (Variable (1.0, decision))
@@ -35,6 +38,16 @@ with
 
     static member (+) (expr:LinearExpression, decision:Decision) =
         decision + expr
+
+    static member (<==) (decision:Decision, constant:float) =
+        let lhs = Element (Variable (1.0, decision))
+        let rhs = Element (Constant constant)
+        Constraint (lhs, LessOrEqual, rhs)
+
+    static member (<==) (lhsDecision:Decision, rhsDecision:Decision) =
+        let lhs = Element (Variable (1.0, lhsDecision))
+        let rhs = Element (Variable (1.0, rhsDecision))
+        Constraint (lhs, LessOrEqual, rhs)
 
 
 
@@ -51,13 +64,13 @@ and LinearExpression =
     | Elements of List<LinearElement>
 
 
-type ExpressionComparison =
+and ExpressionComparison =
     | Equal
     | LessOrEqual
     | GreaterOrEqual
 
 
-type Constraint = Constraint of LHS:LinearExpression * ExpressionComparison * RHS:LinearExpression
+and Constraint = Constraint of LHS:LinearExpression * ExpressionComparison * RHS:LinearExpression
 
 
 type ObjectiveSense =
