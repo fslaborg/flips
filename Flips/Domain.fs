@@ -138,6 +138,15 @@ with
 
 and LinearExpression = LinearExpression of List<LinearElement>
 with
+    static member ofFloat (scalar:float) =
+        LinearExpression [Scalar scalar]
+
+    static member ofDecision (decision:Decision) =
+        LinearExpression [Variable (1.0, decision)]
+
+    static member ofLinearElement (elem:LinearElement) =
+        LinearExpression [elem]
+
     static member (+) (LinearExpression expr:LinearExpression, scalar:float) =
         [Scalar scalar] @ expr
         |> LinearExpression
@@ -157,15 +166,6 @@ with
         match expr.Length > rExpr.Length with
         | true -> rExpr @ expr
         | false -> expr @ rExpr
-
-    static member ofFloat (scalar:float) =
-        LinearExpression [Scalar scalar]
-
-    static member ofDecision (decision:Decision) =
-        LinearExpression [Variable (1.0, decision)]
-
-    static member ofLinearElement (elem:LinearElement) =
-        LinearExpression [elem]
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Constraint (lhs, LessOrEqual, LinearExpression.ofFloat rhs)
