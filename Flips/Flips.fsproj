@@ -5,8 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Types.fs" />
-    <Compile Include="LinearAlgebra.fs" />
+    <Compile Include="Domain.fs" />
   </ItemGroup>
 
   <ItemGroup />
