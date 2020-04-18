@@ -167,9 +167,6 @@ with
     static member ofLinearElement (elem:LinearElement) =
         LinearExpression [elem]
 
-    static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Constraint (lhs, LessOrEqual, rhs)
-
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Constraint (lhs, LessOrEqual, LinearExpression.ofFloat rhs)
 
@@ -179,8 +176,8 @@ with
     static member (<==) (lhs:LinearExpression, rhs:LinearElement) =
         Constraint (lhs, LessOrEqual, LinearExpression.ofLinearElement rhs)
 
-    static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Constraint (lhs, Equal, rhs)
+    static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
+        Constraint (lhs, LessOrEqual, rhs)
 
     static member (==) (lhs:LinearExpression, rhs:float) =
         Constraint (lhs, Equal, LinearExpression.ofFloat rhs)
@@ -191,8 +188,8 @@ with
     static member (==) (lhs:LinearExpression, rhs:LinearElement) =
         Constraint (lhs, Equal, LinearExpression.ofLinearElement rhs)
 
-    static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Constraint (lhs, GreaterOrEqual, rhs)
+    static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
+        Constraint (lhs, Equal, rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:float) =
         Constraint (lhs, GreaterOrEqual, LinearExpression.ofFloat rhs)
@@ -202,6 +199,9 @@ with
 
     static member (>==) (lhs:LinearExpression, rhs:LinearElement) =
         Constraint (lhs, GreaterOrEqual, LinearExpression.ofLinearElement rhs)
+
+    static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
+        Constraint (lhs, GreaterOrEqual, rhs)
 
 
 and ExpressionComparison =
