@@ -15,96 +15,193 @@ type Decision = {
     DecisionType : DecisionType
 }
 with
-    static member (*) (decision:Decision, coefficient:float) =
-        Element (Variable (coefficient, decision))
+    static member (*) (decision:Decision, scalar:float) =
+        LinearExpression.ofDecision decision + scalar
     
-    static member (*) (coefficient:float, decision:Decision) =
-        decision * coefficient
+    static member (*) (scalar:float, decision:Decision) =
+        LinearExpression.ofFloat scalar + decision
 
-    static member (+) (constant:float, decision:Decision) =
-        constant + decision
+    static member (+) (scalar:float, decision:Decision) =
+        LinearExpression.ofFloat scalar + decision
 
-    static member (+) (decision:Decision, constant:float) =
-        Elements [Constant constant; Variable (1.0, decision)]
+    static member (+) (decision:Decision, scalar:float) =
+        LinearExpression.ofDecision decision + scalar
 
     static member (+) (decision:Decision, rightDecision:Decision) =
-        Elements [Variable (1.0, decision); Variable (1.0, rightDecision)]
+        LinearExpression.ofDecision decision + rightDecision
 
     static member (+) (decision:Decision, expr:LinearExpression) =
-        match expr with
-        | Empty -> Element (Variable (1.0, decision))
-        | Element e -> Elements [e; Variable (1.0, decision)]
-        | Elements es -> Elements ([Variable (1.0, decision)] @ es)
+        LinearExpression.ofDecision decision + expr
 
-    static member private decisionConstantComparison (decision:Decision) (constant:float) (comparison:ExpressionComparison) =
-        let lhs = Element (Variable (1.0, decision))
-        let rhs = Element (Constant constant)
-        Constraint (lhs, comparison, rhs)
-
-    static member (<==) (decision:Decision, constant:float) =
-        Decision.decisionConstantComparison decision constant LessOrEqual
-
-    static member (>==) (decision:Decision, constant:float) =
-        Decision.decisionConstantComparison decision constant GreaterOrEqual
-
-    static member (==) (decision:Decision, constant:float) =
-        Decision.decisionConstantComparison decision constant Equal
-
-    static member private decisionDecisionComparison (decision:Decision) (rhsDecision:Decision) (comparison:ExpressionComparison) =
-        let lhs = Element (Variable (1.0, decision))
-        let rhs = Element (Variable (1.0, rhsDecision))
-        Constraint (lhs, comparison, rhs)
+    static member (<==) (decision:Decision, scalar:float) =
+        LinearExpression.ofDecision decision <== scalar
 
     static member (<==) (decision:Decision, rhsDecision:Decision) =
-        Decision.decisionDecisionComparison decision rhsDecision LessOrEqual
-
-    static member (>==) (decision:Decision, rhsDecision:Decision) =
-        Decision.decisionDecisionComparison decision rhsDecision GreaterOrEqual
-
-    static member (==) (decision:Decision, rhsDecision:Decision) =
-        Decision.decisionDecisionComparison decision rhsDecision Equal
-
-    static member private decisionLinearElementComparison (decision:Decision) (element:LinearElement) (comparison:ExpressionComparison) =
-        let lhs = Element (Variable (1.0, decision))
-        let rhs = Element (element)
-        Constraint (lhs, comparison, rhs)
+        LinearExpression.ofDecision decision <== rhsDecision
 
     static member (<==) (decision:Decision, element:LinearElement) =
-        Decision.decisionLinearElementComparison decision element LessOrEqual
-
-    static member (>==) (decision:Decision, element:LinearElement) =
-        Decision.decisionLinearElementComparison decision element GreaterOrEqual
-
-    static member (==) (decision:Decision, element:LinearElement) =
-        Decision.decisionLinearElementComparison decision element Equal
-
-    static member private decisionLinearExpressionComparison (decision:Decision) (expr:LinearExpression) (comparison:ExpressionComparison) =
-        let lhs = Element (Variable (1.0, decision))
-        Constraint (lhs, comparison, expr)
+        LinearExpression.ofDecision decision <== element
 
     static member (<==) (decision:Decision, expr:LinearExpression) =
-        Decision.decisionLinearExpressionComparison decision expr LessOrEqual
+        LinearExpression.ofDecision decision <== expr
 
-    static member (>==) (decision:Decision, expr:LinearExpression) =
-        Decision.decisionLinearExpressionComparison decision expr GreaterOrEqual
+    static member (==) (decision:Decision, scalar:float) =
+        LinearExpression.ofDecision decision == scalar
+
+    static member (==) (decision:Decision, rhsDecision:Decision) =
+        LinearExpression.ofDecision decision == rhsDecision
+
+    static member (==) (decision:Decision, element:LinearElement) =
+        LinearExpression.ofDecision decision == element
 
     static member (==) (decision:Decision, expr:LinearExpression) =
-        Decision.decisionLinearExpressionComparison decision expr Equal
+        LinearExpression.ofDecision decision == expr
 
+    static member (>==) (decision:Decision, scalar:float) =
+        LinearExpression.ofDecision decision >== scalar
 
+    static member (>==) (decision:Decision, rhsDecision:Decision) =
+        LinearExpression.ofDecision decision >== rhsDecision
 
+    static member (>==) (decision:Decision, element:LinearElement) =
+        LinearExpression.ofDecision decision >== element
+
+    static member (>==) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.ofDecision decision >== expr
 
 
 and LinearElement =
     | Zero
-    | Constant of float
+    | Scalar of float
     | Variable of Coefficent:float * Decision
+with
+    static member (*) (elem:LinearElement, scalar:float) =
+        match elem with
+        | Zero -> Zero
+        | Scalar c -> Scalar (c * scalar)
+        | Variable (c, d) -> Variable (c * scalar, d)
+
+    static member (*) (scalar:float, elem:LinearElement) =
+        elem * scalar
+
+    static member (+) (elem:LinearElement, scalar:float) =
+        LinearExpression.ofLinearElement elem + scalar
+
+    static member (+) (scalar:float, elem:LinearElement) =
+        elem + scalar
+
+    static member (+) (elem:LinearElement, decision:Decision) =
+        LinearExpression.ofLinearElement elem + decision
+
+    static member (+) (elem:LinearElement, rElem:LinearElement) =
+        LinearExpression.ofLinearElement elem + rElem
+
+    static member (+) (elem:LinearElement, expr:LinearExpression) =
+        LinearExpression.ofLinearElement elem + expr
+
+    static member (<==) (lhs:LinearElement, rhs:float) =
+        LinearExpression.ofLinearElement lhs <== rhs
+
+    static member (<==) (lhs:LinearElement, rhs:Decision) =
+        LinearExpression.ofLinearElement lhs <== rhs
+
+    static member (<==) (lhs:LinearElement, rhs:LinearElement) =
+        LinearExpression.ofLinearElement lhs <== rhs
+
+    static member (<==) (lhs:LinearElement, rhs:LinearExpression) =
+        LinearExpression.ofLinearElement lhs <== rhs
+
+    static member (==) (lhs:LinearElement, rhs:float) =
+        LinearExpression.ofLinearElement lhs == rhs
+
+    static member (==) (lhs:LinearElement, rhs:Decision) =
+        LinearExpression.ofLinearElement lhs == rhs
+
+    static member (==) (lhs:LinearElement, rhs:LinearElement) =
+        LinearExpression.ofLinearElement lhs == rhs
+
+    static member (==) (lhs:LinearElement, rhs:LinearExpression) =
+        LinearExpression.ofLinearElement lhs == rhs
+
+    static member (>==) (lhs:LinearElement, rhs:float) =
+        LinearExpression.ofLinearElement lhs >== rhs
+
+    static member (>==) (lhs:LinearElement, rhs:Decision) =
+        LinearExpression.ofLinearElement lhs >== rhs
+
+    static member (>==) (lhs:LinearElement, rhs:LinearElement) =
+        LinearExpression.ofLinearElement lhs >== rhs
+
+    static member (>==) (lhs:LinearElement, rhs:LinearExpression) =
+        LinearExpression.ofLinearElement lhs >== rhs
 
 
-and LinearExpression = 
-    | Empty
-    | Element of LinearElement
-    | Elements of List<LinearElement>
+and LinearExpression = LinearExpression of List<LinearElement>
+with
+    static member (+) (LinearExpression expr:LinearExpression, scalar:float) =
+        [Scalar scalar] @ expr
+        |> LinearExpression
+
+    static member (+) (scalar:float, expr:LinearExpression) =
+        expr + scalar
+
+    static member (+) (LinearExpression expr:LinearExpression, decision:Decision) =
+        [Variable (1.0, decision)] @ expr
+        |> LinearExpression
+
+    static member (+) (LinearExpression expr:LinearExpression, elem:LinearElement) =
+        [elem] @ expr 
+        |> LinearExpression
+
+    static member (+) (LinearExpression expr:LinearExpression, LinearExpression rExpr:LinearExpression) =
+        match expr.Length > rExpr.Length with
+        | true -> rExpr @ expr
+        | false -> expr @ rExpr
+
+    static member ofFloat (scalar:float) =
+        LinearExpression [Scalar scalar]
+
+    static member ofDecision (decision:Decision) =
+        LinearExpression [Variable (1.0, decision)]
+
+    static member ofLinearElement (elem:LinearElement) =
+        LinearExpression [elem]
+
+    static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
+        Constraint (lhs, LessOrEqual, rhs)
+
+    static member (<==) (lhs:LinearExpression, rhs:float) =
+        Constraint (lhs, LessOrEqual, LinearExpression.ofFloat rhs)
+
+    static member (<==) (lhs:LinearExpression, rhs:Decision) =
+        Constraint (lhs, LessOrEqual, LinearExpression.ofDecision rhs)
+
+    static member (<==) (lhs:LinearExpression, rhs:LinearElement) =
+        Constraint (lhs, LessOrEqual, LinearExpression.ofLinearElement rhs)
+
+    static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
+        Constraint (lhs, Equal, rhs)
+
+    static member (==) (lhs:LinearExpression, rhs:float) =
+        Constraint (lhs, Equal, LinearExpression.ofFloat rhs)
+
+    static member (==) (lhs:LinearExpression, rhs:Decision) =
+        Constraint (lhs, Equal, LinearExpression.ofDecision rhs)
+
+    static member (==) (lhs:LinearExpression, rhs:LinearElement) =
+        Constraint (lhs, Equal, LinearExpression.ofLinearElement rhs)
+
+    static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
+        Constraint (lhs, GreaterOrEqual, rhs)
+
+    static member (>==) (lhs:LinearExpression, rhs:float) =
+        Constraint (lhs, GreaterOrEqual, LinearExpression.ofFloat rhs)
+
+    static member (>==) (lhs:LinearExpression, rhs:Decision) =
+        Constraint (lhs, GreaterOrEqual, LinearExpression.ofDecision rhs)
+
+    static member (>==) (lhs:LinearExpression, rhs:LinearElement) =
+        Constraint (lhs, GreaterOrEqual, LinearExpression.ofLinearElement rhs)
 
 
 and ExpressionComparison =
