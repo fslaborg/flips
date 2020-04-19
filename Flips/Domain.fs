@@ -229,11 +229,6 @@ type Objective = {
 }
 
 
-type Model = {
-    Objectives : List<Objective>
-    Constraints : List<Constraint>
-}
-
 
 module Decision =
 
@@ -257,23 +252,39 @@ module Objective =
 
 module Model =
 
+    type Model = private {
+        _Objectives : List<Objective>
+        _Constraints : List<Constraint>
+    } 
+    with
+        member public this.Objectives = this._Objectives
+        member public this.Constraints = this._Constraints
+
     let create objectives constraints =
         {
-            Objectives = objectives
-            Constraints = constraints
+            _Objectives = objectives
+            _Constraints = constraints
         }
 
     let empty =
         {
-            Objectives = []
-            Constraints = []
+            _Objectives = []
+            _Constraints = []
         }
 
     let addObjective objective model =
-        { model with Objectives = [objective] @ model.Objectives}
+        { model with _Objectives = [objective] @ model.Objectives}
+
+    let addObjectives objectives model =
+        let adders =
+            objectives
+            |> List.map addObjective
+            |> List.reduce (>>)
+
+        adders model
 
     let addConstraint c model =
-        { model with Constraints = [c] @ model.Constraints}
+        { model with _Constraints = [c] @ model.Constraints}
 
 
 let inline (.*) (lhs, rhs) =
