@@ -7,9 +7,11 @@ type DecisionType =
     | Continuous of LowerBound:float * UpperBound:float
 
 
+type DecisionName = DecisionName of string
+
 type Decision = {
-    Name : string
-    DecisionType : DecisionType
+    Name : DecisionName
+    Type : DecisionType
 }
 with
     static member (*) (decision:Decision, scalar:float) =
@@ -68,13 +70,21 @@ with
 
 
 and LinearElement =
-    | Zero
+    | Empty
     | Scalar of float
     | Variable of Coefficent:float * Decision
 with
+    static member getDecision (elem:LinearElement) =
+        match elem with
+        | Empty -> None
+        | Scalar s -> None
+        | Variable (c, d) -> Some d
+
+    static member Zero = Empty
+
     static member (*) (elem:LinearElement, scalar:float) =
         match elem with
-        | Zero -> Zero
+        | Empty -> Empty
         | Scalar c -> Scalar (c * scalar)
         | Variable (c, d) -> Variable (c * scalar, d)
 
@@ -143,6 +153,11 @@ with
 
     static member OfLinearElement (elem:LinearElement) =
         LinearExpression [elem]
+
+    static member getDecisions (LinearExpression expr:LinearExpression) =
+        expr
+        |> List.choose LinearElement.getDecision
+        |> Set.ofList
 
     static member (*) (LinearExpression expr:LinearExpression, scalar:float) =
         LinearExpression (expr |> List.map ((*) scalar))
@@ -229,13 +244,20 @@ type Objective = {
 }
 
 
+module Constraint =
+
+    let getDecisions (Constraint (lhs, _, rhs):Constraint) =
+        let lhsDecisions = LinearExpression.getDecisions lhs
+        let rhsDecisions = LinearExpression.getDecisions rhs
+        lhsDecisions + rhsDecisions
+
 
 module Decision =
 
     let create name decisionType =
         {
             Name = name
-            DecisionType = decisionType
+            Type = decisionType
         }
 
 
@@ -255,36 +277,68 @@ module Model =
     type Model = private {
         _Objectives : List<Objective>
         _Constraints : List<Constraint>
+        _Decisions : Map<DecisionName, DecisionType>
     } 
     with
         member public this.Objectives = this._Objectives
         member public this.Constraints = this._Constraints
-
-    let create objectives constraints =
-        {
-            _Objectives = objectives
-            _Constraints = constraints
-        }
+        member public this.Decisions = this._Decisions
 
     let empty =
         {
             _Objectives = []
             _Constraints = []
+            _Decisions = Map.empty
         }
 
-    let addObjective objective model =
-        { model with _Objectives = [objective] @ model.Objectives}
+    let private existingDecisions (decisionMap:Map<DecisionName,DecisionType>) (decisions:Set<Decision>) =
+        decisions
+        |> Set.filter (fun n -> Map.containsKey n.Name decisionMap)
+
+    let private newDecisions (decisionMap:Map<DecisionName,DecisionType>) (decisions:Set<Decision>) =
+        decisions - (existingDecisions decisionMap decisions)
+        |> Set.toList
+
+    let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,DecisionType>) (decisions:Set<Decision>) =
+        existingDecisions decisionMap decisions
+        |> Set.filter (fun x -> decisionMap.[x.Name] <> x.Type)
+
+    let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, DecisionType>) =
+        Map.add decision.Name decision.Type decisionMap
+
+
+    let addObjective (objective:Objective) (model:Model) =
+        let objectiveDecisions = LinearExpression.getDecisions objective.Expression
+        let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions objectiveDecisions
+        
+        if not (Set.isEmpty mismatchedDecisions) then
+            // TODO Make this error more informative
+            failwith "Cannot have Decisions with the same name of differnt type"
+
+        let newDecisions = newDecisions model.Decisions objectiveDecisions
+        let newDecisionMap = (newDecisions |> List.map addToDecisionMap |> List.reduce (>>)) model.Decisions
+
+        { model with _Objectives = [objective] @ model.Objectives; _Decisions = newDecisionMap }
 
     let addObjectives objectives model =
-        let adders =
-            objectives
-            |> List.map addObjective
-            |> List.reduce (>>)
+        (objectives |> List.map addObjective |> List.reduce (>>)) model
 
-        adders model
 
-    let addConstraint c model =
-        { model with _Constraints = [c] @ model.Constraints}
+    let addConstraint c (model:Model) =
+        let decisions = Constraint.getDecisions c
+        let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions decisions
+        
+        if not (Set.isEmpty mismatchedDecisions) then
+            // TODO Make this error more informative
+            failwith "Cannot have Decisions with the same name of differnt type"
+
+        let newDecisions = newDecisions model.Decisions decisions
+        let newDecisionMap = (newDecisions |> List.map addToDecisionMap |> List.reduce (>>)) model.Decisions
+
+        { model with _Constraints = [c] @ model.Constraints; _Decisions = newDecisionMap }
+
+    let addConstraints constraints model =
+        (constraints |> List.map addConstraint |> List.reduce (>>)) model
 
 
 let inline (.*) (lhs, rhs) =
@@ -297,6 +351,3 @@ let inline sum m =
     m
     |> Map.toSeq
     |> Seq.sumBy snd
-
-
-let x = 1.0 * (Decision.create  "CHicken" DecisionType.Boolean)
