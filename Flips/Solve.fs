@@ -44,7 +44,10 @@ let private createVariable (solver:Solver) (DecisionName name:DecisionName) (dec
 
 let private createVariableMap (solver:Solver) (decisions:Map<DecisionName, Decision>) =
     decisions
-    |> Map.map (fun name decision -> createVariable solver name decision.Type)
+    |> Map.toSeq
+    |> Seq.map snd
+    |> Seq.map (fun decision -> decision, createVariable solver decision.Name decision.Type)
+    |> Map.ofSeq
 
 
 let private setObjective (vars:Map<Decision, Variable>) (objective:Flips.Domain.Objective) (solver:Solver) =
@@ -98,3 +101,6 @@ let solve (settings:SolverSettings) (model:Flips.Domain.Model.Model) =
     solver.EnableOutput()
 
     let vars = createVariableMap solver model.Decisions
+    addConstraints vars model.Constraints solver
+    // TODO Update to support multiobjective
+    setObjective vars model.Objectives.[0] solver
