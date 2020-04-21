@@ -42,9 +42,9 @@ let private createVariable (solver:Solver) (DecisionName name:DecisionName) (dec
     | Continuous (lb, ub) -> solver.MakeNumVar(lb, ub, name)
 
 
-let private createVariableMap (solver:Solver) (decisions:Map<Decision, DecisionType>) =
+let private createVariableMap (solver:Solver) (decisions:Map<DecisionName, Decision>) =
     decisions
-    |> Map.map (fun decision decisionType -> createVariable solver decision.Name decisionType)
+    |> Map.map (fun name decision -> createVariable solver name decision.Type)
 
 
 let private setObjective (vars:Map<Decision, Variable>) (objective:Flips.Domain.Objective) (solver:Solver) =

@@ -11,7 +11,7 @@ type DecisionName = DecisionName of string
 
 type Decision = {
     Name : DecisionName
-    Type : Decision
+    Type : DecisionType
 }
 with
     static member (*) (decision:Decision, scalar:float) =
@@ -305,10 +305,10 @@ module Model =
 
     let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         existingDecisions decisionMap decisions
-        |> Set.filter (fun x -> decisionMap.[x.Name] <> x.Type)
+        |> Set.filter (fun x -> decisionMap.[x.Name].Type <> x.Type)
 
     let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, Decision>) =
-        Map.add decision.Name decision.Type decisionMap
+        Map.add decision.Name decision decisionMap
 
 
     let addObjective (objective:Objective) (model:Model) =
