@@ -5,16 +5,20 @@ open Google.OrTools.LinearSolver
 open Flips.Domain
 
 type Solution = {
-    DecisionResults : Map<Decision,float>
-    ObjectiveResults : Map<Flips.Domain.Objective,float>
+    DecisionResults : Map<DecisionName,float>
+    ObjectiveResults : Map<Objective,float>
 }
 
 type SolverType = | CBC
 
 type SolverSettings = {
     SolverType : SolverType
-    SolveDuration : float
+    MaxDuration : int64
 }
+
+type SolveResult =
+    | Optimal of Solution
+    | Suboptimal of string
 
 
 let private buildExpression (vars:Map<Decision,Variable>) (LinearExpression expr:LinearExpression) =
@@ -30,15 +34,18 @@ let private buildExpression (vars:Map<Decision,Variable>) (LinearExpression expr
         
     constantExpr + decisionExpr
 
+
 let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
     match decisionType with
     | Boolean -> solver.MakeBoolVar(name)
     | Integer (lb, ub) -> solver.MakeIntVar(lb, ub, name)
     | Continuous (lb, ub) -> solver.MakeNumVar(lb, ub, name)
 
+
 let private createVariableMap (solver:Solver) (decisions:Map<Decision, DecisionType>) =
     decisions
     |> Map.map (fun decision decisionType -> createVariable solver decision.Name decisionType)
+
 
 let private setObjective (vars:Map<Decision, Variable>) (objective:Flips.Domain.Objective) (solver:Solver) =
     let expr = buildExpression vars objective.Expression
@@ -46,6 +53,7 @@ let private setObjective (vars:Map<Decision, Variable>) (objective:Flips.Domain.
     match objective.Sense with
     | Minimize -> solver.Minimize(expr)
     | Maximize -> solver.Maximize(expr)
+
 
 let private addConstraint (vars:Map<Decision, Variable>) (Constraint (lhs, comparison, rhs):Constraint) (solver:Solver) =
     let lhsExpr = buildExpression vars lhs
@@ -64,6 +72,29 @@ let private addConstraint (vars:Map<Decision, Variable>) (Constraint (lhs, compa
         solver.Add(c)
     |> ignore
 
+
 let private addConstraints (vars:Map<Decision, Variable>) (constraints:List<Constraint>) (solver:Solver) =
     for c in constraints do
         addConstraint vars c solver |> ignore
+
+
+let private buildSolution (vars:Map<Decision, Variable>) (solver:Solver) (objective:Objective) =
+    let decisions =
+        vars
+        |> Map.toSeq
+        |> Seq.map (fun (d, v) -> d.Name, v.SolutionValue())
+        |> Map.ofSeq
+
+    let objectiveResults = Map.ofList [(objective, solver.Objective().BestBound())]
+
+    {
+        DecisionResults = decisions
+        ObjectiveResults = objectiveResults
+    }
+
+let solve (settings:SolverSettings) (model:Flips.Domain.Model.Model) =
+    let solver = Solver.CreateSolver("MIP Solver", "CBC_MIXED_INTEGER_PROGRAMMING")
+    solver.SetTimeLimit(settings.MaxDuration)
+    solver.EnableOutput()
+
+    let vars = createVariableMap solver model.Decisions
