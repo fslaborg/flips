@@ -2,12 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="Domain.fs" />
+    <Compile Include="Solve.fs" />
   </ItemGroup>
 
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="Google.OrTools" Version="7.5.7466" />
+    <PackageReference Include="Google.OrTools.runtime.win-x64" Version="7.5.7466" />
+  </ItemGroup>
 
 </Project>

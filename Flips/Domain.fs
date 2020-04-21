@@ -11,7 +11,7 @@ type DecisionName = DecisionName of string
 
 type Decision = {
     Name : DecisionName
-    Type : DecisionType
+    Type : Decision
 }
 with
     static member (*) (decision:Decision, scalar:float) =
@@ -145,6 +145,7 @@ with
 
 and LinearExpression = LinearExpression of List<LinearElement>
 with
+
     static member OfFloat (scalar:float) =
         LinearExpression [Scalar scalar]
 
@@ -159,11 +160,8 @@ with
         |> List.choose LinearElement.getDecision
         |> Set.ofList
 
-    static member (*) (LinearExpression expr:LinearExpression, scalar:float) =
-        LinearExpression (expr |> List.map ((*) scalar))
-
-    static member (*) (scalar:float, LinearExpression expr:LinearExpression) =
-        LinearExpression (expr |> List.map ((*) scalar))
+    static member Zero =
+        LinearExpression []
 
     static member (+) (LinearExpression expr:LinearExpression, scalar:float) =
         [Scalar scalar] @ expr
@@ -184,6 +182,12 @@ with
         match expr.Length > rExpr.Length with
         | true -> rExpr @ expr
         | false -> expr @ rExpr
+
+    static member (*) (LinearExpression expr:LinearExpression, scalar:float) =
+        LinearExpression (expr |> List.map ((*) scalar))
+
+    static member (*) (scalar:float, LinearExpression expr:LinearExpression) =
+        LinearExpression (expr |> List.map ((*) scalar))
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Constraint (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
@@ -237,10 +241,10 @@ type ObjectiveSense =
 
 
 type Objective = {
+    Name : string
     Expression : LinearExpression
     Sense : ObjectiveSense
-    Priority : float
-    Weighting : float
+    Priority : int
 }
 
 
@@ -263,51 +267,52 @@ module Decision =
 
 module Objective =
 
-    let create expression sense priority weighting =
+    let create name expression sense priority weighting =
         {
+            Name = name
             Expression = expression
             Sense = sense
             Priority = priority
-            Weighting = weighting
         }
 
 
 module Model =
 
     type Model = private {
-        _Objectives : List<Objective>
+        _Objective : List<Objective>
         _Constraints : List<Constraint>
-        _Decisions : Map<DecisionName, DecisionType>
+        _Decisions : Map<DecisionName, Decision>
     } 
     with
-        member public this.Objectives = this._Objectives
+        member public this.Objectives = this._Objective
         member public this.Constraints = this._Constraints
         member public this.Decisions = this._Decisions
 
     let empty =
         {
-            _Objectives = []
+            _Objective = []
             _Constraints = []
             _Decisions = Map.empty
         }
 
-    let private existingDecisions (decisionMap:Map<DecisionName,DecisionType>) (decisions:Set<Decision>) =
+    let private existingDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         decisions
         |> Set.filter (fun n -> Map.containsKey n.Name decisionMap)
 
-    let private newDecisions (decisionMap:Map<DecisionName,DecisionType>) (decisions:Set<Decision>) =
+    let private newDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         decisions - (existingDecisions decisionMap decisions)
         |> Set.toList
 
-    let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,DecisionType>) (decisions:Set<Decision>) =
+    let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         existingDecisions decisionMap decisions
         |> Set.filter (fun x -> decisionMap.[x.Name] <> x.Type)
 
-    let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, DecisionType>) =
+    let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, Decision>) =
         Map.add decision.Name decision.Type decisionMap
 
 
     let addObjective (objective:Objective) (model:Model) =
+        // TODO Check that objective priority is not repeated
         let objectiveDecisions = LinearExpression.getDecisions objective.Expression
         let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions objectiveDecisions
         
@@ -318,7 +323,7 @@ module Model =
         let newDecisions = newDecisions model.Decisions objectiveDecisions
         let newDecisionMap = (newDecisions |> List.map addToDecisionMap |> List.reduce (>>)) model.Decisions
 
-        { model with _Objectives = [objective] @ model.Objectives; _Decisions = newDecisionMap }
+        { model with _Objective = [objective] @ model.Objectives; _Decisions = newDecisionMap }
 
     let addObjectives objectives model =
         (objectives |> List.map addObjective |> List.reduce (>>)) model
