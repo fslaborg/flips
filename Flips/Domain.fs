@@ -3,8 +3,8 @@ module Flips.Domain
 
 type DecisionType =
     | Boolean
-    | Integer of LowerBound:float * UpperBound:float
-    | Continuous of LowerBound:float * UpperBound:float
+    | Integer of LowerBound:int64 * UpperBound:int64
+    | Continuous of LowerBound:decimal * UpperBound:decimal
 
 type DecisionName = DecisionName of string
 
@@ -182,21 +182,36 @@ type Objective = {
 }
 
 
+module Decision =
+
+    let createBoolean name =
+        {
+            Name = name
+            Type = DecisionType.Boolean
+        }
+
+    let createInteger name lowerBound upperBound =
+        if lowerBound > upperBound then
+            failwith "Cannot create Decision where LowerBound is greater than UpperBound"
+        {
+            Name = name
+            Type = DecisionType.Integer (lowerBound, upperBound)
+        }
+
+    let createContinuous name lowerBound upperBound =
+        if lowerBound > upperBound then
+            failwith "Cannot create Decision where LowerBound is greater than UpperBound"
+        {
+            Name = name
+            Type = DecisionType.Continuous (lowerBound, upperBound)
+        }    
+
 module Constraint =
 
     let getDecisions (Constraint (lhs, _, rhs):Constraint) =
         let lhsDecisions = LinearExpression.GetDecisions lhs
         let rhsDecisions = LinearExpression.GetDecisions rhs
         lhsDecisions + rhsDecisions
-
-
-module Decision =
-
-    let create name decisionType =
-        {
-            Name = name
-            Type = decisionType
-        }
 
 
 module Objective =
@@ -217,7 +232,7 @@ module Model =
         _Decisions : Map<DecisionName, Decision>
     } 
     with
-        member public this.Objectives = this._Objective
+        member public this.Objective = this._Objective
         member public this.Constraints = this._Constraints
         member public this.Decisions = this._Decisions
 
@@ -295,6 +310,7 @@ type SolverType = | CBC
 type SolverSettings = {
     SolverType : SolverType
     MaxDuration : int64
+    WriteLPFile : Option<string>
 }
 
 type SolveResult =
