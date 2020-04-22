@@ -7,18 +7,16 @@ open Flips.Domain
 
 
 
-let private buildExpression (vars:Map<Decision,Variable>) (LinearExpression expr:LinearExpression) =
-    let constantExpr =
-        expr
-        |> List.choose (fun x -> match x with | Empty -> Some 0.0 | Scalar s -> Some s | _ -> None)
-        |> List.sum
-
+let private buildExpression (vars:Map<DecisionName,Variable>) (LinearExpression (names, coefs, decs, offset):LinearExpression) =
     let decisionExpr =
-        expr
-        |> List.choose (fun x -> match x with | Variable (c, d) -> Some (c * vars.[d]) | _ -> None)
-        |> fun x -> match x with | [] -> new LinearExpr() | l -> List.reduce (+) l
+        names
+        |> Seq.map (fun n -> coefs.[n] * vars.[n])
+        |> fun x -> 
+            match Seq.isEmpty x with 
+            | true -> new LinearExpr() 
+            | false -> Seq.reduce (+) x
         
-    constantExpr + decisionExpr
+    offset + decisionExpr
 
 
 let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
