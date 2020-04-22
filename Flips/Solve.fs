@@ -38,13 +38,13 @@ let private setObjective (vars:Map<DecisionName, Variable>) (objective:Flips.Dom
     | Minimize -> solver.Minimize(expr)
     | Maximize -> solver.Maximize(expr)
 
-let private addEqualityConstraint (vars:Map<DecisionName, Variable>) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
+let private addEqualityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
     let lhsExpr = buildExpression vars lhs
     let rhsExpr = buildExpression vars rhs
     let c = Google.OrTools.LinearSolver.Equality(lhsExpr, rhsExpr, true)
     solver.Add(c)
 
-let private addInequalityConstraint (vars:Map<DecisionName, Variable>) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
+let private addInequalityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
     let lhsExpr = buildExpression vars lhs
     let rhsExpr = buildExpression vars rhs
     let constraintExpr = lhsExpr - rhsExpr
@@ -58,13 +58,13 @@ let private addInequalityConstraint (vars:Map<DecisionName, Variable>) (lhs:Line
         solver.Add(c)
 
 
-let private addConstraint (vars:Map<DecisionName, Variable>) (cExpr:ConstraintExpression) (solver:Solver) =
-    match cExpr with
-    | Equality (lhs, rhs) -> addEqualityConstraint vars lhs rhs solver
-    | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars lhs rhs inequality solver
+let private addConstraint (vars:Map<DecisionName, Variable>) (c:Constraint) (solver:Solver) =
+    match c.Expression with
+    | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs solver
+    | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality solver
 
 
-let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<ConstraintExpression>) (solver:Solver) =
+let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Constraint>) (solver:Solver) =
     for c in constraints do
         addConstraint vars c solver |> ignore
 

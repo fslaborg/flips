@@ -224,14 +224,22 @@ module Decision =
 
 module Constraint =
 
-    let getDecisions (cExpr:ConstraintExpression) =
+    let getDecisions (c:Constraint) =
         let (lhs, rhs) =
-            match cExpr with
+            match c.Expression with
             | Inequality (lhs, c, rhs) -> lhs, rhs
             | Equality (lhs, rhs) -> lhs, rhs
         let lhsDecisions = LinearExpression.GetDecisions lhs
         let rhsDecisions = LinearExpression.GetDecisions rhs
         lhsDecisions + rhsDecisions
+
+    let create (name:string) (cExpr:ConstraintExpression) =
+        if System.String.IsNullOrEmpty(name) then
+            failwith "Cannot have Name of Decision that is null or empty"
+        {
+            Name = ConstraintName name
+            Expression = cExpr
+        }
 
 
 module Objective =
@@ -250,7 +258,7 @@ module Model =
 
     type Model = private {
         _Objective : Objective
-        _Constraints : List<ConstraintExpression>
+        _Constraints : List<Constraint>
         _Decisions : Map<DecisionName, Decision>
     } 
     with
@@ -368,4 +376,15 @@ type ConstraintBuilder (constraintSetPrefix:string) =
         |> String.concat "_"
         |> (sprintf "%s|%s" constraintSetPrefix)
 
-    member this.Yield (x:)
+    member this.Yield (cExpr:ConstraintExpression) =
+        cExpr
+
+    member this.For(source:seq<'a>, body:'a -> seq<'b * ConstraintExpression>) =
+        source
+        |> Seq.collect (fun x -> body x |> Seq.map (fun (idx, expr) -> (x, idx), expr))
+
+    member this.For(source:seq<'a>, body:'a -> ConstraintExpression) =
+        source |> Seq.map (fun x -> x, body x)
+
+    member this.Run(source:seq<'a * ConstraintExpression>) =
+        source |> Seq.map (fun (n, c) -> Constraint.create (constraintNamer n) c)

@@ -16,9 +16,9 @@ let main argv =
     let objective = Objective.create "Get big" Maximize objExpr
     let model = 
         Model.create objective
-        |> Model.addConstraint (x1 <== 10.0)
-        |> Model.addConstraint (x2 <== 5.0)
-        |> Model.addConstraint (x1 + x2 <== 12.0)
+        |> Model.addConstraint (Constraint.create "Max x1" (x1 <== 10.0))
+        |> Model.addConstraint (Constraint.create "Max x2" (x2 <== 5.0))
+        |> Model.addConstraint (Constraint.create "Max x1 and x2" (x1 + x2 <== 12.0))
     
     let settings = {
         SolverType = SolverType.CBC
