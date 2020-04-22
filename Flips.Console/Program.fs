@@ -5,10 +5,7 @@ open Flips.Domain
 open Flips.Solve
 
 
-[<EntryPoint>]
-let main argv =
-    
-    
+let simpleModel () =
     let x1 = Decision.createContinuous "x1" 0.0M Decimal.MaxValue
     let x2 = Decision.createContinuous "x2" 0M Decimal.MaxValue
     
@@ -28,6 +25,20 @@ let main argv =
     
     let r = solve settings model
     printfn "%A" r
+
+//let constraintBuilderExample () =
+//    let sources = [1 .. 3]
+//    let destinations = ["a"; "b"; "c"]
+//    let decisions = 
+//        [for s in sources do
+//            for d in destinations ->
+//                (s, d), Decision.createBoolean (sprintf "%i_%s" s d)]
+//        |> Map.ofList
+
+[<EntryPoint>]
+let main argv =
+    
+    simpleModel ()
 
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
