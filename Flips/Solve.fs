@@ -69,11 +69,9 @@ let private buildSolution (vars:Map<DecisionName, Variable>) (solver:Solver) (ob
         |> Seq.map (fun (n, v) -> n, v.SolutionValue())
         |> Map.ofSeq
 
-    let objectiveResults = Map.ofList [(objective, solver.Objective().BestBound())]
-
     {
         DecisionResults = decisions
-        ObjectiveResults = objectiveResults
+        ObjectiveResult = solver.Objective().BestBound()
     }
 
 let private writeLPFile (solver:Solver) (filePath:string) =

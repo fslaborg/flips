@@ -62,8 +62,8 @@ and LinearExpression =
     | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, float> * decs:Map<DecisionName, Decision> * offset:float
 with
 
-    static member OfFloat (s:float) =
-        LinearExpression (Set.empty, Map.empty, Map.empty, 0.0)
+    static member OfFloat (f:float) =
+        LinearExpression (Set.empty, Map.empty, Map.empty, f)
 
     static member OfDecision (d:Decision) =
         let names = Set.ofList [d.Name]
@@ -175,34 +175,42 @@ type ObjectiveSense =
     | Minimize
     | Maximize
 
+type ObjectiveName = ObjectiveName of string
+
 type Objective = {
-    Name : string
-    Expression : LinearExpression
+    Name : ObjectiveName
     Sense : ObjectiveSense
+    Expression : LinearExpression
 }
 
 
 module Decision =
 
     let createBoolean name =
+        if System.String.IsNullOrEmpty(name) then
+            failwith "Cannot have Name of Decision that is null or empty"
         {
-            Name = name
+            Name = DecisionName name
             Type = DecisionType.Boolean
         }
 
     let createInteger name lowerBound upperBound =
+        if System.String.IsNullOrEmpty(name) then
+                failwith "Cannot have Name of Decision that is null or empty"
         if lowerBound > upperBound then
             failwith "Cannot create Decision where LowerBound is greater than UpperBound"
         {
-            Name = name
+            Name = DecisionName name
             Type = DecisionType.Integer (lowerBound, upperBound)
         }
 
     let createContinuous name lowerBound upperBound =
+        if System.String.IsNullOrEmpty(name) then
+                failwith "Cannot have Name of Decision that is null or empty"
         if lowerBound > upperBound then
             failwith "Cannot create Decision where LowerBound is greater than UpperBound"
         {
-            Name = name
+            Name = DecisionName name
             Type = DecisionType.Continuous (lowerBound, upperBound)
         }    
 
@@ -216,11 +224,13 @@ module Constraint =
 
 module Objective =
 
-    let create name expression sense =
+    let create name sense expression =
+        if System.String.IsNullOrEmpty(name) then
+            failwith "Cannot have Name of Decision that is null or empty"
         {
-            Name = name
-            Expression = expression
+            Name = ObjectiveName name
             Sense = sense
+            Expression = expression
         }
 
 
@@ -291,7 +301,7 @@ module Model =
             failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let newDecisions = newDecisions model.Decisions decisions
-        let newDecisionMap = (newDecisions |> List.map addToDecisionMap |> List.reduce (>>)) model.Decisions
+        let newDecisionMap = (model.Decisions, newDecisions) ||> List.fold (fun m d -> Map.add d.Name d m )
 
         { model with _Constraints = [c] @ model.Constraints; _Decisions = newDecisionMap }
 
@@ -301,7 +311,7 @@ module Model =
 
 type Solution = {
     DecisionResults : Map<DecisionName,float>
-    ObjectiveResults : Map<Objective,float>
+    ObjectiveResult : float
 }
 
 type SolverType = | CBC
