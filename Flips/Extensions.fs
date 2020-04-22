@@ -1,7 +1,7 @@
 ﻿module Flips.Extensions
 
 
-let inline (.*) (lhs, rhs) =
+let inline (.*) (lhs:Map<_,_>) (rhs:Map<_,_>) =
     lhs
     |> Map.filter (fun k _ -> Map.containsKey k rhs)
     |> Map.map (fun k v -> v * rhs.[k])

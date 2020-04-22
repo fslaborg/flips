@@ -326,7 +326,7 @@ module Model =
         { model with _Constraints = [c] @ model.Constraints; _Decisions = newDecisionMap }
 
     let addConstraints constraints model =
-        (constraints |> List.map addConstraint |> List.reduce (>>)) model
+        (constraints |> Seq.map addConstraint |> Seq.reduce (>>)) model
 
 
 type Solution = {
