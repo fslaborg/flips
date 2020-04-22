@@ -6,7 +6,6 @@ type DecisionType =
     | Integer of LowerBound:float * UpperBound:float
     | Continuous of LowerBound:float * UpperBound:float
 
-
 type DecisionName = DecisionName of string
 
 type Decision = {
@@ -56,11 +55,11 @@ with
     static member (>==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision >== rhsDecision
 
-
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-and LinearExpression = LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, float> * decs:Map<DecisionName, Decision> * offset:float
+and LinearExpression = 
+    | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, float> * decs:Map<DecisionName, Decision> * offset:float
 with
 
     static member OfFloat (s:float) =
@@ -72,7 +71,7 @@ with
         let decs = Map.ofList [d.Name, d]
         LinearExpression (names, coefs, decs, 0.0)
 
-    static member getDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
+    static member GetDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
         decs
         |> Map.toList
         |> List.map snd
@@ -100,9 +99,8 @@ with
             let newDecs = Map.add decision.Name decision decs
             LinearExpression (newNames, newCoefs, newDecs, offset)
 
-
-    // Assume the Left LinearExpression is larget than the right
-    static member private merge (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression, LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+    static member private Merge (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression, LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+        // Assume the Left LinearExpression is larget than the right
         let nameOverlap = Set.intersect lNames rNames
         
         for n in nameOverlap do
@@ -127,9 +125,9 @@ with
         let rSize = Set.count rNames
 
         if lSize > rSize then
-            LinearExpression.merge (lExpr, rExpr)
+            LinearExpression.Merge (lExpr, rExpr)
         else
-            LinearExpression.merge (rExpr, lExpr)
+            LinearExpression.Merge (rExpr, lExpr)
 
     static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:float) =
         let newCoefs = Map.map (fun k v -> v * scalar) coefs
@@ -171,28 +169,24 @@ and ExpressionComparison =
     | LessOrEqual
     | GreaterOrEqual
 
-
 and Constraint = Constraint of LHS:LinearExpression * ExpressionComparison * RHS:LinearExpression
-
 
 type ObjectiveSense =
     | Minimize
     | Maximize
 
-
 type Objective = {
     Name : string
     Expression : LinearExpression
     Sense : ObjectiveSense
-    Priority : int
 }
 
 
 module Constraint =
 
     let getDecisions (Constraint (lhs, _, rhs):Constraint) =
-        let lhsDecisions = LinearExpression.getDecisions lhs
-        let rhsDecisions = LinearExpression.getDecisions rhs
+        let lhsDecisions = LinearExpression.GetDecisions lhs
+        let rhsDecisions = LinearExpression.GetDecisions rhs
         lhsDecisions + rhsDecisions
 
 
@@ -207,12 +201,11 @@ module Decision =
 
 module Objective =
 
-    let create name expression sense priority weighting =
+    let create name expression sense =
         {
             Name = name
             Expression = expression
             Sense = sense
-            Priority = priority
         }
 
 
@@ -228,7 +221,6 @@ module Model =
         member public this.Constraints = this._Constraints
         member public this.Decisions = this._Decisions
 
-
     let private getMismatchedDecisionTypesInSet(decisions:Set<Decision>) =
         decisions
         |> Set.toList
@@ -241,26 +233,22 @@ module Model =
         decisions
         |> Set.filter (fun n -> Map.containsKey n.Name decisionMap)
 
-
     let private newDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         decisions - (existingDecisions decisionMap decisions)
         |> Set.toList
-
 
     let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         existingDecisions decisionMap decisions
         |> Set.filter (fun x -> decisionMap.[x.Name].Type <> x.Type)
 
-
     let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, Decision>) =
         Map.add decision.Name decision decisionMap
 
-
     let create objective =
-        let objectiveDecisions = LinearExpression.getDecisions objective.Expression
+        let objectiveDecisions = LinearExpression.GetDecisions objective.Expression
         let mismatchedDecisionsInObjective = getMismatchedDecisionTypesInSet objectiveDecisions
 
-        if List.length mismatchedDecisionsInObjective > 0 then
+        if not (List.isEmpty mismatchedDecisionsInObjective) then
             failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let decisions = 
@@ -275,12 +263,11 @@ module Model =
             _Decisions = decisions
         }
 
-
     let addConstraint c (model:Model) =
         let decisions = Constraint.getDecisions c
 
         let mismatchedWithinConstraint = getMismatchedDecisionTypesInSet decisions
-        if List.length mismatchedWithinConstraint > 0 then
+        if not (List.isEmpty mismatchedWithinConstraint) then
             failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions decisions
