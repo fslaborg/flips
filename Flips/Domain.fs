@@ -137,39 +137,47 @@ with
         expr * scalar
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
-        Constraint (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
+        Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:Decision) =
-        Constraint (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
+        Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Constraint (lhs, LessOrEqual, rhs)
+        Inequality (lhs, LessOrEqual, rhs)
 
     static member (==) (lhs:LinearExpression, rhs:float) =
-        Constraint (lhs, Equal, LinearExpression.OfFloat rhs)
+        Equality (lhs, LinearExpression.OfFloat rhs)
 
     static member (==) (lhs:LinearExpression, rhs:Decision) =
-        Constraint (lhs, Equal, LinearExpression.OfDecision rhs)
+        Equality (lhs, LinearExpression.OfDecision rhs)
 
     static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Constraint (lhs, Equal, rhs)
+        Equality (lhs, rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:float) =
-        Constraint (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
+        Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:Decision) =
-        Constraint (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
+        Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Constraint (lhs, GreaterOrEqual, rhs)
+        Inequality (lhs, GreaterOrEqual, rhs)
 
 
-and ExpressionComparison =
-    | Equal
+and Inequality =
     | LessOrEqual
     | GreaterOrEqual
 
-and Constraint = Constraint of LHS:LinearExpression * ExpressionComparison * RHS:LinearExpression
+and ConstraintExpression = 
+    | Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
+    | Equality of LHS:LinearExpression * RHS:LinearExpression
+
+type ConstraintName = ConstraintName of string
+
+type Constraint = {
+    Name : ConstraintName
+    Expression : ConstraintExpression
+}
 
 type ObjectiveSense =
     | Minimize
@@ -216,10 +224,22 @@ module Decision =
 
 module Constraint =
 
-    let getDecisions (Constraint (lhs, _, rhs):Constraint) =
+    let getDecisions (c:Constraint) =
+        let (lhs, rhs) =
+            match c.Expression with
+            | Inequality (lhs, c, rhs) -> lhs, rhs
+            | Equality (lhs, rhs) -> lhs, rhs
         let lhsDecisions = LinearExpression.GetDecisions lhs
         let rhsDecisions = LinearExpression.GetDecisions rhs
         lhsDecisions + rhsDecisions
+
+    let create (name:string) (cExpr:ConstraintExpression) =
+        if System.String.IsNullOrEmpty(name) then
+            failwith "Cannot have Name of Decision that is null or empty"
+        {
+            Name = ConstraintName name
+            Expression = cExpr
+        }
 
 
 module Objective =
@@ -306,7 +326,7 @@ module Model =
         { model with _Constraints = [c] @ model.Constraints; _Decisions = newDecisionMap }
 
     let addConstraints constraints model =
-        (constraints |> List.map addConstraint |> List.reduce (>>)) model
+        (constraints |> Seq.map addConstraint |> Seq.reduce (>>)) model
 
 
 type Solution = {
@@ -328,13 +348,43 @@ type SolveResult =
     | Suboptimal of string
 
 
-let inline (.*) (lhs, rhs) =
-    lhs
-    |> Map.filter (fun k _ -> Map.containsKey k rhs)
-    |> Map.map (fun k v -> v * rhs.[k])
+type ConstraintBuilder (constraintSetPrefix:string) =
 
+    let isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
 
-let inline sum m =
-    m
-    |> Map.toSeq
-    |> Seq.sumBy snd
+    let getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
+
+    let rec flattenFields f =
+        f
+        |> List.collect(
+            fun t ->
+                if isTuple t then
+                    flattenFields (getFields t)
+                else
+                    [t]
+        )
+
+    let tupleToObjectList (t:obj) : List<obj> =
+        if isTuple t then
+            t |> getFields |> flattenFields
+        else
+            [t]
+
+    let constraintNamer (indices:obj) : string =
+        tupleToObjectList indices
+        |> List.map (sprintf "%O")
+        |> String.concat "_"
+        |> (sprintf "%s|%s" constraintSetPrefix)
+
+    member this.Yield (cExpr:ConstraintExpression) =
+        cExpr
+
+    member this.For(source:seq<'a>, body:'a -> seq<'b * ConstraintExpression>) =
+        source
+        |> Seq.collect (fun x -> body x |> Seq.map (fun (idx, expr) -> (x, idx), expr))
+
+    member this.For(source:seq<'a>, body:'a -> ConstraintExpression) =
+        source |> Seq.map (fun x -> x, body x)
+
+    member this.Run(source:seq<'a * ConstraintExpression>) =
+        source |> Seq.map (fun (n, c) -> Constraint.create (constraintNamer n) c)

@@ -38,23 +38,30 @@ let private setObjective (vars:Map<DecisionName, Variable>) (objective:Flips.Dom
     | Minimize -> solver.Minimize(expr)
     | Maximize -> solver.Maximize(expr)
 
+let private addEqualityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
+    let lhsExpr = buildExpression vars lhs
+    let rhsExpr = buildExpression vars rhs
+    let c = Google.OrTools.LinearSolver.Equality(lhsExpr, rhsExpr, true)
+    solver.Add(c)
 
-let private addConstraint (vars:Map<DecisionName, Variable>) (Constraint (lhs, comparison, rhs):Constraint) (solver:Solver) =
+let private addInequalityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
     let lhsExpr = buildExpression vars lhs
     let rhsExpr = buildExpression vars rhs
     let constraintExpr = lhsExpr - rhsExpr
 
-    match comparison with
+    match inequality with
     | LessOrEqual -> 
         let c = RangeConstraint(constraintExpr, System.Double.NegativeInfinity, 0.0)
         solver.Add(c)
     | GreaterOrEqual -> 
         let c = RangeConstraint(constraintExpr, 0.0, System.Double.PositiveInfinity)
         solver.Add(c)
-    | Equal -> 
-        let c = Equality(lhsExpr, rhsExpr, true)
-        solver.Add(c)
-    |> ignore
+
+
+let private addConstraint (vars:Map<DecisionName, Variable>) (c:Constraint) (solver:Solver) =
+    match c.Expression with
+    | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs solver
+    | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality solver
 
 
 let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Constraint>) (solver:Solver) =

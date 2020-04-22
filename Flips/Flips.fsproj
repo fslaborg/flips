@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Extensions.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="Solve.fs" />
   </ItemGroup>
