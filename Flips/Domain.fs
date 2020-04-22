@@ -38,9 +38,6 @@ with
     static member (<==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision <== rhsDecision
 
-    static member (<==) (decision:Decision, element:LinearElement) =
-        LinearExpression.OfDecision decision <== element
-
     static member (<==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision <== expr
 
@@ -49,9 +46,6 @@ with
 
     static member (==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision == rhsDecision
-
-    static member (==) (decision:Decision, element:LinearElement) =
-        LinearExpression.OfDecision decision == element
 
     static member (==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision == expr
@@ -62,141 +56,93 @@ with
     static member (>==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision >== rhsDecision
 
-    static member (>==) (decision:Decision, element:LinearElement) =
-        LinearExpression.OfDecision decision >== element
 
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-
-and LinearElement =
-    | Empty
-    | Scalar of float
-    | Variable of Coefficent:float * Decision
-with
-    static member getDecision (elem:LinearElement) =
-        match elem with
-        | Empty -> None
-        | Scalar s -> None
-        | Variable (c, d) -> Some d
-
-    static member Zero = Empty
-
-    static member (*) (elem:LinearElement, scalar:float) =
-        match elem with
-        | Empty -> Empty
-        | Scalar c -> Scalar (c * scalar)
-        | Variable (c, d) -> Variable (c * scalar, d)
-
-    static member (*) (scalar:float, elem:LinearElement) =
-        elem * scalar
-
-    static member (+) (elem:LinearElement, scalar:float) =
-        LinearExpression.OfLinearElement elem + scalar
-
-    static member (+) (scalar:float, elem:LinearElement) =
-        elem + scalar
-
-    static member (+) (elem:LinearElement, decision:Decision) =
-        LinearExpression.OfLinearElement elem + decision
-
-    static member (+) (elem:LinearElement, rElem:LinearElement) =
-        LinearExpression.OfLinearElement elem + rElem
-
-    static member (+) (elem:LinearElement, expr:LinearExpression) =
-        LinearExpression.OfLinearElement elem + expr
-
-    static member (<==) (lhs:LinearElement, rhs:float) =
-        LinearExpression.OfLinearElement lhs <== rhs
-
-    static member (<==) (lhs:LinearElement, rhs:Decision) =
-        LinearExpression.OfLinearElement lhs <== rhs
-
-    static member (<==) (lhs:LinearElement, rhs:LinearElement) =
-        LinearExpression.OfLinearElement lhs <== rhs
-
-    static member (<==) (lhs:LinearElement, rhs:LinearExpression) =
-        LinearExpression.OfLinearElement lhs <== rhs
-
-    static member (==) (lhs:LinearElement, rhs:float) =
-        LinearExpression.OfLinearElement lhs == rhs
-
-    static member (==) (lhs:LinearElement, rhs:Decision) =
-        LinearExpression.OfLinearElement lhs == rhs
-
-    static member (==) (lhs:LinearElement, rhs:LinearElement) =
-        LinearExpression.OfLinearElement lhs == rhs
-
-    static member (==) (lhs:LinearElement, rhs:LinearExpression) =
-        LinearExpression.OfLinearElement lhs == rhs
-
-    static member (>==) (lhs:LinearElement, rhs:float) =
-        LinearExpression.OfLinearElement lhs >== rhs
-
-    static member (>==) (lhs:LinearElement, rhs:Decision) =
-        LinearExpression.OfLinearElement lhs >== rhs
-
-    static member (>==) (lhs:LinearElement, rhs:LinearElement) =
-        LinearExpression.OfLinearElement lhs >== rhs
-
-    static member (>==) (lhs:LinearElement, rhs:LinearExpression) =
-        LinearExpression.OfLinearElement lhs >== rhs
-
-
-and LinearExpression = LinearExpression of List<LinearElement>
+and LinearExpression = LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, float> * decs:Map<DecisionName, Decision> * offset:float
 with
 
-    static member OfFloat (scalar:float) =
-        LinearExpression [Scalar scalar]
+    static member OfFloat (s:float) =
+        LinearExpression (Set.empty, Map.empty, Map.empty, 0.0)
 
-    static member OfDecision (decision:Decision) =
-        LinearExpression [Variable (1.0, decision)]
+    static member OfDecision (d:Decision) =
+        let names = Set.ofList [d.Name]
+        let coefs = Map.ofList [d.Name, 1.0]
+        let decs = Map.ofList [d.Name, d]
+        LinearExpression (names, coefs, decs, 0.0)
 
-    static member OfLinearElement (elem:LinearElement) =
-        LinearExpression [elem]
-
-    static member getDecisions (LinearExpression expr:LinearExpression) =
-        expr
-        |> List.choose LinearElement.getDecision
+    static member getDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
+        decs
+        |> Map.toList
+        |> List.map snd
         |> Set.ofList
 
     static member Zero =
-        LinearExpression []
+        LinearExpression (Set.empty, Map.empty, Map.empty, 0.0)
 
-    static member (+) (LinearExpression expr:LinearExpression, scalar:float) =
-        [Scalar scalar] @ expr
-        |> LinearExpression
+    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:float) =
+        LinearExpression (names, coefs, decs, offset + scalar)
 
     static member (+) (scalar:float, expr:LinearExpression) =
         expr + scalar
 
-    static member (+) (LinearExpression expr:LinearExpression, decision:Decision) =
-        [Variable (1.0, decision)] @ expr
-        |> LinearExpression
+    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, decision:Decision) =
+        if Set.contains decision.Name names then
+            if decs.[decision.Name].Type <> decision.Type then
+                failwith "Mistmatched DecisionType"
 
-    static member (+) (LinearExpression expr:LinearExpression, elem:LinearElement) =
-        [elem] @ expr 
-        |> LinearExpression
+            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + 1.0) coefs
+            LinearExpression (names, newCoefs, decs, offset)
+        else
+            let newNames = Set.add decision.Name names
+            let newCoefs = Map.add decision.Name 1.0 coefs
+            let newDecs = Map.add decision.Name decision decs
+            LinearExpression (newNames, newCoefs, newDecs, offset)
 
-    static member (+) (LinearExpression expr:LinearExpression, LinearExpression rExpr:LinearExpression) =
-        match expr.Length > rExpr.Length with
-        | true -> rExpr @ expr
-        | false -> expr @ rExpr
 
-    static member (*) (LinearExpression expr:LinearExpression, scalar:float) =
-        LinearExpression (expr |> List.map ((*) scalar))
+    // Assume the Left LinearExpression is larget than the right
+    static member private merge (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression, LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+        let nameOverlap = Set.intersect lNames rNames
+        
+        for n in nameOverlap do
+            if lDecs.[n].Type <> rDecs.[n].Type then
+                failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
-    static member (*) (scalar:float, LinearExpression expr:LinearExpression) =
-        LinearExpression (expr |> List.map ((*) scalar))
+        let newNames = lNames + rNames
+
+        let newDecs = (lDecs, (rNames - lNames)) ||> Set.fold (fun m k -> Map.add k rDecs.[k] m)
+
+        let newCoefs =
+            (lCoefs, nameOverlap)
+            ||> Set.fold (fun m k -> Map.add k (lCoefs.[k] + rCoefs.[k]) m)
+            |> fun updatedCoefs -> Set.fold (fun m n -> Map.add n rCoefs.[n] m) updatedCoefs (rNames - lNames)
+
+        LinearExpression (newNames, newCoefs, newDecs, lOffset + rOffset)
+
+    static member (+) (lExpr:LinearExpression, rExpr:LinearExpression) =
+        let (LinearExpression (lNames, _, _, _)) = lExpr
+        let (LinearExpression (rNames, _, _, _)) = rExpr
+        let lSize = Set.count lNames
+        let rSize = Set.count rNames
+
+        if lSize > rSize then
+            LinearExpression.merge (lExpr, rExpr)
+        else
+            LinearExpression.merge (rExpr, lExpr)
+
+    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:float) =
+        let newCoefs = Map.map (fun k v -> v * scalar) coefs
+        LinearExpression (names, newCoefs, decs, offset * scalar)
+
+    static member (*) (scalar:float, expr:LinearExpression) =
+        expr * scalar
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Constraint (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:Decision) =
         Constraint (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
-
-    static member (<==) (lhs:LinearExpression, rhs:LinearElement) =
-        Constraint (lhs, LessOrEqual, LinearExpression.OfLinearElement rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
         Constraint (lhs, LessOrEqual, rhs)
@@ -207,9 +153,6 @@ with
     static member (==) (lhs:LinearExpression, rhs:Decision) =
         Constraint (lhs, Equal, LinearExpression.OfDecision rhs)
 
-    static member (==) (lhs:LinearExpression, rhs:LinearElement) =
-        Constraint (lhs, Equal, LinearExpression.OfLinearElement rhs)
-
     static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
         Constraint (lhs, Equal, rhs)
 
@@ -218,9 +161,6 @@ with
 
     static member (>==) (lhs:LinearExpression, rhs:Decision) =
         Constraint (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
-
-    static member (>==) (lhs:LinearExpression, rhs:LinearElement) =
-        Constraint (lhs, GreaterOrEqual, LinearExpression.OfLinearElement rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         Constraint (lhs, GreaterOrEqual, rhs)
@@ -279,7 +219,7 @@ module Objective =
 module Model =
 
     type Model = private {
-        _Objective : List<Objective>
+        _Objective : Objective
         _Constraints : List<Constraint>
         _Decisions : Map<DecisionName, Decision>
     } 
@@ -288,54 +228,65 @@ module Model =
         member public this.Constraints = this._Constraints
         member public this.Decisions = this._Decisions
 
-    let empty =
-        {
-            _Objective = []
-            _Constraints = []
-            _Decisions = Map.empty
-        }
+
+    let private getMismatchedDecisionTypesInSet(decisions:Set<Decision>) =
+        decisions
+        |> Set.toList
+        |> List.map (fun x -> x.Name, x.Type)
+        |> List.groupBy fst
+        |> List.map (fun (k, g) -> k, g |> Seq.map snd |> Set.ofSeq |> Set.count)
+        |> List.filter (fun (k, c) -> c > 1)
 
     let private existingDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         decisions
         |> Set.filter (fun n -> Map.containsKey n.Name decisionMap)
 
+
     let private newDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         decisions - (existingDecisions decisionMap decisions)
         |> Set.toList
+
 
     let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
         existingDecisions decisionMap decisions
         |> Set.filter (fun x -> decisionMap.[x.Name].Type <> x.Type)
 
+
     let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, Decision>) =
         Map.add decision.Name decision decisionMap
 
 
-    let addObjective (objective:Objective) (model:Model) =
-        // TODO Check that objective priority is not repeated
+    let create objective =
         let objectiveDecisions = LinearExpression.getDecisions objective.Expression
-        let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions objectiveDecisions
-        
-        if not (Set.isEmpty mismatchedDecisions) then
-            // TODO Make this error more informative
-            failwith "Cannot have Decisions with the same name of differnt type"
+        let mismatchedDecisionsInObjective = getMismatchedDecisionTypesInSet objectiveDecisions
 
-        let newDecisions = newDecisions model.Decisions objectiveDecisions
-        let newDecisionMap = (newDecisions |> List.map addToDecisionMap |> List.reduce (>>)) model.Decisions
+        if List.length mismatchedDecisionsInObjective > 0 then
+            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
-        { model with _Objective = [objective] @ model.Objectives; _Decisions = newDecisionMap }
+        let decisions = 
+            objectiveDecisions 
+            |> Set.toList 
+            |> List.map (fun x -> x.Name, x) 
+            |> Map.ofList
 
-    let addObjectives objectives model =
-        (objectives |> List.map addObjective |> List.reduce (>>)) model
+        {
+            _Objective = objective
+            _Constraints = []
+            _Decisions = decisions
+        }
 
 
     let addConstraint c (model:Model) =
         let decisions = Constraint.getDecisions c
+
+        let mismatchedWithinConstraint = getMismatchedDecisionTypesInSet decisions
+        if List.length mismatchedWithinConstraint > 0 then
+            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
+
         let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions decisions
-        
         if not (Set.isEmpty mismatchedDecisions) then
             // TODO Make this error more informative
-            failwith "Cannot have Decisions with the same name of differnt type"
+            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let newDecisions = newDecisions model.Decisions decisions
         let newDecisionMap = (newDecisions |> List.map addToDecisionMap |> List.reduce (>>)) model.Decisions
@@ -344,6 +295,24 @@ module Model =
 
     let addConstraints constraints model =
         (constraints |> List.map addConstraint |> List.reduce (>>)) model
+
+
+type Solution = {
+    DecisionResults : Map<DecisionName,float>
+    ObjectiveResults : Map<Objective,float>
+}
+
+type SolverType = | CBC
+
+
+type SolverSettings = {
+    SolverType : SolverType
+    MaxDuration : int64
+}
+
+type SolveResult =
+    | Optimal of Solution
+    | Suboptimal of string
 
 
 let inline (.*) (lhs, rhs) =

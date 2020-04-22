@@ -4,21 +4,7 @@
 open Google.OrTools.LinearSolver
 open Flips.Domain
 
-type Solution = {
-    DecisionResults : Map<DecisionName,float>
-    ObjectiveResults : Map<Objective,float>
-}
 
-type SolverType = | CBC
-
-type SolverSettings = {
-    SolverType : SolverType
-    MaxDuration : int64
-}
-
-type SolveResult =
-    | Optimal of Solution
-    | Suboptimal of string
 
 
 let private buildExpression (vars:Map<Decision,Variable>) (LinearExpression expr:LinearExpression) =
@@ -95,15 +81,6 @@ let private buildSolution (vars:Map<Decision, Variable>) (solver:Solver) (object
         ObjectiveResults = objectiveResults
     }
 
-let private addObjectiveSolutionAsConstraint (vars:Map<Decision, Variable>) (solver:Solver) (objective:Objective) =
-    let lhsExpr = buildExpression vars objective.Expression
-    let rhsExpr = (new LinearExpr()) + solver.Objective().BestBound()
-    let c = new Equality(lhsExpr, rhsExpr, true)
-    solver.Add(c)
-
-let private solveForObjective (vars:Map<Decision, Variable>) (objective:Objective)  (solver:Solver) =
-    setObjective vars objective solver
-    let result = solver.Solve()
 
 let solve (settings:SolverSettings) (model:Flips.Domain.Model.Model) =
     let solver = Solver.CreateSolver("MIP Solver", "CBC_MIXED_INTEGER_PROGRAMMING")
