@@ -122,7 +122,7 @@ let mapSlicingExample () =
         [for s in sources do
             for d in destinations ->
                 (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
-        |> Map.ofList
+        |> Map2D.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
@@ -131,7 +131,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the first
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            Map.sum (decisions.[*,*]) <== sourceMax.[source]
+            Map.sum (decisions.[source..source,*]) <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -141,7 +141,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the second
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            Map.sum (decisions.[(minSource, dest)..(maxSource, dest)]) <== destinationMax.[dest]
+            Map2D.sum (decisions.[(minSource, dest)..(maxSource, dest)]) <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints

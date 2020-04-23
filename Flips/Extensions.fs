@@ -42,12 +42,40 @@ type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
 
     member private this.Values = m
 
+    override this.ToString() =
+        sprintf "Map2D %O" this.Values
+
     member this.ContainsKey k =
         Map.containsKey k this.Values
 
     member this.Item
         with get(k) =
-            this.Values.[k]
+            this.Values.[k] 
+
+    member this.GetSlice (sk1 : _,
+                          lb2 : 'Key2 option,
+                          ub2 : 'Key2 option) = 
+                            let k2Check = getChecker lb2 ub2
+                            this.Values
+                            |> Map.filter (fun (k1, k2) _ -> k1 = sk1 && k2Check k2)
+                            |> Map2D
+
+    member this.GetSlice (lb1 : 'Key1 option,
+                          ub1 : 'Key1 option,
+                          sk2 : _) =
+                            let k1Check = getChecker lb1 ub1
+                            this.Values
+                            |> Map.filter (fun (k1, k2) _ -> k1Check k1 && k2 = sk2)
+
+    member this.GetSlice (lb1 : 'Key1 option,
+                          ub1 : 'Key1 option,
+                          lb2 : 'Key2 option,
+                          ub2 : 'Key2 option) =
+
+        let key1Check = getChecker lb1 ub1
+        let key2Check = getChecker lb2 ub2
+        
+        m |> Map.filter (fun (k1, k2) _ -> (key1Check k1) && (key2Check k2))
 
     static member inline (.*) (lhs:Map2D<_,_,_>, rhs:Map<_,_>) =
         lhs.Values
@@ -64,13 +92,18 @@ type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
         |> Map.filter (fun (k1, k2) _ -> rhs.ContainsKey (k1, k2))
         |> Map.map (fun (k1, k2) v -> v * rhs.[(k1, k2)])
 
+    static member toSeq (m:Map2D<_,_,_>) =
+        m.Values
+        |> Map.toSeq
 
-    member this.GetSlice (lb1 : 'Key1 option,
-                          ub1 : 'Key1 option,
-                          lb2 : 'Key2 option,
-                          ub2 : 'Key2 option) =
+    static member inline sum (m:Map2D<_,_,_>) =
+        m.Values
+        |> Map.toSeq
+        |> Seq.sumBy snd
 
-        let key1Check = getChecker lb1 ub1
-        let key2Check = getChecker lb2 ub2
-        
-        m |> Map.filter (fun (k1, k2) _ -> (key1Check k1) && (key2Check k2))
+
+module Map2D =
+
+    let ofList l =
+        l |> Map.ofList |> Map2D
+
