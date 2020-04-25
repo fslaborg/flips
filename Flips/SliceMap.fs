@@ -27,7 +27,7 @@ type Map1D<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
         with get(k) =
             this.Values.[k] 
 
-    member this.GetSlice (lb : 'Key option, ub : 'Key option) = 
+    member this.GetSlice (lb, ub) = 
         let check = getKeyCheck lb ub
         this.Values
         |> Map.filter (fun k _ -> check k)
@@ -54,7 +54,7 @@ module Map1D =
     let inline ofArray x =
         x |> Map.ofArray |> Map1D
 
-    let inline containsKey k (m:Map1D<_,_>) =
+    let containsKey k (m:Map1D<_,_>) =
         Map.containsKey k m.Values
 
 
@@ -67,35 +67,31 @@ type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
     member this.Item
         with get(k) =
             this.Values.[k] 
 
-    member this.GetSlice (sk1 : _,
-                          lb2 : 'Key2 option, ub2 : 'Key2 option) = 
-                            let k2Check = getKeyCheck lb2 ub2
-                            this.Values
-                            |> Map.filter (fun (k1, k2) _ -> k1 = sk1 && k2Check k2)
-                            |> Map.toSeq
-                            |> Seq.map (fun (k, v) -> snd k, v)
-                            |> Map1D.ofSeq
+    member this.GetSlice (sk1, lb2, ub2) = 
+        let k2Check = getKeyCheck lb2 ub2
+        this.Values
+        |> Map.filter (fun (k1, k2) _ -> k1 = sk1 && k2Check k2)
+        |> Map.toSeq
+        |> Seq.map (fun (k, v) -> snd k, v)
+        |> Map1D.ofSeq
 
-    member this.GetSlice (lb1 : 'Key1 option, ub1 : 'Key1 option, 
-                          sk2 : _) =
-                            let k1Check = getKeyCheck lb1 ub1
-                            this.Values
-                            |> Map.filter (fun (k1, k2) _ -> k1Check k1 && k2 = sk2)
-                            |> Map.toSeq
-                            |> Seq.map (fun (k, v) -> fst k, v)
-                            |> Map1D.ofSeq
+    member this.GetSlice (lb1, ub1, sk2) =
+        let k1Check = getKeyCheck lb1 ub1
+        this.Values
+        |> Map.filter (fun (k1, k2) _ -> k1Check k1 && k2 = sk2)
+        |> Map.toSeq
+        |> Seq.map (fun (k, v) -> fst k, v)
+        |> Map1D.ofSeq
 
-    member this.GetSlice (lb1 : 'Key1 option, ub1 : 'Key1 option,
-                          lb2 : 'Key2 option, ub2 : 'Key2 option) =
-
+    member this.GetSlice (lb1, ub1, lb2, ub2) =
         let key1Check = getKeyCheck lb1 ub1
         let key2Check = getKeyCheck lb2 ub2
-        
-        m 
+        this.Values
         |> Map.filter (fun (k1, k2) _ -> (key1Check k1) && (key2Check k2)) 
         |> Map2D
 
@@ -144,8 +140,8 @@ module Map2D =
     let ofArray m =
         m |> Map.ofArray |> Map2D
 
-    let inline sum (m:Map2D<_,_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
+    let containsKey k (m:Map2D<_,_,_>) =
+        Map.containsKey k m.Values
 
 
 type Map3D<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
@@ -243,7 +239,9 @@ type Map3D<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         |> Map3D
 
     static member inline (.*) (lhs, rhs:Map3D<_,_,_,_>) =
-        rhs .* lhs
+        rhs.Values
+        |> Map.map (fun _ v -> v * lhs)
+        |> Map3D
 
     static member inline (.*) (lhs:Map3D<_,_,_,_>, rhs:Map3D<_,_,_,_>) =
         lhs.Values
@@ -262,10 +260,13 @@ type Map3D<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 module Map3D =
 
     let ofList m =
-        m |> Map.ofList |> Map2D
+        m |> Map.ofList |> Map3D
 
     let ofSeq m =
-        m |> Map.ofSeq |> Map2D
+        m |> Map.ofSeq |> Map3D
 
     let ofArray m =
-        m |> Map.ofArray |> Map2D
+        m |> Map.ofArray |> Map3D
+
+    let containsKey k (m:Map3D<_,_,_,_>) =
+        Map.containsKey k m.Values
