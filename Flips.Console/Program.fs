@@ -3,7 +3,7 @@
 open System
 open Flips.Domain
 open Flips.Solve
-open Flips.Extensions
+open Flips.SliceMap
 
 
 let simpleModel () =
@@ -35,13 +35,13 @@ let constraintBuilderExample () =
     let destinations = ["a"; "b"; "c"]
     let destinationMax = Map.ofList ["a", 12.0; "b", 14.0; "c", 9.0]
 
-    let arcMax = Map.ofList [
+    let arcMax = Map2D.ofList [
         (1, "a"), 12.0; (1, "b"), 12.0; (1, "c"), 12.1; 
         (2, "a"), 13.0; (2, "b"), 11.0; (2, "c"), 12.3; 
         (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 
     ]
 
-    let arcValues = Map.ofList [
+    let arcValues = Map2D.ofList [
         (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
         (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
         (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
@@ -51,22 +51,21 @@ let constraintBuilderExample () =
         [for s in sources do
             for d in destinations ->
                 (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
-        |> Map.ofList
+        |> Map2D.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let sourceConstraints = ConstraintBuilder "SourceMax" {
         for source in sources ->
-            let sourceDecs = decisions |> Map.filter (fun (s, d) v -> s = source)
-            Map.sum (sourceDecs) <== sourceMax.[source]
+            //let sourceDecs = decisions |> Map.filter (fun (s, d) v -> s = source)
+            sum decisions.[source,*] <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let destinationConstraints = ConstraintBuilder "DestinationMax" {
         for dest in destinations ->
-            let destDecs = decisions |> Map.filter (fun (s, d) v -> d = dest)
-            Map.sum (destDecs) <== destinationMax.[dest]
+            sum decisions.[*,dest] <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -79,7 +78,7 @@ let constraintBuilderExample () =
 
     // Use combination of the `sum` function and the `.*` operator to perform an inner join
     // of two maps and calculate the product of the values for which there are matching keys
-    let objExpr = Map.sum (arcValues .* decisions)
+    let objExpr = sum (arcValues .* decisions)
     let objective = Objective.create "Max flow" Maximize objExpr
 
     let model =
@@ -131,7 +130,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the first
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            Map2D.sum (decisions.[source,*]) <== sourceMax.[source]
+            sum decisions.[source,*] <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -141,7 +140,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the second
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            Map2D.sum ( decisions.[*,dest] ) <== destinationMax.[dest]
+            sum decisions.[*,dest] <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -154,7 +153,7 @@ let mapSlicingExample () =
 
     // Use combination of the `sum` function and the `.*` operator to combine two Maps
     let x = arcValues .* decisions
-    let objExpr = Map2D.sum (arcValues .* decisions)
+    let objExpr = sum (arcValues .* decisions)
     let objective = Objective.create "Max flow" Maximize objExpr
 
     let model =

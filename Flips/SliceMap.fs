@@ -9,6 +9,10 @@ let inline private getKeyCheck lb ub =
     | None, None -> fun _ -> true
 
 
+let inline sum< ^a, ^b when ^a: (static member sum: ^a -> ^b)> (x: ^a) = 
+    ((^a) : (static member sum: ^a -> ^b) x)
+
+
 type Map1D<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
 
     member this.Values = m
@@ -35,6 +39,9 @@ type Map1D<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
         |> Map.map (fun k v -> v * rhs.[k])
         |> Map1D
 
+    static member inline sum (m:Map1D<_,_>) =
+        m.Values |> Map.toSeq |> Seq.sumBy snd
+
 
 module Map1D =
 
@@ -50,9 +57,6 @@ module Map1D =
     let inline containsKey k (m:Map1D<_,_>) =
         Map.containsKey k m.Values
 
-    let inline sum (m:Map1D<_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
-
 
 type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> (m:Map<('Key1 * 'Key2),'Value>) =
 
@@ -63,7 +67,6 @@ type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
-
     member this.Item
         with get(k) =
             this.Values.[k] 
@@ -122,14 +125,12 @@ type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
         |> Map.map (fun (k1, k2) v -> v * rhs.[(k1, k2)])
         |> Map2D
 
+    static member inline sum (m:Map2D<_,_,_>) =
+        m.Values |> Map.toSeq |> Seq.sumBy snd
+
     static member inline toSeq (m:Map2D<_,_,_>) =
         m.Values
         |> Map.toSeq
-
-    static member inline sum (m:Map2D<_,_,_>) =
-        m.Values
-        |> Map.toSeq
-        |> Seq.sumBy snd
 
 
 module Map2D =
@@ -250,14 +251,12 @@ type Map3D<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         |> Map.map (fun k v -> v * rhs.[k])
         |> Map3D
 
+    static member inline sum (m:Map3D<_,_,_,_>) =
+        m.Values |> Map.toSeq |> Seq.sumBy snd
+
     static member inline toSeq (m:Map2D<_,_,_>) =
         m.Values
         |> Map.toSeq
-
-    static member inline sum (m:Map2D<_,_,_>) =
-        m.Values
-        |> Map.toSeq
-        |> Seq.sumBy snd
 
 
 module Map3D =
