@@ -112,7 +112,7 @@ let mapSlicingExample () =
         (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 
     ]
 
-    let arcValues = Map.ofList [
+    let arcValues = Map2D.ofList [
         (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
         (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
         (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
@@ -131,7 +131,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the first
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            Map.sum (decisions.[source..source,*]) <== sourceMax.[source]
+            Map2D.sum (decisions.[source,*]) <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -141,7 +141,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the second
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            Map2D.sum (decisions.[(minSource, dest)..(maxSource, dest)]) <== destinationMax.[dest]
+            Map2D.sum ( decisions.[*,dest] ) <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -153,7 +153,8 @@ let mapSlicingExample () =
     }
 
     // Use combination of the `sum` function and the `.*` operator to combine two Maps
-    let objExpr = Map.sum (arcValues .* decisions)
+    let x = arcValues .* decisions
+    let objExpr = Map2D.sum (arcValues .* decisions)
     let objective = Objective.create "Max flow" Maximize objExpr
 
     let model =
