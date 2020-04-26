@@ -1,35 +1,25 @@
 #load "Domain.fs"
-#load "Solve.fs"
+//#load "Solve.fs"
+#load "FilterMap.fs"
 
 open System
 open Flips.Domain
-open Flips.Solve
+open Flips.FilterMap
 
-// let x = Decision.create (DecisionName "Chicken") DecisionType.Boolean
-// let e = 1.0 * x
-// let e2 = e + 2.0
-// let e3 = e2 + x
-// let badX = Decision.create (DecisionName "Chicken") (DecisionType.Integer (1.0, 2.0))
-// e3 + badX
+let f = FMap2.ofList [
+    (1, "a"), 12.0; (1, "b"), 12.0; (1, "c"), 12.1; 
+    (2, "a"), 13.0; (2, "b"), 11.0; (2, "c"), 12.3; 
+    (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 
+]
 
-// let x1 = Decision.createContinuous "x1" 0.0M Decimal.MaxValue
-// let x2 = Decision.createContinuous "x2" 0M Decimal.MaxValue
+//let x = .> "CHicken"
 
-// let objExpr = 2.0 * x1 + 3.0 * x2
-// let objective = Objective.create "Get big" Maximize objExpr
-// let model = 
-//     Model.create objective
-//     |> Model.addConstraint (x1 <== 10.0)
-//     |> Model.addConstraint (x2 <== 5.0)
-//     |> Model.addConstraint (x1 + x2 <== 8.0)
+//f.[1, "a"]
+f.[All, "a"]
+f.[All, GreaterThan "a"]
+f.[All, GTE "a"]
+f.[GT 2, "c"]
+f.[Equals 2, LT "b"]
+f.[All, All]
 
-// let settings = {
-//     SolverType = SolverType.CBC
-//     MaxDuration = 30_000L
-//     WriteLPFile = Some "Test.lp"
-// }
-
-// let r = solve settings model
-
-// let c2 = x2 <== 5.0
-// let c3 = x1 + x2 <== 8.0
+[1 .. 10].ToString()

@@ -3,7 +3,7 @@
 open System
 open Flips.Domain
 open Flips.Solve
-open Flips.FilterMap
+open Flips.SliceMap
 
 
 let simpleModel () =
@@ -35,13 +35,13 @@ let constraintBuilderExample () =
     let destinations = ["a"; "b"; "c"]
     let destinationMax = Map.ofList ["a", 12.0; "b", 14.0; "c", 9.0]
 
-    let arcMax = FMap2.ofList [
+    let arcMax = SMap2.ofList [
         (1, "a"), 12.0; (1, "b"), 12.0; (1, "c"), 12.1; 
         (2, "a"), 13.0; (2, "b"), 11.0; (2, "c"), 12.3; 
         (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 
     ]
 
-    let arcValues = FMap2.ofList [
+    let arcValues = SMap2.ofList [
         (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
         (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
         (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
@@ -51,7 +51,7 @@ let constraintBuilderExample () =
         [for s in sources do
             for d in destinations ->
                 (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
-        |> FMap2.ofList
+        |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
@@ -111,7 +111,7 @@ let mapSlicingExample () =
         (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 
     ]
 
-    let arcValues = FMap2.ofList [
+    let arcValues = SMap2.ofList [
         (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
         (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
         (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
@@ -121,7 +121,7 @@ let mapSlicingExample () =
         [for s in sources do
             for d in destinations ->
                 (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
-        |> FMap2.ofList
+        |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
