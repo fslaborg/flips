@@ -3,17 +3,50 @@
 // Declared here so it can be used by any of the MapXD types
 let inline private getKeyCheck lb ub =
     match lb, ub with
-    | Some lb, Some ub -> fun x -> x >= lb && x <= ub
-    | Some lb, None -> fun x -> x >= lb
-    | None, Some ub -> fun x -> x <= ub
+    | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
+    | Some lb, None -> fun k1 -> k1 >= lb
+    | None, Some ub -> fun k1 -> k1 <= ub
     | None, None -> fun _ -> true
 
+type AdditionDirection = | Left | Right
 
-let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (x: ^a) = 
-    ((^a) : (static member Sum: ^a -> ^b) x)
+let inline additionMerge (direction:AdditionDirection) (lhs:Map<_,_>) (rhs:Map<_,_>) =
+    let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
+    let adder = match direction with | Left -> (fun x y -> x + y) | Right -> (fun x y -> y + x)
+
+    lhs
+    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with | Some rhsV -> adder lhsV rhsV | None -> lhsV)
+    |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
+
+let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
+    ((^a) : (static member Sum: ^a -> ^b) k1)
+
+type SliceType<'a when 'a : comparison> =
+    | All
+    | Equals of 'a
+    | GreaterThan of 'a
+    | GreaterOrEqual of 'a
+    | LessThan of 'a
+    | LessOrEqual of 'a
+    | In of Set<'a>
+    | Between of 'a * 'a
+    | Where of ('a -> bool)
 
 
-type Map1D<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
+let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
+    match f with
+    | All -> fun _ -> true
+    | Equals k1 -> fun k2 -> k2 = k1
+    | GreaterThan k1 -> fun k2 -> k2 > k1
+    | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
+    | LessThan k1 -> fun k2 -> k2 < k1
+    | LessOrEqual k1 -> fun k2 -> k2 <= k1
+    | In k1 -> fun k2 -> Set.contains k2 k1
+    | Between (k1, k2) -> fun k3 -> k3 >= k1 && k3 <= k2
+    | Where k1 -> k1
+
+
+type SMap<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
 
     member this.Values = m
 
@@ -23,157 +56,174 @@ type Map1D<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
     member this.ContainsKey k =
         Map.containsKey k this.Values
 
+    // Filter Values
+    member private this.FilterValues k1f =
+        let k1Filter = SliceFilterBuilder k1f
+            
+        this.Values
+        |> Map.filter (fun k1 _ -> k1Filter k1 )
+        |> Map.toSeq
+
+    // Slices
+    // 1D
+    member this.Item
+        with get (k1f) =
+            this.FilterValues k1f |> Map.ofSeq |> SMap
+
+    // 0D (aka GetItem)
     member this.Item
         with get(k) =
             this.Values.[k] 
 
-    // 1D Slice
-    member this.GetSlice (lb, ub) = 
-        let check = getKeyCheck lb ub
-        this.Values
-        |> Map.filter (fun k _ -> check k)
-        |> Map1D
-
     // Operators
-    static member inline (*) (lhs, rhs:Map1D<_,_>) =
+    static member inline (*) (lhs, rhs:SMap<_,_>) =
         rhs.Values
         |> Map.map (fun _ v -> lhs * v)
-        |> Map1D
+        |> SMap
 
-    static member inline (*) (lhs:Map1D<_,_>, rhs) =
+    static member inline (*) (lhs:SMap<_,_>, rhs) =
         lhs.Values
         |> Map.map (fun _ v -> rhs * v)
-        |> Map1D
+        |> SMap
 
-    static member inline (.*) (lhs:Map1D<_,_>, rhs:Map1D<_,_>) =
+    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
         |> Map.map (fun k v -> v * rhs.[k])
-        |> Map1D
+        |> SMap
 
-    static member inline Sum (m:Map1D<_,_>) =
+    static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
+        match Map.count lhs.Values > Map.count rhs.Values with
+        | true ->  additionMerge Left lhs.Values rhs.Values
+        | false -> additionMerge Right rhs.Values lhs.Values
+        |> SMap
+
+    static member inline Sum (m:SMap<_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
 
 
-module Map1D =
+module SMap =
 
     let ofList m =
-        m |> Map.ofList |> Map1D
+        m |> Map.ofList |> SMap
 
-    let toList (m:Map1D<_,_>) =
+    let toList (m:SMap<_,_>) =
         m.Values |> Map.toList
 
     let ofSeq m =
-        m |> Map.ofSeq |> Map1D
+        m |> Map.ofSeq |> SMap
 
-    let toSeq (m:Map1D<_,_>) =
+    let toSeq (m:SMap<_,_>) =
         m.Values |> Map.toSeq
 
     let ofArray m =
-        m |> Map.ofArray |> Map1D
+        m |> Map.ofArray |> SMap
 
-    let toArray (m:Map1D<_,_>) =
+    let toArray (m:SMap<_,_>) =
         m.Values |> Map.toArray
 
-    let containsKey k (m:Map1D<_,_>) =
+    let containsKey k (m:SMap<_,_>) =
         Map.containsKey k m.Values
 
 
-type Map2D<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> (m:Map<('Key1 * 'Key2),'Value>) =
+type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> (m:Map<('Key1 * 'Key2),'Value>) =
 
     member this.Values = m
 
-    override this.ToString() =
+    override this.ToString () = 
         sprintf "Map2D %O" this.Values
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
 
+    // Filter Values
+    member private this.FilterValues k1f k2f =
+        let k1Filter = SliceFilterBuilder k1f
+        let k2Filter = SliceFilterBuilder k2f
+        
+        this.Values
+        |> Map.filter (fun (k1, k2) _ -> k1Filter k1 && k2Filter k2)
+        |> Map.toSeq
+
+    // Slices
+    // 2D
     member this.Item
-        with get(k) =
-            this.Values.[k] 
+        with get (k1f, k2f) =
+            this.FilterValues k1f k2f |> Map.ofSeq |> SMap2
 
-    // 1D Slices
-    member this.GetSlice (sk1, lb2, ub2) = 
-        let k2Check = getKeyCheck lb2 ub2
-        this.Values
-        |> Map.filter (fun (k1, k2) _ -> k1 = sk1 && k2Check k2)
-        |> Map.toSeq
-        |> Seq.map (fun (k, v) -> snd k, v)
-        |> Map1D.ofSeq
+    // 1D
+    member this.Item
+        with get (k1, k2f) =
+            this.FilterValues (Equals k1) k2f 
+            |> Seq.map (fun ((_, k2), v) -> k2, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    member this.GetSlice (lb1, ub1, sk2) =
-        let k1Check = getKeyCheck lb1 ub1
-        this.Values
-        |> Map.filter (fun (k1, k2) _ -> k1Check k1 && k2 = sk2)
-        |> Map.toSeq
-        |> Seq.map (fun (k, v) -> fst k, v)
-        |> Map1D.ofSeq
+    member this.Item
+        with get (k1f, k2) =
+            this.FilterValues k1f (Equals k2)
+            |> Seq.map (fun ((k1, _), v) -> k1, v)
+            |> Map.ofSeq
+            |> SMap
 
-    // 2D Slice
-    member this.GetSlice (lb1, ub1, lb2, ub2) =
-        let key1Check = getKeyCheck lb1 ub1
-        let key2Check = getKeyCheck lb2 ub2
-        this.Values
-        |> Map.filter (fun (k1, k2) _ -> (key1Check k1) && (key2Check k2)) 
-        |> Map2D
+    // 0D (aka GetItem)
+    member this.Item
+        with get(k1, k2) =
+            this.Values.[(k1, k2)]
 
     // Operators
-    static member inline (*) (lhs, rhs:Map1D<_,_>) =
+    static member inline (*) (lhs, rhs:SMap2<_,_,_>) =
         rhs.Values
         |> Map.map (fun _ v -> v * lhs)
-        |> Map1D
+        |> SMap
 
-    static member inline (*) (lhs:Map1D<_,_>, rhs) =
-        rhs * lhs
-
-    static member inline (.*) (lhs:Map2D<_,_,_>, rhs:Map1D<_,_>) =
+    static member inline (*) (lhs:SMap2<_,_,_>, rhs) =
         lhs.Values
-        |> Map.filter (fun (_, k2) _ -> Map1D.containsKey k2 rhs)
-        |> Map.map (fun (_, k2) v -> v * rhs.[k2])
-        |> Map2D
+        |> Map.map (fun _ v -> v * rhs)
+        |> SMap
 
-    static member inline (.*) (lhs:Map1D<_,_>, rhs:Map2D<_,_,_>) =
-        rhs.Values
-        |> Map.filter (fun (k1, _) _ -> Map1D.containsKey k1 lhs)
-        |> Map.map (fun (k1, _) v -> v * lhs.[k1])
-        |> Map2D
-
-    static member inline (.*) (lhs:Map2D<_,_,_>, rhs:Map2D<_,_,_>) =
+    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
+        let rhs = rhs.Values
         lhs.Values
         |> Map.filter (fun (k1, k2) _ -> rhs.ContainsKey (k1, k2))
         |> Map.map (fun (k1, k2) v -> v * rhs.[(k1, k2)])
-        |> Map2D
+        |> SMap2
 
-    static member inline Sum (m:Map2D<_,_,_>) =
+    static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
+        match Map.count lhs.Values > Map.count rhs.Values with
+        | true ->  additionMerge Left lhs.Values rhs.Values
+        | false -> additionMerge Right rhs.Values lhs.Values
+        |> SMap2
+
+    static member inline Sum (m:SMap2<_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
 
 
-module Map2D =
+module SMap2 =
 
     let ofList m =
-        m |> Map.ofList |> Map2D
+        m |> Map.ofList |> SMap2
 
-    let toList (m:Map2D<_,_,_>) =
+    let toList (m:SMap2<_,_,_>) =
         m.Values |> Map.toList
 
     let ofSeq m =
-        m |> Map.ofSeq |> Map2D
+        m |> Map.ofSeq |> SMap2
 
-    let toSeq (m:Map2D<_,_,_>) =
+    let toSeq (m:SMap2<_,_,_>) =
         m.Values |> Map.toSeq
 
     let ofArray m =
-        m |> Map.ofArray |> Map2D
+        m |> Map.ofArray |> SMap2
 
-    let toArray (m:Map2D<_,_,_>) =
+    let toArray (m:SMap2<_,_,_>) =
         m.Values |> Map.toArray
 
-    let containsKey k (m:Map2D<_,_,_>) =
+    let containsKey k (m:SMap2<_,_,_>) =
         Map.containsKey k m.Values
 
 
-type Map3D<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
+type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
 
     member this.Values = m
 
@@ -183,124 +233,124 @@ type Map3D<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     member this.ContainsKey k =
         Map.containsKey k this.Values
 
+    // Filter Values
+    member private this.FilterValues k1f k2f k3f =
+        let k1Filter = SliceFilterBuilder k1f
+        let k2Filter = SliceFilterBuilder k2f
+        let k3Filter = SliceFilterBuilder k3f
+        
+        this.Values
+        |> Map.filter (fun (k1, k2, k3) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3)
+        |> Map.toSeq
+
+    // Slices
+    // 3D
     member this.Item
-        with get(k) =
-            this.Values.[k] 
+        with get (k1f, k2f, k3f) =
+            this.FilterValues k1f k2f k3f |> Map.ofSeq |> SMap3
 
-    // 1D Slices
-    member this.GetSlice (lb1, ub1, sk2, sk3) = 
-        let k1Check = getKeyCheck lb1 ub1
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1Check k1 && k2 = sk2 && k3 = sk3)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, _, _), v) -> k1, v )
-        |> Map.ofSeq
-        |> Map1D
+    // 2D
+    member this.Item
+        with get (k1, k2f, k3f) =
+            this.FilterValues (Equals k1) k2f k3f
+            |> Seq.map (fun ((k1, k2, k3), v) -> (k2, k3), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    member this.GetSlice (sk1, lb2, ub2, sk3) = 
-        let k2Check = getKeyCheck lb2 ub2
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1 = sk1 && k2Check k2 && k3 = sk3)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, k2, _), v) -> k2, v )
-        |> Map.ofSeq
-        |> Map1D
+    member this.Item
+        with get (k1f, k2, k3f) =
+            this.FilterValues k1f (Equals k2) k3f
+            |> Seq.map (fun ((k1, k2, k3), v) -> (k1, k3), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    member this.GetSlice (sk1, sk2, lb3, ub3) = 
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1 = sk1 && k2 = sk2 && k3Check k3)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, _, k3), v) -> k3, v )
-        |> Map.ofSeq
-        |> Map1D
+    member this.Item
+        with get (k1f, k2f, k3) =
+            this.FilterValues k1f k2f (Equals k3)
+            |> Seq.map (fun ((k1, k2, k3), v) -> (k1, k2), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    // 2D Slices
-    member this.GetSlice (sk1, lb2, ub2, lb3, ub3) = 
-        let k2Check = getKeyCheck lb2 ub2
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1 = sk1 && k2Check k2 && k3Check k3)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, k2, k3), v) -> (k2, k3), v )
-        |> Map.ofSeq
-        |> Map2D
+    // 1D
+    member this.Item
+        with get (k1, k2, k3f) =
+            this.FilterValues (Equals k1) (Equals k2) k3f
+            |> Seq.map (fun ((k1, k2, k3), v) -> k3, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    member this.GetSlice (lb1, ub1, sk2, lb3, ub3) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1Check k1 && k2 = sk2 && k3Check k3)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, _, k3), v) -> (k1, k3), v)
-        |> Map.ofSeq
-        |> Map2D
+    member this.Item
+        with get (k1, k2f, k3) =
+            this.FilterValues (Equals k1) k2f (Equals k3)
+            |> Seq.map (fun ((k1, k2, k3), v) -> k2, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    member this.GetSlice (lb1, ub1, lb2, ub2, sk3) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k2Check = getKeyCheck lb2 ub2
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1Check k1 && k2Check k2 && k3 = sk3)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, k2, _), v) -> (k1, k2), v)
-        |> Map.ofSeq
-        |> Map2D
+    member this.Item
+        with get (k1f, k2, k3) =
+            this.FilterValues k1f (Equals k2) (Equals k3)
+            |> Seq.map (fun ((k1, k2, k3), v) -> k1, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    // 3D Slice
-    member this.GetSlice (lb1, ub1, lb2, ub2, lb3, ub3) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k2Check = getKeyCheck lb2 ub2
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1Check k1 && k2Check k2 && k3Check k3)
-        |> Map3D
+    // 0D (aka GetItem)
+    member this.Item
+        with get(k1, k2, k3) =
+            this.Values.[(k1, k2, k3)] 
 
     // Operators
-    static member inline (*) (lhs, rhs:Map3D<_,_,_,_>) =
+    static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
         rhs.Values
         |> Map.map (fun k v -> lhs * v)
-        |> Map3D
+        |> SMap3
 
-    static member inline (*) (lhs:Map3D<_,_,_,_>, rhs) =
+    static member inline (*) (lhs:SMap3<_,_,_,_>, rhs) =
         lhs.Values
-        |> Map.map (fun _ v -> v * rhs)
-        |> Map3D
+        |> Map.map (fun k v -> rhs * v)
+        |> SMap3
 
-    static member inline (.*) (lhs:Map3D<_,_,_,_>, rhs:Map3D<_,_,_,_>) =
+
+    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun k v -> v * rhs.[k])
-        |> Map3D
+        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k1, k2, k3])
+        |> SMap3
 
-    static member inline Sum (m:Map3D<_,_,_,_>) =
+    static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
+        match Map.count lhs.Values > Map.count rhs.Values with
+        | true ->  additionMerge Left lhs.Values rhs.Values
+        | false -> additionMerge Right rhs.Values lhs.Values
+        |> SMap3
+
+    static member inline Sum (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
 
 
-module Map3D =
+module SMap3 =
 
     let ofList m =
-        m |> Map.ofList |> Map3D
+        m |> Map.ofList |> SMap3
 
-    let toList (m:Map3D<_,_,_,_>) =
+    let toList (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toList
 
     let ofSeq m =
-        m |> Map.ofSeq |> Map3D
+        m |> Map.ofSeq |> SMap3
 
-    let toSeq (m:Map3D<_,_,_,_>) =
+    let toSeq (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toSeq
 
     let ofArray m =
-        m |> Map.ofArray |> Map3D
+        m |> Map.ofArray |> SMap3
 
-    let toArray (m:Map3D<_,_,_,_>) =
+    let toArray (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toArray
 
-    let containsKey k (m:Map3D<_,_,_,_>) =
+    let containsKey k (m:SMap3<_,_,_,_>) =
         Map.containsKey k m.Values
 
 
-type Map4D<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
+type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
 
     member this.Values = m
 
@@ -310,193 +360,168 @@ type Map4D<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
     member this.ContainsKey k =
         Map.containsKey k this.Values
 
+    // Filter Values
+    member private this.FilterValues k1f k2f k3f k4f =
+        let k1Filter = SliceFilterBuilder k1f
+        let k2Filter = SliceFilterBuilder k2f
+        let k3Filter = SliceFilterBuilder k3f
+        let k4Filter = SliceFilterBuilder k4f
+        
+        this.Values
+        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4)
+        |> Map.toSeq
+
+    // Slices
+    // 4D
     member this.Item
-        with get(k) =
-            this.Values.[k] 
+        with get (k1f, k2f, k3f, k4f) =
+            this.FilterValues k1f k2f k3f k4f |> Map.ofSeq |> SMap4
 
-    // 1D Slices
-    member this.GetSlice (lb1, ub1, sk2, sk3, sk4) = 
-        let k1Check = getKeyCheck lb1 ub1
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2 = sk2 && k3 = sk3 && k4 = sk4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, _, _, _), v) -> k1, v )
-        |> Map.ofSeq
-        |> Map1D
+    // 3D
+    member this.Item
+        with get (k1, k2f, k3f, k4f) =
+            this.FilterValues (Equals k1) k2f k3f k4f
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k2, k3, k4), v) 
+            |> Map.ofSeq 
+            |> SMap3
 
-    member this.GetSlice (sk1, lb2, ub2, sk3, sk4) = 
-        let k2Check = getKeyCheck lb2 ub2
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1 = sk1 && k2Check k2 && k3 = sk3 && k4 = sk4)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, k2, _, _), v) -> k2, v )
-        |> Map.ofSeq
-        |> Map1D
+    member this.Item
+        with get (k1f, k2, k3f, k4f) =
+            this.FilterValues k1f (Equals k2) k3f k4f
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k3, k4), v) 
+            |> Map.ofSeq 
+            |> SMap3
 
-    member this.GetSlice (sk1, sk2, lb3, ub3, sk4) = 
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1 = sk1 && k2 = sk2 && k3Check k3 && k4 = sk4)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, _, k3, _), v) -> k3, v )
-        |> Map.ofSeq
-        |> Map1D
+    member this.Item
+        with get (k1f, k2f, k3, k4f) =
+            this.FilterValues k1f k2f (Equals k3) k4f
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k4), v) 
+            |> Map.ofSeq 
+            |> SMap3
 
-    member this.GetSlice (sk1, sk2, sk3, lb4, ub4) = 
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1 = sk1 && k2 = sk2 && k3 = sk3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, _, _, k4), v) -> k4, v )
-        |> Map.ofSeq
-        |> Map1D
+    member this.Item
+        with get (k1f, k2f, k3f, k4) =
+            this.FilterValues k1f k2f k3f (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) 
+            |> Map.ofSeq 
+            |> SMap3
 
-    // 2D Slices
-    member this.GetSlice (sk1, sk2, lb3, ub3, lb4, ub4) = 
-        let k3Check = getKeyCheck lb3 ub3
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1 = sk1 && k2 = sk2 && k3Check k3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, _, k3, k4), v) -> (k3, k4), v )
-        |> Map.ofSeq
-        |> Map2D
+    // 2D
+    member this.Item
+        with get (k1, k2, k3f, k4f) =
+            this.FilterValues (Equals k1) (Equals k2) k3f k4f
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    member this.GetSlice (sk1, lb2, ub2, sk3, lb4, ub4) = 
-        let k2Check = getKeyCheck lb2 ub2
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1 = sk1 && k2Check k2 && k3 = sk3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, k2, _, k4), v) -> (k2, k4), v )
-        |> Map.ofSeq
-        |> Map2D
+    member this.Item
+        with get (k1, k2f, k3, k4f) =
+            this.FilterValues (Equals k1) k2f (Equals k3) k4f
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k2, k4), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    member this.GetSlice (lb1, ub1, sk2, sk3, lb4, ub4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2 = sk2 && k3 = sk3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, _, _, k4), v) -> (k1, k4), v)
-        |> Map.ofSeq
-        |> Map2D
+    member this.Item
+        with get (k1, k2f, k3f, k4) =
+            this.FilterValues (Equals k1) k2f k3f (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    member this.GetSlice (lb1, ub1, sk2, lb3, ub3, sk4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2 = sk2 && k3Check k3 && k4 = sk4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, _, k3, _), v) -> (k1, k3), v)
-        |> Map.ofSeq
-        |> Map2D
+    member this.Item
+        with get (k1f, k2, k3f, k4) =
+            this.FilterValues k1f (Equals k2) k3f (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k3), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    member this.GetSlice (lb1, ub1, lb2, ub2, sk3, sk4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k2Check = getKeyCheck lb2 ub2
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2Check k2 && k3 = sk3 && k4 = sk4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, k2, _, _), v) -> (k1, k2), v)
-        |> Map.ofSeq
-        |> Map2D
+    member this.Item
+        with get (k1f, k2f, k3, k4) =
+            this.FilterValues k1f k2f (Equals k3) (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) 
+            |> Map.ofSeq 
+            |> SMap2
 
-    // 3D Slices
-    member this.GetSlice (lb1, ub1, lb2, ub2, lb3, ub3, sk4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k2Check = getKeyCheck lb2 ub2
-        let k3Check = getKeyCheck lb3 ub3
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2Check k2 && k3Check k3 && k4 = sk4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, k2, k3, _), v) -> (k1, k2, k3), v)
-        |> Map.ofSeq
-        |> Map3D
+    // 1D
+    member this.Item
+        with get (k1, k2, k3, k4f) =
+            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k4, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    member this.GetSlice (lb1, ub1, lb2, ub2, sk3, lb4, ub4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k2Check = getKeyCheck lb2 ub2
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2Check k2 && k3 = sk3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, k2, _, k4), v) -> (k1, k2, k4), v)
-        |> Map.ofSeq
-        |> Map3D
+    member this.Item
+        with get (k1, k2, k3f, k4) =
+            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k3, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    member this.GetSlice (lb1, ub1, sk2, lb3, ub3, lb4, ub4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k3Check = getKeyCheck lb3 ub3
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2 = sk2 && k3Check k3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((k1, _, k3, k4), v) -> (k1, k3, k4), v)
-        |> Map.ofSeq
-        |> Map3D
+    member this.Item
+        with get (k1, k2f, k3, k4) =
+            this.FilterValues (Equals k1) k2f (Equals k3) (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k2, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    member this.GetSlice (sk1, lb2, ub2, lb3, ub3, lb4, ub4) =
-        let k2Check = getKeyCheck lb2 ub2
-        let k3Check = getKeyCheck lb3 ub3
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1 = sk1 && k2Check k2 &&  k3Check k3 && k4Check k4)
-        |> Map.toSeq
-        |> Seq.map (fun ((_, k2, k3, k4), v) -> (k2, k3, k4), v)
-        |> Map.ofSeq
-        |> Map3D
+    member this.Item
+        with get (k1f, k2, k3, k4) =
+            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) 
+            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k1, v) 
+            |> Map.ofSeq 
+            |> SMap
 
-    // 4D Slice
-    member this.GetSlice (lb1, ub1, lb2, ub2, lb3, ub3, lb4, ub4) =
-        let k1Check = getKeyCheck lb1 ub1
-        let k2Check = getKeyCheck lb2 ub2
-        let k3Check = getKeyCheck lb3 ub3
-        let k4Check = getKeyCheck lb4 ub4
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Check k1 && k2Check k2 && k3Check k3 && k4Check k4)
-        |> Map4D
+    // 0D (aka GetItem)
+    member this.Item
+        with get(k1, k2, k3, k4) =
+            this.Values.[k1, k2, k3, k4] 
 
     // Operators
-    static member inline (*) (lhs, rhs:Map4D<_,_,_,_,_>) =
+    static member inline (*) (lhs, rhs:SMap4<_,_,_,_,_>) =
         rhs.Values
         |> Map.map (fun k v -> lhs * v)
-        |> Map4D
+        |> SMap4
 
-    static member inline (*) (lhs:Map4D<_,_,_,_,_>, rhs) =
+    static member inline (*) (lhs:SMap4<_,_,_,_,_>, rhs) =
         lhs.Values
-        |> Map.map (fun _ v -> v * rhs)
-        |> Map4D
+        |> Map.map (fun k v -> rhs * v)
+        |> SMap4
 
-    static member inline (.*) (lhs:Map4D<_,_,_,_,_>, rhs:Map4D<_,_,_,_,_>) =
+    static member inline (.*) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun k v -> v * rhs.[k])
-        |> Map4D
+        |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
+        |> SMap4
 
-    static member inline Sum (m:Map4D<_,_,_,_,_>) =
+    static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
+        match Map.count lhs.Values > Map.count rhs.Values with
+        | true ->  additionMerge Left lhs.Values rhs.Values
+        | false -> additionMerge Right rhs.Values lhs.Values
+        |> SMap3
+
+    static member inline Sum (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
 
 
-module Map4D =
+module SMap4 =
 
     let ofList m =
-        m |> Map.ofList |> Map4D
+        m |> Map.ofList |> SMap4
 
-    let toList (m:Map4D<_,_,_,_,_>) =
+    let toList (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toList
 
     let ofSeq m =
-        m |> Map.ofSeq |> Map4D
+        m |> Map.ofSeq |> SMap4
 
-    let toSeq (m:Map4D<_,_,_,_,_>) =
+    let toSeq (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toSeq
 
     let ofArray m =
-        m |> Map.ofArray |> Map3D
+        m |> Map.ofArray |> SMap3
 
-    let toArray (m:Map4D<_,_,_,_,_>) =
+    let toArray (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toArray
 
-    let containsKey k (m:Map4D<_,_,_,_,_>) =
+    let containsKey k (m:SMap4<_,_,_,_,_>) =
         Map.containsKey k m.Values
