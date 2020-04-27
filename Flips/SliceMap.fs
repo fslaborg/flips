@@ -8,9 +8,9 @@ let inline private getKeyCheck lb ub =
     | None, Some ub -> fun k1 -> k1 <= ub
     | None, None -> fun _ -> true
 
-type private AdditionDirection = | Left | Right
+type AdditionDirection = | Left | Right
 
-let inline private additionMerge (direction:AdditionDirection) (lhs:Map<_,_>) (rhs:Map<_,_>) =
+let inline additionMerge (direction:AdditionDirection) (lhs:Map<_,_>) (rhs:Map<_,_>) =
     let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
     let adder = match direction with | Left -> (fun x y -> x + y) | Right -> (fun x y -> y + x)
 

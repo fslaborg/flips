@@ -58,14 +58,14 @@ let constraintBuilderExample () =
     let sourceConstraints = ConstraintBuilder "SourceMax" {
         for source in sources ->
             //let sourceDecs = decisions |> Map.filter (fun (s, d) v -> s = source)
-            sum decisions.[source,*] <== sourceMax.[source]
+            sum decisions.[source, All] <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let destinationConstraints = ConstraintBuilder "DestinationMax" {
         for dest in destinations ->
-            sum decisions.[*,dest] <== destinationMax.[dest]
+            sum decisions.[All, dest] <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -73,7 +73,7 @@ let constraintBuilderExample () =
     let arcConstraints = ConstraintBuilder "ArcMax" {
         for source in sources do
             for dest in destinations ->
-                decisions.[(source, dest)] <== arcMax.[(source, dest)]
+                decisions.[source, dest] <== arcMax.[source, dest]
     }
 
     // Use combination of the `sum` function and the `.*` operator to perform an inner join
@@ -130,7 +130,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the first
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            sum decisions.[source,*] <== sourceMax.[source]
+            sum decisions.[source, All] <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -140,7 +140,7 @@ let mapSlicingExample () =
             // Here we are using the ability to slice the Map across the second
             // dimentions of the 2D Tuple index
             // Slicing is coming from the Extensions module
-            sum decisions.[*,dest] <== destinationMax.[dest]
+            sum decisions.[All, dest] <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -148,7 +148,7 @@ let mapSlicingExample () =
     let arcConstraints = ConstraintBuilder "ArcMax" {
         for source in sources do
             for dest in destinations ->
-                decisions.[(source, dest)] <== arcMax.[(source, dest)]
+                decisions.[source, dest] <== arcMax.[(source, dest)]
     }
 
     // Use combination of the `sum` function and the `.*` operator to combine two Maps
