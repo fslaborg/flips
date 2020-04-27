@@ -4,9 +4,9 @@
 
 open System
 open Flips.Domain
-open Flips.FilterMap
+open Flips.SliceMap
 
-let f = FMap2.ofList [
+let f = SMap2.ofList [
     (1, "a"), 12.0; (1, "b"), 12.0; (1, "c"), 12.1; 
     (2, "a"), 13.0; (2, "b"), 11.0; (2, "c"), 12.3; 
     (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 

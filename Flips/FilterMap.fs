@@ -80,9 +80,7 @@ type SMap<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
         |> SMap
 
     static member inline (*) (lhs:SMap<_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun _ v -> rhs * v)
-        |> SMap
+        rhs * lhs
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         lhs.Values
@@ -164,12 +162,12 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
             this.Values.[k] 
 
     // Operators
-    static member inline (*) (lhs, rhs:SMap<_,_>) =
+    static member inline (*) (lhs, rhs:SMap2<_,_,_>) =
         rhs.Values
         |> Map.map (fun _ v -> v * lhs)
         |> SMap
 
-    static member inline (*) (lhs:SMap<_,_>, rhs) =
+    static member inline (*) (lhs:SMap2<_,_,_>, rhs) =
         rhs * lhs
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
@@ -295,16 +293,42 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
             this.Values.[k] 
 
     // Operators
+    // 0D
     static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
         rhs.Values
         |> Map.map (fun k v -> lhs * v)
         |> SMap3
 
     static member inline (*) (lhs:SMap3<_,_,_,_>, rhs) =
+        rhs * lhs
+
+    // 1D
+    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap<_,_>) =
         lhs.Values
-        |> Map.map (fun _ v -> v * rhs)
+        |> Map.filter (fun (k1, k2, k3) _ -> rhs.ContainsKey k3)
+        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k3])
         |> SMap3
 
+    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap3<_,_,_,_>) =
+        rhs.Values
+        |> Map.filter (fun (k1, k2, k3) _ -> lhs.ContainsKey k1)
+        |> Map.map (fun (k1, k2, k3) v -> v * lhs.[k1])
+        |> SMap3
+
+    // 2D
+    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap2<_,_,_>) =
+        lhs.Values
+        |> Map.filter (fun (k1, k2, k3) _ -> rhs.ContainsKey (k2, k3))
+        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[(k2, k3)])
+        |> SMap3
+
+    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap3<_,_,_,_>) =
+        rhs.Values
+        |> Map.filter (fun (k1, k2, k3) _ -> lhs.ContainsKey (k1, k2))
+        |> Map.map (fun (k1, k2, k3) v -> v * lhs.[(k1, k2)])
+        |> SMap3
+
+    // 3D
     static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
