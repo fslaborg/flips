@@ -1,6 +1,6 @@
 #load "Domain.fs"
 //#load "Solve.fs"
-#load "FilterMap.fs"
+#load "SliceMap.fs"
 
 open System
 open Flips.Domain
