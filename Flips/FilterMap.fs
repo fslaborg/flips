@@ -23,13 +23,6 @@ type SliceType<'a when 'a : comparison> =
     | Between of 'a * 'a
     | Where of ('a -> bool)
 
-let GT k1 = GreaterThan k1
-let GTE k1 = GreaterOrEqual k1
-let LT k1 = LessThan k1
-let LTE k1 = LessOrEqual k1
-let IN k1 = In k1
-let BTWN k1 k2 = Between (k1, k2)
-let WHERE k1 = Where k1
 
 let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
     match f with
@@ -170,18 +163,6 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
     static member inline (*) (lhs:SMap2<_,_,_>, rhs) =
         rhs * lhs
 
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
-        lhs.Values
-        |> Map.filter (fun (_, k2) _ -> SMap.containsKey k2 rhs)
-        |> Map.map (fun (_, k2) v -> v * rhs.[k2])
-        |> SMap2
-
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
-        rhs.Values
-        |> Map.filter (fun (k1, _) _ -> SMap.containsKey k1 lhs)
-        |> Map.map (fun (k1, _) v -> v * lhs.[k1])
-        |> SMap2
-
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         let rhs = rhs.Values
         lhs.Values
@@ -293,7 +274,6 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
             this.Values.[k] 
 
     // Operators
-    // 0D
     static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
         rhs.Values
         |> Map.map (fun k v -> lhs * v)
@@ -302,33 +282,6 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     static member inline (*) (lhs:SMap3<_,_,_,_>, rhs) =
         rhs * lhs
 
-    // 1D
-    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap<_,_>) =
-        lhs.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> rhs.ContainsKey k3)
-        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k3])
-        |> SMap3
-
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap3<_,_,_,_>) =
-        rhs.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> lhs.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3) v -> v * lhs.[k1])
-        |> SMap3
-
-    // 2D
-    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap2<_,_,_>) =
-        lhs.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> rhs.ContainsKey (k2, k3))
-        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[(k2, k3)])
-        |> SMap3
-
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap3<_,_,_,_>) =
-        rhs.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> lhs.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3) v -> v * lhs.[(k1, k2)])
-        |> SMap3
-
-    // 3D
     static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
@@ -496,9 +449,7 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         |> SMap4
 
     static member inline (*) (lhs:SMap4<_,_,_,_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun _ v -> v * rhs)
-        |> SMap4
+        rhs * lhs
 
     static member inline (.*) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
         lhs.Values
