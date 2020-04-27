@@ -82,7 +82,9 @@ type SMap<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
         |> SMap
 
     static member inline (*) (lhs:SMap<_,_>, rhs) =
-        rhs * lhs
+        lhs.Values
+        |> Map.map (fun _ v -> rhs * v)
+        |> SMap
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         lhs.Values
@@ -166,8 +168,8 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
 
     // 0D (aka GetItem)
     member this.Item
-        with get(k) =
-            this.Values.[k] 
+        with get(k1, k2) =
+            this.Values.[(k1, k2)]
 
     // Operators
     static member inline (*) (lhs, rhs:SMap2<_,_,_>) =
@@ -176,7 +178,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
         |> SMap
 
     static member inline (*) (lhs:SMap2<_,_,_>, rhs) =
-        rhs * lhs
+        lhs.Values
+        |> Map.map (fun _ v -> v * rhs)
+        |> SMap
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         let rhs = rhs.Values
@@ -291,8 +295,8 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     // 0D (aka GetItem)
     member this.Item
-        with get(k) =
-            this.Values.[k] 
+        with get(k1, k2, k3) =
+            this.Values.[(k1, k2, k3)] 
 
     // Operators
     static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
@@ -301,12 +305,15 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         |> SMap3
 
     static member inline (*) (lhs:SMap3<_,_,_,_>, rhs) =
-        rhs * lhs
+        lhs.Values
+        |> Map.map (fun k v -> rhs * v)
+        |> SMap3
+
 
     static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun k v -> v * rhs.[k])
+        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k1, k2, k3])
         |> SMap3
 
     static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
@@ -466,8 +473,8 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     // 0D (aka GetItem)
     member this.Item
-        with get(k) =
-            this.Values.[k] 
+        with get(k1, k2, k3, k4) =
+            this.Values.[k1, k2, k3, k4] 
 
     // Operators
     static member inline (*) (lhs, rhs:SMap4<_,_,_,_,_>) =
@@ -476,12 +483,14 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         |> SMap4
 
     static member inline (*) (lhs:SMap4<_,_,_,_,_>, rhs) =
-        rhs * lhs
+        lhs.Values
+        |> Map.map (fun k v -> rhs * v)
+        |> SMap4
 
     static member inline (.*) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun k v -> v * rhs.[k])
+        |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
         |> SMap4
 
     static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =

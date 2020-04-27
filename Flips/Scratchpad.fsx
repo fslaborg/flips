@@ -6,20 +6,29 @@ open System
 open Flips.Domain
 open Flips.SliceMap
 
-let f = SMap2.ofList [
-    (1, "a"), 12.0; (1, "b"), 12.0; (1, "c"), 12.1; 
-    (2, "a"), 13.0; (2, "b"), 11.0; (2, "c"), 12.3; 
-    (3, "a"), 14.0; (3, "b"), 11.5; (3, "c"), 12.4; 
+let f1 = SMap2.ofList [
+    (1, "a"), 1.0; (1, "b"), 2.0; (1, "c"), 3.0; 
+    (2, "a"), 1.0; (2, "b"), 2.0; (2, "c"), 3.0; 
+    (3, "a"), 1.0; (3, "b"), 2.5; (3, "c"), 3.0; 
 ]
 
+let f2 = SMap2.ofList [
+    (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
+    (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
+    (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
+]
+
+f1 + f2
+f1 .* f2
+
+let x = SMap.ofList [for i in 1..3 -> i, float i]
+let y = SMap.ofList [for i in 1..3 -> i, 2.0 * float i]
+
+x + y
+x .* y
+
+f1.[All, "b"] .* x
+f1.[1, "b"]
 //let x = .> "CHicken"
 
 //f.[1, "a"]
-f.[All, "a"]
-f.[All, GreaterThan "a"]
-f.[All, GTE "a"]
-f.[GT 2, "c"]
-f.[Equals 2, LT "b"]
-f.[All, All]
-
-[1 .. 10].ToString()
