@@ -8,14 +8,13 @@ let inline private getKeyCheck lb ub =
     | None, Some ub -> fun k1 -> k1 <= ub
     | None, None -> fun _ -> true
 
-type AdditionDirection = | Left | Right
 
-let inline additionMerge (direction:AdditionDirection) (lhs:Map<_,_>) (rhs:Map<_,_>) =
+let inline private additionMerge (lhs:Map<_,_>) (rhs:Map<_,_>) =
+    /// The assumption is that the LHS Map has more entries than the RHS Map
     let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
-    let adder = match direction with | Left -> (fun x y -> x + y) | Right -> (fun x y -> y + x)
 
     lhs
-    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with | Some rhsV -> adder lhsV rhsV | None -> lhsV)
+    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with | Some rhsV -> lhsV + rhsV | None -> lhsV)
     |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
 let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
@@ -41,9 +40,9 @@ let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
     | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
     | LessThan k1 -> fun k2 -> k2 < k1
     | LessOrEqual k1 -> fun k2 -> k2 <= k1
-    | In k1 -> fun k2 -> Set.contains k2 k1
-    | Between (k1, k2) -> fun k3 -> k3 >= k1 && k3 <= k2
-    | Where k1 -> k1
+    | In set -> fun k2 -> Set.contains k2 set
+    | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
+    | Where f -> f
 
 
 type SMap<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
@@ -94,8 +93,8 @@ type SMap<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
 
     static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge Left lhs.Values rhs.Values
-        | false -> additionMerge Right rhs.Values lhs.Values
+        | true ->  additionMerge lhs.Values rhs.Values
+        | false -> additionMerge rhs.Values lhs.Values
         |> SMap
 
     static member inline Sum (m:SMap<_,_>) =
@@ -191,8 +190,8 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
 
     static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge Left lhs.Values rhs.Values
-        | false -> additionMerge Right rhs.Values lhs.Values
+        | true ->  additionMerge lhs.Values rhs.Values
+        | false -> additionMerge rhs.Values lhs.Values
         |> SMap2
 
     static member inline Sum (m:SMap2<_,_,_>) =
@@ -318,8 +317,8 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge Left lhs.Values rhs.Values
-        | false -> additionMerge Right rhs.Values lhs.Values
+        | true ->  additionMerge lhs.Values rhs.Values
+        | false -> additionMerge rhs.Values lhs.Values
         |> SMap3
 
     static member inline Sum (m:SMap3<_,_,_,_>) =
@@ -495,8 +494,8 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge Left lhs.Values rhs.Values
-        | false -> additionMerge Right rhs.Values lhs.Values
+        | true ->  additionMerge lhs.Values rhs.Values
+        | false -> additionMerge rhs.Values lhs.Values
         |> SMap3
 
     static member inline Sum (m:SMap4<_,_,_,_,_>) =
