@@ -1,9 +1,10 @@
-﻿module Gens
+﻿module Flips.Gens
 
 open Flips.Domain
 open FsCheck
 
-let IntegerBoundsGen () =
+
+let IntegerBoundsGen =
     gen {
         let! lb = Arb.generate<int>
         let! PositiveInt d = Arb.generate<PositiveInt>
@@ -13,7 +14,7 @@ let IntegerBoundsGen () =
         return Integer (lowerBound, upperBound)
     }
     
-let ContinuousBoundsGen () =
+let ContinuousBoundsGen =
     gen {
         let! lowerBound = Arb.generate<decimal>
         let! PositiveInt d = Arb.generate<PositiveInt>
@@ -22,23 +23,23 @@ let ContinuousBoundsGen () =
         return Continuous (lowerBound, upperBound)
     }
 
-let DecisionTypeGen () =
+let DecisionTypeGen =
     gen {
-        let! integerBounds = IntegerBoundsGen ()
-        let! continuousBounds = ContinuousBoundsGen ()
-        return! Gen.elements [integerBounds; continuousBounds; Boolean]
+        let! integerBounds = IntegerBoundsGen
+        let! continuousBounds = ContinuousBoundsGen
+        return! Gen.elements [integerBounds; continuousBounds;]
     }
 
-let DecisionNameGen () =
+let DecisionNameGen =
     gen {
         let! (NonEmptyString name) = Arb.generate<NonEmptyString>
         return DecisionName name
     }
 
-let DecisionGen () = 
+let DecisionGen = 
     gen {
-        let! name = DecisionNameGen ()
-        let! decisionType = DecisionTypeGen ()
+        let! name = DecisionNameGen
+        let! decisionType = DecisionTypeGen
         let d = {
             Name = name
             Type = decisionType
@@ -47,4 +48,6 @@ let DecisionGen () =
     }
 
 type Domain () =
-    static member ArbDecision () = Arb.fromGen (DecisionGen ())
+    static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
+    static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
+    static member ArbDecision () = Arb.fromGen DecisionGen
