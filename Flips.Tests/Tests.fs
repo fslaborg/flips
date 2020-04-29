@@ -4,6 +4,9 @@ open System
 open Xunit
 open FsCheck
 open FsCheck.Xunit
+open Gens
+
+do Arb.register<Domain> () |> ignore
 
 [<Fact>]
 let ``My test`` () =
