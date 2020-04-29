@@ -27,7 +27,7 @@ let DecisionTypeGen =
     gen {
         let! integerBounds = IntegerBoundsGen
         let! continuousBounds = ContinuousBoundsGen
-        return! Gen.elements [integerBounds; continuousBounds;]
+        return! Gen.elements [integerBounds; continuousBounds; Boolean]
     }
 
 let DecisionNameGen =
@@ -47,7 +47,41 @@ let DecisionGen =
         return d
     }
 
+let InequalityGen = 
+    gen {
+        return! Gen.elements [LessOrEqual; GreaterOrEqual]
+    }
+
+let ConstraintNameGen = 
+    gen {
+        let! NonEmptyString name = Arb.generate<NonEmptyString>
+        return ConstraintName name
+    }
+
+let ObjectiveSenseGen =
+    gen {
+        return! Gen.elements [Minimize; Maximize]
+    }
+
+let ObjectiveNameGen =
+    gen {
+        let! NonEmptyString name = Arb.generate<NonEmptyString>
+        return ObjectiveName name
+    }
+
+let ObjectiveGen =
+    gen {
+        let! name = ObjectiveNameGen
+        let! sense = ObjectiveSenseGen
+        // Need to create gen for LinearExpression
+    }
+
 type Domain () =
     static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
     static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
     static member ArbDecision () = Arb.fromGen DecisionGen
+    static member ArbInequality () = Arb.fromGen InequalityGen
+    static member ArbConstraintName () = Arb.fromGen ConstraintNameGen
+    static member ArbObjectiveSense () = Arb.fromGen ObjectiveSenseGen
+    static member ArbObjectiveName () = Arb.fromGen ObjectiveNameGen
+    static member ArbObjective () = Arb.fromGen ObjectiveGen
