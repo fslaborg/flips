@@ -1,6 +1,7 @@
 module Flips.Domain
 
 
+
 type DecisionType =
     | Boolean
     | Integer of LowerBound:int64 * UpperBound:int64
@@ -89,7 +90,8 @@ with
     static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, decision:Decision) =
         if Set.contains decision.Name names then
             if decs.[decision.Name].Type <> decision.Type then
-                failwith "Mistmatched DecisionType"
+                let (DecisionName name) = decision.Name
+                invalidArg name "Mistmatched DecisionType"
 
             let newCoefs = Map.add decision.Name (coefs.[decision.Name] + 1.0) coefs
             LinearExpression (names, newCoefs, decs, offset)
@@ -105,7 +107,8 @@ with
         
         for n in nameOverlap do
             if lDecs.[n].Type <> rDecs.[n].Type then
-                failwith "Cannot have mismatched DecisionTypes for same DecisionName"
+                let (DecisionName name) = n
+                invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let newNames = lNames + rNames
 
@@ -194,31 +197,31 @@ type Objective = {
 
 module Decision =
 
-    let createBoolean name =
-        if System.String.IsNullOrEmpty(name) then
-            failwith "Cannot have Name of Decision that is null or empty"
+    let createBoolean decisionName =
+        if System.String.IsNullOrEmpty(decisionName) then
+            invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
         {
-            Name = DecisionName name
+            Name = DecisionName decisionName
             Type = DecisionType.Boolean
         }
 
-    let createInteger name lowerBound upperBound =
-        if System.String.IsNullOrEmpty(name) then
-                failwith "Cannot have Name of Decision that is null or empty"
+    let createInteger decisionName lowerBound upperBound =
+        if System.String.IsNullOrEmpty(decisionName) then
+                invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
         if lowerBound > upperBound then
-            failwith "Cannot create Decision where LowerBound is greater than UpperBound"
+            invalidArg "LowerBound" "Cannot create Decision where LowerBound is greater than UpperBound"
         {
-            Name = DecisionName name
+            Name = DecisionName decisionName
             Type = DecisionType.Integer (lowerBound, upperBound)
         }
 
-    let createContinuous name lowerBound upperBound =
-        if System.String.IsNullOrEmpty(name) then
-                failwith "Cannot have Name of Decision that is null or empty"
+    let createContinuous decisionName lowerBound upperBound =
+        if System.String.IsNullOrEmpty(decisionName) then
+                invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
         if lowerBound > upperBound then
-            failwith "Cannot create Decision where LowerBound is greater than UpperBound"
+            invalidArg "LowerBound" "Cannot create Decision where LowerBound is greater than UpperBound"
         {
-            Name = DecisionName name
+            Name = DecisionName decisionName
             Type = DecisionType.Continuous (lowerBound, upperBound)
         }    
 
@@ -233,22 +236,22 @@ module Constraint =
         let rhsDecisions = LinearExpression.GetDecisions rhs
         lhsDecisions + rhsDecisions
 
-    let create (name:string) (cExpr:ConstraintExpression) =
-        if System.String.IsNullOrEmpty(name) then
-            failwith "Cannot have Name of Decision that is null or empty"
+    let create (constraintName:string) (cExpr:ConstraintExpression) =
+        if System.String.IsNullOrEmpty(constraintName) then
+            invalidArg "ConstraintName" "Cannot have Name of Constraint that is null or empty"
         {
-            Name = ConstraintName name
+            Name = ConstraintName constraintName
             Expression = cExpr
         }
 
 
 module Objective =
 
-    let create name sense expression =
-        if System.String.IsNullOrEmpty(name) then
-            failwith "Cannot have Name of Decision that is null or empty"
+    let create objectiveName sense expression =
+        if System.String.IsNullOrEmpty(objectiveName) then
+            invalidArg "ObjectiveName" "Cannot have Name of Decision that is null or empty"
         {
-            Name = ObjectiveName name
+            Name = ObjectiveName objectiveName
             Sense = sense
             Expression = expression
         }
@@ -310,10 +313,6 @@ module Model =
 
     let addConstraint c (model:Model) =
         let decisions = Constraint.getDecisions c
-
-        let mismatchedWithinConstraint = getMismatchedDecisionTypesInSet decisions
-        if not (List.isEmpty mismatchedWithinConstraint) then
-            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions decisions
         if not (Set.isEmpty mismatchedDecisions) then

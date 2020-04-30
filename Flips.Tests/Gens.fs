@@ -118,6 +118,16 @@ let ObjectiveGen =
         return objective
     }
 
+let ModelGen =
+    gen {
+        let! objective = ObjectiveGen
+        let! constraints = ConstraintGen.ListOf 100
+        let model =
+            Model.create objective
+            |> Model.addConstraints constraints
+        return model
+    }
+
 type Domain () =
     static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
     static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
@@ -125,6 +135,9 @@ type Domain () =
     static member ArbLinearExpression () = Arb.fromGen LinearExpressionGen
     static member ArbInequality () = Arb.fromGen InequalityGen
     static member ArbConstraintName () = Arb.fromGen ConstraintNameGen
+    static member ArbConstraintExpression () = Arb.fromGen ConstraintExpressionGen
+    static member ArbConstraint () = Arb.fromGen ConstraintGen
     static member ArbObjectiveSense () = Arb.fromGen ObjectiveSenseGen
     static member ArbObjectiveName () = Arb.fromGen ObjectiveNameGen
     static member ArbObjective () = Arb.fromGen ObjectiveGen
+    static member ArbModel () = Arb.fromGen ModelGen
