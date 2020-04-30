@@ -47,15 +47,51 @@ let DecisionGen =
         return d
     }
 
+let DecisionExpressionGen =
+    gen {
+        let! coefficient = Arb.generate<float>
+        let! decision = Arb.generate<Decision>
+        return coefficient * decision
+    }
+
+let LinearExpressionGen =
+    gen {
+        let! offsetValue = Arb.generate<float>
+        let! offset = Gen.elements [None; Some offsetValue]
+        let! decisionElements = DecisionExpressionGen.ListOf 100
+        let decisionExpr = decisionElements |> Seq.sum
+        let finalExpr = match offset with | Some x -> decisionExpr + x | None -> decisionExpr
+        return finalExpr
+    }
+
 let InequalityGen = 
     gen {
         return! Gen.elements [LessOrEqual; GreaterOrEqual]
+    }
+
+let ConstraintExpressionGen = 
+    gen {
+        let! lhs = LinearExpressionGen
+        let! rhs = LinearExpressionGen
+        let! inequality = InequalityGen
+        return! Gen.elements [Inequality (lhs, inequality, rhs); Equality (lhs, rhs)]
     }
 
 let ConstraintNameGen = 
     gen {
         let! NonEmptyString name = Arb.generate<NonEmptyString>
         return ConstraintName name
+    }
+
+let ConstraintGen =
+    gen {
+        let! name = ConstraintNameGen
+        let! constraintExpression = ConstraintExpressionGen
+        let cnst = {
+            Name = name
+            Expression = constraintExpression
+        }
+        return cnst
     }
 
 let ObjectiveSenseGen =
@@ -73,13 +109,20 @@ let ObjectiveGen =
     gen {
         let! name = ObjectiveNameGen
         let! sense = ObjectiveSenseGen
-        // Need to create gen for LinearExpression
+        let! expr = LinearExpressionGen
+        let objective = {
+            Name = name
+            Sense = sense
+            Expression = expr
+        }
+        return objective
     }
 
 type Domain () =
     static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
     static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
     static member ArbDecision () = Arb.fromGen DecisionGen
+    static member ArbLinearExpression () = Arb.fromGen LinearExpressionGen
     static member ArbInequality () = Arb.fromGen InequalityGen
     static member ArbConstraintName () = Arb.fromGen ConstraintNameGen
     static member ArbObjectiveSense () = Arb.fromGen ObjectiveSenseGen
