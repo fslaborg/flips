@@ -11,10 +11,10 @@ type Scalar = Scalar of float with
 
         if x = y then
             true
-        elif x = 0.0 || y = 0.0 || (absX + absY < System.Double.MinValue) then
-            diff < (epsilon * System.Double.MinValue)
+        elif x = 0.0 || y = 0.0 || (absX + absY < System.Double.Epsilon) then
+            diff < (epsilon * System.Double.Epsilon)
         else
-            diff / (System.Math.Min((absX + absY), System.Double.MaxValue)) < epsilon
+            (diff / (absX + absY)) < epsilon
 
     static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs + rhs)
