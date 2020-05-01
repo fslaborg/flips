@@ -5,12 +5,13 @@ open Google.OrTools.LinearSolver
 open Flips.Domain
 
 
+let private getScalarValue (Scalar s:Scalar) = s
 
 
-let private buildExpression (vars:Map<DecisionName,Variable>) (LinearExpression (names, coefs, decs, offset):LinearExpression) =
+let private buildExpression (vars:Map<DecisionName,Variable>) (LinearExpression (names, coefs, decs, Scalar offset):LinearExpression) =
     let decisionExpr =
         names
-        |> Seq.map (fun n -> coefs.[n] * vars.[n])
+        |> Seq.map (fun n -> getScalarValue coefs.[n] * vars.[n])
         |> fun x -> 
             match Seq.isEmpty x with 
             | true -> LinearExpr() 
