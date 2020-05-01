@@ -4,6 +4,12 @@ open Flips.Domain
 open FsCheck
 
 
+let ScalarGen =
+    gen {
+        let! f = Arb.generate<float>.Where(fun x -> x > -1e10 && x < 1e10)
+        return Scalar f
+    }
+
 let IntegerBoundsGen =
     gen {
         let! lb = Arb.generate<int>
@@ -129,6 +135,7 @@ let ModelGen =
     }
 
 type Domain () =
+    static member ArbScalarGen () = Arb.fromGen ScalarGen
     static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
     static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
     static member ArbDecision () = Arb.fromGen DecisionGen

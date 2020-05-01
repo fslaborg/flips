@@ -26,6 +26,34 @@ let randomExpressionFromDecisions rng (decisions:seq<Decision>) =
 
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module Scalar =
+
+    [<Property>]
+    let ``Addition of Scalar is associative`` (a:Scalar) (b:Scalar) =
+        let r1 = a + b
+        let r2 = b + a
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Addition of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
+        let r1 = (a + b) + c
+        let r2 = a + (b + c)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Multiplication of Scalar is associative`` (a:Scalar) (b:Scalar) =
+        let r1 = a * b
+        let r2 = b * a
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Multiplication of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
+        let r1 = (a * b) * c
+        let r2 = a * (b * c)
+        Assert.StrictEqual(r1, r2)
+
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module LinearExpression =
 
     [<Property>]
