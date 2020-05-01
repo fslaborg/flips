@@ -3,18 +3,21 @@ module Flips.Domain
 [<CustomEquality; CustomComparison>]
 type Scalar = Scalar of float with
 
-    static member private nearlyEquals (Scalar x:Scalar) (Scalar y:Scalar) =
-        let epsilon = 0.00001
-        let absX = System.Math.Abs x
-        let absY = System.Math.Abs y
-        let diff = System.Math.Abs (absX - absY)
-
-        if x = y then
-            true
-        elif x = 0.0 || y = 0.0 || (absX + absY < System.Double.Epsilon) then
-            diff < (epsilon * System.Double.Epsilon)
+    static member private nearlyEquals (Scalar a:Scalar) (Scalar b:Scalar) : bool =
+        let aValue = System.BitConverter.DoubleToInt64Bits a
+        let bValue = System.BitConverter.DoubleToInt64Bits b
+        if (aValue >>> 63) <> (bValue >>> 63) then
+            if a = b then
+                true
+            else
+                false
         else
-            (diff / (absX + absY)) < epsilon
+            let diff = System.Math.Abs(aValue - bValue)
+
+            if diff <= 100L then
+                true
+            else
+                false
 
     static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs + rhs)

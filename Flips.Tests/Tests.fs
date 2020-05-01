@@ -12,7 +12,7 @@ let MAX_COEFFICIENT = 1_000_000_000.0
 
 let randomInRange lowerBound upperBound (rng:System.Random) =
     let range = upperBound - lowerBound
-    rng.NextDouble() * range - lowerBound
+    lowerBound + (rng.NextDouble() * range)
 
 let randomExpressionFromDecisions rng (decisions:seq<Decision>) =
     let decisionGen = Gen.elements decisions
