@@ -54,21 +54,50 @@ module Scalar =
 
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
-module LinearExpression =
+module Decision =
 
     [<Property>]
     let ``Addition of Decisions is associative`` (d1:Decision) (d2:Decision) =
-
         let e1 = d1 + d2
         let e2 = d2 + d1
         Assert.Equal(e1, e2)
 
     [<Property>]
     let ``Addition of Decisions is commutative`` (d1:Decision) (d2:Decision) (d3:Decision) =
-
         let e1 = d1 + (d2 + d3)
         let e2 = (d1 + d2) + d3
         Assert.Equal(e1, e2)
+
+    [<Property>]
+    let ``Addition of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
+        let e1 = d + s
+        let e2 = s + d
+        Assert.Equal(e1, e2)
+
+    [<Property>]
+    let ``Addition of Decisions and Scalar is commutative`` (d1:Decision) (s1:Scalar) (s2:Scalar) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e1 = (d1 + s1) + (d2 + s2)
+        let e2 = d1 + (s1 + d2) + s2
+        Assert.Equal(e1, e2)
+
+    [<Property>]
+    let ``Multiplication of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
+        let e1 = d * s
+        let e2 = s * d
+        Assert.Equal(e1, e2)
+
+    [<Property>]
+    let ``Multiplication of Decisions and Scalar is commutative`` (d1:Decision) (s1:Scalar) (s2:Scalar) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e1 = (d1 * s1) + (d2 * s2)
+        let e2 = (d1 * s2) + (d2 * s1)
+        Assert.Equal(e1, e2)
+
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module LinearExpression =
+
 
     [<Property>]
     let ``Mismatched DecisionType throws error in LinearExpression`` (decisionName:DecisionName) (type1:DecisionType) =
@@ -97,3 +126,11 @@ module LinearExpression =
         let r1 = (expr1 + expr2) + expr3
         let r2 = expr1 + (expr2 + expr3)
         Assert.Equal(r1, r2)
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module ModelTests =
+
+    [<Property>]
+    let ``Adding Constraint to Model yields a new Model with Constraint`` (model:Flips.Domain.Model.Model) (cnst:Constraint) =
+        let m = Model.addConstraint cnst model
+        Assert.Contains(cnst, m.Constraints)
