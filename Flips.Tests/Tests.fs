@@ -91,7 +91,7 @@ module Decision =
     [<Property>]
     let ``Addition of Decisions is commutative`` (d1:Decision) =
         let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
-        let d3 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let d3 = DecisionGen.Where(fun x -> x.Name <> d1.Name && x.Name <> d2.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
         let e1 = d1 + (d2 + d3)
         let e2 = (d1 + d2) + d3
         Assert.Equal(e1, e2)
