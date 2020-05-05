@@ -230,3 +230,173 @@ module ModelTests =
         match result with
         | Optimal _ -> Assert.True(true)
         | Suboptimal _ -> Assert.True(false, "Simple model failed to solve")
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module SliceMapTests =
+    open SliceMap
+
+    [<Property>]
+    let ``SliceMap addition is commutative`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap
+        let s2 = Map.ofList v2 |> SMap
+        let r1 = s1 + s2
+        let r2 = s2 + s1
+        Assert.StrictEqual(r1, r2)
+    
+    [<Property>]
+    let ``SliceMap addition is associative`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) (v3:List<(NonEmptyString * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap
+        let s2 = Map.ofList v2 |> SMap
+        let s3 = Map.ofList v3 |> SMap
+        let r1 = (s1 + s2) + s3
+        let r2 = s1 + (s2 + s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Multiply SliceMap by 1 yields same SliceMap`` (v:List<(NonEmptyString * Scalar)>)=
+        let s = Map.ofList v |> SMap
+        let r = 1.0 * s
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Adding empty SliceMap yields same SliceMap`` (v:List<(NonEmptyString * Scalar)>)=
+        let s = Map.ofList v |> SMap
+        let empty = Map.empty |> SMap
+        let r = s + empty
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Multiply SliceMap by X then 1/X yields same SliceMap`` (v:List<(NonEmptyString * Scalar)>)=
+        let x = randomFloat rng
+        let s = Map.ofList v |> SMap
+        let r1 = x * s
+        let r2 = (1.0 / x) * r1
+        Assert.StrictEqual(s, r2)
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module SliceMap2Tests =
+    open SliceMap
+
+    [<Property>]
+    let ``SMap2 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap2
+        let s2 = Map.ofList v2 |> SMap2
+        let r1 = s1 + s2
+        let r2 = s2 + s1
+        Assert.StrictEqual(r1, r2)
+    
+    [<Property>]
+    let ``SMap2 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap2
+        let s2 = Map.ofList v2 |> SMap2
+        let s3 = Map.ofList v3 |> SMap2
+        let r1 = (s1 + s2) + s3
+        let r2 = s1 + (s2 + s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Multiply SMap2 by 1 yields same SMap2`` (v:List<((NonEmptyString * NonEmptyString) * Scalar)>)=
+        let s = Map.ofList v |> SMap2
+        let r = 1.0 * s
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Adding empty SMap2 yields same SMap2`` (v:List<((NonEmptyString * NonEmptyString) * Scalar)>)=
+        let s = Map.ofList v |> SMap2
+        let empty = Map.empty |> SMap2
+        let r = s + empty
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Multiply SMap2 by X then 1/X yields same SMap2`` (v:List<((NonEmptyString * NonEmptyString) * Scalar)>)=
+        let x = randomFloat rng
+        let s = Map.ofList v |> SMap2
+        let r1 = x * s
+        let r2 = (1.0 / x) * r1
+        Assert.StrictEqual(s, r2)
+
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module SliceMap3Tests =
+    open SliceMap
+
+    [<Property>]
+    let ``SMap3 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap3
+        let s2 = Map.ofList v2 |> SMap3
+        let r1 = s1 + s2
+        let r2 = s2 + s1
+        Assert.StrictEqual(r1, r2)
+    
+    [<Property>]
+    let ``SMap3 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap3
+        let s2 = Map.ofList v2 |> SMap3
+        let s3 = Map.ofList v3 |> SMap3
+        let r1 = (s1 + s2) + s3
+        let r2 = s1 + (s2 + s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Multiply SMap3 by 1 yields same SMap3`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+        let s = Map.ofList v |> SMap3
+        let r = 1.0 * s
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Adding empty SMap3 yields same SMap3`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+        let s = Map.ofList v |> SMap3
+        let empty = Map.empty |> SMap3
+        let r = s + empty
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Multiply SMap3 by X then 1/X yields same SMap3`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+        let x = randomFloat rng
+        let s = Map.ofList v |> SMap3
+        let r1 = x * s
+        let r2 = (1.0 / x) * r1
+        Assert.StrictEqual(s, r2)
+
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module SliceMap4Tests =
+    open SliceMap
+
+    [<Property>]
+    let ``SMap4 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let s2 = Map.ofList v2 |> SMap4
+        let r1 = s1 + s2
+        let r2 = s2 + s1
+        Assert.StrictEqual(r1, r2)
+    
+    [<Property>]
+    let ``SMap4 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let s2 = Map.ofList v2 |> SMap4
+        let s3 = Map.ofList v3 |> SMap4
+        let r1 = (s1 + s2) + s3
+        let r2 = s1 + (s2 + s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``Multiply SMap4 by 1 yields same SMap4`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+        let s = Map.ofList v |> SMap4
+        let r = 1.0 * s
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Adding empty SMap4 yields same SMap4`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+        let s = Map.ofList v |> SMap4
+        let empty = Map.empty |> SMap4
+        let r = s + empty
+        Assert.StrictEqual(s, r)
+
+    [<Property>]
+    let ``Multiply SMap4 by X then 1/X yields same SMap4`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+        let x = randomFloat rng
+        let s = Map.ofList v |> SMap4
+        let r1 = x * s
+        let r2 = (1.0 / x) * r1
+        Assert.StrictEqual(s, r2)
