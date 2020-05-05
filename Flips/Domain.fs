@@ -1,5 +1,58 @@
 module Flips.Domain
 
+[<CustomEquality; CustomComparison>]
+type Scalar = Scalar of float with
+
+    static member private nearlyEquals (Scalar a:Scalar) (Scalar b:Scalar) : bool =
+        let aValue = System.BitConverter.DoubleToInt64Bits a
+        let bValue = System.BitConverter.DoubleToInt64Bits b
+        if (aValue >>> 63) <> (bValue >>> 63) then
+            if a = b then
+                true
+            else
+                false
+        else
+            let diff = System.Math.Abs(aValue - bValue)
+
+            if diff <= 100L then
+                true
+            else
+                false
+
+    static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
+        Scalar (lhs + rhs)
+
+    static member (+) (Scalar s:Scalar, f:float) =
+        Scalar (s + f)
+
+    static member (+) (f:float, Scalar s:Scalar) =
+        Scalar (s + f)
+
+    static member (*) (Scalar s:Scalar, f:float) =
+        Scalar (s * f)
+
+    static member (*) (f:float, Scalar s:Scalar) =
+        Scalar (s * f)
+
+    static member (*) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
+        Scalar (lhs * rhs)
+
+    static member Zero = Scalar 0.0
+
+    override this.GetHashCode () =
+        let (Scalar v) = this
+        hash v
+
+    override this.Equals(obj) =
+        match obj with
+        | :? Scalar as s -> Scalar.nearlyEquals this s 
+        | _ -> false
+
+    interface System.IComparable with
+        member this.CompareTo yObj =
+            match yObj with
+            | :? Scalar as s -> compare this s
+            | _ -> invalidArg "yObj" "Cannot compare values of different types"
 
 type DecisionType =
     | Boolean
@@ -13,16 +66,23 @@ type Decision = {
     Type : DecisionType
 }
 with
-    static member (*) (decision:Decision, scalar:float) =
-        LinearExpression.OfDecision decision + scalar
+
+    static member (*) (decision:Decision, f:float) =
+        LinearExpression.OfDecision decision * f
+
+    static member (*) (f:float, decision:Decision) =
+        LinearExpression.OfDecision decision * f
+
+    static member (*) (decision:Decision, scalar:Scalar) =
+        LinearExpression.OfDecision decision * scalar
     
-    static member (*) (scalar:float, decision:Decision) =
-        LinearExpression.OfFloat scalar + decision
+    static member (*) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfDecision decision * scalar
 
-    static member (+) (scalar:float, decision:Decision) =
-        LinearExpression.OfFloat scalar + decision
+    static member (+) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar + decision
 
-    static member (+) (decision:Decision, scalar:float) =
+    static member (+) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision + scalar
 
     static member (+) (decision:Decision, rightDecision:Decision) =
@@ -31,7 +91,10 @@ with
     static member (+) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision + expr
 
-    static member (<==) (decision:Decision, scalar:float) =
+    static member (<==) (decision:Decision, f:float) =
+        LinearExpression.OfDecision decision <== f
+
+    static member (<==) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision <== scalar
 
     static member (<==) (decision:Decision, rhsDecision:Decision) =
@@ -40,7 +103,10 @@ with
     static member (<==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision <== expr
 
-    static member (==) (decision:Decision, scalar:float) =
+    static member (==) (decision:Decision, f:float) =
+        LinearExpression.OfDecision decision == f
+
+    static member (==) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision == scalar
 
     static member (==) (decision:Decision, rhsDecision:Decision) =
@@ -49,7 +115,10 @@ with
     static member (==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision == expr
 
-    static member (>==) (decision:Decision, scalar:float) =
+    static member (>==) (decision:Decision, f:float) =
+        LinearExpression.OfDecision decision >== f
+
+    static member (>==) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision >== scalar
 
     static member (>==) (decision:Decision, rhsDecision:Decision) =
@@ -59,17 +128,20 @@ with
         LinearExpression.OfDecision decision >== expr
 
 and LinearExpression = 
-    | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, float> * decs:Map<DecisionName, Decision> * offset:float
+    | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
 with
 
     static member OfFloat (f:float) =
-        LinearExpression (Set.empty, Map.empty, Map.empty, f)
+        LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
+
+    static member OfScalar (s:Scalar) =
+        LinearExpression (Set.empty, Map.empty, Map.empty, s)
 
     static member OfDecision (d:Decision) =
         let names = Set.ofList [d.Name]
-        let coefs = Map.ofList [d.Name, 1.0]
+        let coefs = Map.ofList [d.Name, Scalar 1.0]
         let decs = Map.ofList [d.Name, d]
-        LinearExpression (names, coefs, decs, 0.0)
+        LinearExpression (names, coefs, decs, Scalar 0.0)
 
     static member GetDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
         decs
@@ -78,24 +150,31 @@ with
         |> Set.ofList
 
     static member Zero =
-        LinearExpression (Set.empty, Map.empty, Map.empty, 0.0)
+        LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
 
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:float) =
+    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
+        LinearExpression (names, coefs, decs, offset + (Scalar f))
+
+    static member (+) (f:float, LinearExpression (names, coefs, decs, offset):LinearExpression) =
+        LinearExpression (names, coefs, decs, offset + (Scalar f))
+
+    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
         LinearExpression (names, coefs, decs, offset + scalar)
 
-    static member (+) (scalar:float, expr:LinearExpression) =
-        expr + scalar
+    static member (+) (scalar:Scalar, LinearExpression (names, coefs, decs, offset):LinearExpression) =
+        LinearExpression (names, coefs, decs, offset + scalar)
 
     static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, decision:Decision) =
         if Set.contains decision.Name names then
             if decs.[decision.Name].Type <> decision.Type then
-                failwith "Mistmatched DecisionType"
+                let (DecisionName name) = decision.Name
+                invalidArg name "Mistmatched DecisionType"
 
-            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + 1.0) coefs
+            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + (Scalar 1.0)) coefs
             LinearExpression (names, newCoefs, decs, offset)
         else
             let newNames = Set.add decision.Name names
-            let newCoefs = Map.add decision.Name 1.0 coefs
+            let newCoefs = Map.add decision.Name (Scalar 1.0) coefs
             let newDecs = Map.add decision.Name decision decs
             LinearExpression (newNames, newCoefs, newDecs, offset)
 
@@ -105,7 +184,8 @@ with
         
         for n in nameOverlap do
             if lDecs.[n].Type <> rDecs.[n].Type then
-                failwith "Cannot have mismatched DecisionTypes for same DecisionName"
+                let (DecisionName name) = n
+                invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let newNames = lNames + rNames
 
@@ -129,15 +209,25 @@ with
         else
             LinearExpression.Merge (rExpr, lExpr)
 
-    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:float) =
+    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
+        let newCoefs = Map.map (fun k v -> v * f) coefs
+        LinearExpression (names, newCoefs, decs, offset * f)
+
+    static member (*) (f:float, expr:LinearExpression) =
+        expr * f
+
+    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
         let newCoefs = Map.map (fun k v -> v * scalar) coefs
         LinearExpression (names, newCoefs, decs, offset * scalar)
 
-    static member (*) (scalar:float, expr:LinearExpression) =
+    static member (*) (scalar:Scalar, expr:LinearExpression) =
         expr * scalar
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
+
+    static member (<==) (lhs:LinearExpression, rhs:Scalar) =
+        Inequality (lhs, LessOrEqual, LinearExpression.OfScalar rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
@@ -148,6 +238,9 @@ with
     static member (==) (lhs:LinearExpression, rhs:float) =
         Equality (lhs, LinearExpression.OfFloat rhs)
 
+    static member (==) (lhs:LinearExpression, rhs:Scalar) =
+        Equality (lhs, LinearExpression.OfScalar rhs)
+
     static member (==) (lhs:LinearExpression, rhs:Decision) =
         Equality (lhs, LinearExpression.OfDecision rhs)
 
@@ -156,6 +249,9 @@ with
 
     static member (>==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
+
+    static member (>==) (lhs:LinearExpression, rhs:Scalar) =
+        Inequality (lhs, GreaterOrEqual, LinearExpression.OfScalar rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
@@ -194,31 +290,31 @@ type Objective = {
 
 module Decision =
 
-    let createBoolean name =
-        if System.String.IsNullOrEmpty(name) then
-            failwith "Cannot have Name of Decision that is null or empty"
+    let createBoolean decisionName =
+        if System.String.IsNullOrEmpty(decisionName) then
+            invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
         {
-            Name = DecisionName name
+            Name = DecisionName decisionName
             Type = DecisionType.Boolean
         }
 
-    let createInteger name lowerBound upperBound =
-        if System.String.IsNullOrEmpty(name) then
-                failwith "Cannot have Name of Decision that is null or empty"
+    let createInteger decisionName lowerBound upperBound =
+        if System.String.IsNullOrEmpty(decisionName) then
+                invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
         if lowerBound > upperBound then
-            failwith "Cannot create Decision where LowerBound is greater than UpperBound"
+            invalidArg "LowerBound" "Cannot create Decision where LowerBound is greater than UpperBound"
         {
-            Name = DecisionName name
+            Name = DecisionName decisionName
             Type = DecisionType.Integer (lowerBound, upperBound)
         }
 
-    let createContinuous name lowerBound upperBound =
-        if System.String.IsNullOrEmpty(name) then
-                failwith "Cannot have Name of Decision that is null or empty"
+    let createContinuous decisionName lowerBound upperBound =
+        if System.String.IsNullOrEmpty(decisionName) then
+                invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
         if lowerBound > upperBound then
-            failwith "Cannot create Decision where LowerBound is greater than UpperBound"
+            invalidArg "LowerBound" "Cannot create Decision where LowerBound is greater than UpperBound"
         {
-            Name = DecisionName name
+            Name = DecisionName decisionName
             Type = DecisionType.Continuous (lowerBound, upperBound)
         }    
 
@@ -233,22 +329,22 @@ module Constraint =
         let rhsDecisions = LinearExpression.GetDecisions rhs
         lhsDecisions + rhsDecisions
 
-    let create (name:string) (cExpr:ConstraintExpression) =
-        if System.String.IsNullOrEmpty(name) then
-            failwith "Cannot have Name of Decision that is null or empty"
+    let create (constraintName:string) (cExpr:ConstraintExpression) =
+        if System.String.IsNullOrEmpty(constraintName) then
+            invalidArg "ConstraintName" "Cannot have Name of Constraint that is null or empty"
         {
-            Name = ConstraintName name
+            Name = ConstraintName constraintName
             Expression = cExpr
         }
 
 
 module Objective =
 
-    let create name sense expression =
-        if System.String.IsNullOrEmpty(name) then
-            failwith "Cannot have Name of Decision that is null or empty"
+    let create objectiveName sense expression =
+        if System.String.IsNullOrEmpty(objectiveName) then
+            invalidArg "ObjectiveName" "Cannot have Name of Decision that is null or empty"
         {
-            Name = ObjectiveName name
+            Name = ObjectiveName objectiveName
             Sense = sense
             Expression = expression
         }
@@ -310,10 +406,6 @@ module Model =
 
     let addConstraint c (model:Model) =
         let decisions = Constraint.getDecisions c
-
-        let mismatchedWithinConstraint = getMismatchedDecisionTypesInSet decisions
-        if not (List.isEmpty mismatchedWithinConstraint) then
-            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions decisions
         if not (Set.isEmpty mismatchedDecisions) then
