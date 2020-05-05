@@ -45,12 +45,20 @@ let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
     | Where f -> f
 
 
-type SMap<'Key, 'Value when 'Key : comparison> (m:Map<'Key,'Value>) =
+type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key,'Value>) =
 
     member this.Values = m
 
     override this.ToString() =
         sprintf "Map1D %O" this.Values
+
+    override this.Equals(obj) =
+        match obj with
+        | :? SMap<'Key, 'Value> as s -> this.Values = s.Values
+        | _ -> false
+
+    override this.GetHashCode () =
+        hash this.Values
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
@@ -125,12 +133,20 @@ module SMap =
         Map.containsKey k m.Values
 
 
-type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> (m:Map<('Key1 * 'Key2),'Value>) =
+type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2),'Value>) =
 
     member this.Values = m
 
     override this.ToString () = 
         sprintf "Map2D %O" this.Values
+
+    override this.Equals(obj) =
+        match obj with
+        | :? SMap2<'Key1, 'Key2, 'Value > as s -> this.Values = s.Values
+        | _ -> false
+
+    override this.GetHashCode () =
+        hash this.Values
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
@@ -174,12 +190,12 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison> 
     static member inline (*) (lhs, rhs:SMap2<_,_,_>) =
         rhs.Values
         |> Map.map (fun _ v -> v * lhs)
-        |> SMap
+        |> SMap2
 
     static member inline (*) (lhs:SMap2<_,_,_>, rhs) =
         lhs.Values
         |> Map.map (fun _ v -> v * rhs)
-        |> SMap
+        |> SMap2
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         let rhs = rhs.Values
@@ -222,12 +238,20 @@ module SMap2 =
         Map.containsKey k m.Values
 
 
-type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
+type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
 
     member this.Values = m
 
     override this.ToString() =
         sprintf "Map3D %O" this.Values
+
+    override this.Equals(obj) =
+        match obj with
+        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as s -> this.Values = s.Values
+        | _ -> false
+
+    override this.GetHashCode () =
+        hash this.Values
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
@@ -349,12 +373,20 @@ module SMap3 =
         Map.containsKey k m.Values
 
 
-type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
+type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
 
     member this.Values = m
 
     override this.ToString() =
         sprintf "Map4D %O" this.Values
+
+    override this.Equals(obj) =
+        match obj with
+        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> this.Values = s.Values
+        | _ -> false
+
+    override this.GetHashCode () =
+        hash this.Values
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
@@ -492,11 +524,11 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
         |> SMap4
 
-    static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
+    static member inline (+) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
         | true ->  additionMerge lhs.Values rhs.Values
         | false -> additionMerge rhs.Values lhs.Values
-        |> SMap3
+        |> SMap4
 
     static member inline Sum (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
