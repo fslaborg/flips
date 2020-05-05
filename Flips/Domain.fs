@@ -68,16 +68,16 @@ type Decision = {
 with
 
     static member (*) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision + f
+        LinearExpression.OfDecision decision * f
 
     static member (*) (f:float, decision:Decision) =
-        LinearExpression.OfFloat f + decision
+        LinearExpression.OfDecision decision * f
 
     static member (*) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision + scalar
+        LinearExpression.OfDecision decision * scalar
     
     static member (*) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar + decision
+        LinearExpression.OfDecision decision * scalar
 
     static member (+) (scalar:Scalar, decision:Decision) =
         LinearExpression.OfScalar scalar + decision
