@@ -3,21 +3,13 @@ module Flips.Domain
 [<CustomEquality; CustomComparison>]
 type Scalar = Scalar of float with
 
-    static member private nearlyEquals (Scalar a:Scalar) (Scalar b:Scalar) : bool =
+    static member private NearlyEquals (Scalar a:Scalar) (Scalar b:Scalar) : bool =
         let aValue = System.BitConverter.DoubleToInt64Bits a
         let bValue = System.BitConverter.DoubleToInt64Bits b
         if (aValue >>> 63) <> (bValue >>> 63) then
-            if a = b then
-                true
-            else
-                false
+            a = b
         else
-            let diff = System.Math.Abs(aValue - bValue)
-
-            if diff <= 100L then
-                true
-            else
-                false
+            System.Math.Abs(aValue - bValue) <= 100L
 
     static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs + rhs)
@@ -45,7 +37,7 @@ type Scalar = Scalar of float with
 
     override this.Equals(obj) =
         match obj with
-        | :? Scalar as s -> Scalar.nearlyEquals this s 
+        | :? Scalar as s -> Scalar.NearlyEquals this s 
         | _ -> false
 
     interface System.IComparable with
@@ -56,8 +48,8 @@ type Scalar = Scalar of float with
 
 type DecisionType =
     | Boolean
-    | Integer of LowerBound:int64 * UpperBound:int64
-    | Continuous of LowerBound:decimal * UpperBound:decimal
+    | Integer of LowerBound:float * UpperBound:float
+    | Continuous of LowerBound:float * UpperBound:float
 
 type DecisionName = DecisionName of string
 

@@ -5,10 +5,45 @@ open Flips.Domain
 open Flips.Solve
 open Flips.SliceMap
 
+let FoodTruckExample () =
+
+    // Declare the parameters for our model
+    let hamburgerProfit = 1.50
+    let hotdogProfit = 1.20
+    let hamburgerBuns = 300.0
+    let hotdogBuns = 200.0
+    let hamburgerWeight = 0.5
+    let hotdogWeight = 0.4
+    let maxWeight = 800.0
+
+    let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infinity
+    let numberOfHotdogs = Decision.createContinuous "NumberOfHotDogs" 0.0 infinity
+
+    let objectiveExpression = hamburgerProfit * numberOfHamburgers + hotdogProfit * numberOfHotdogs
+    let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
+    
+    let maxHamburger = Constraint.create "MaxHamburger" (numberOfHamburgers <== hamburgerBuns)
+    let maxHotDog = Constraint.create "MaxHotDog" (numberOfHotdogs <== hotdogBuns)
+    let maxWeight = Constraint.create "MaxWeight" (numberOfHotdogs * hotdogWeight + numberOfHamburgers * hamburgerWeight <== maxWeight)
+
+    let model =
+        Model.create objective
+        |> Model.addConstraint maxHamburger
+        |> Model.addConstraint maxHotDog
+        |> Model.addConstraint maxWeight
+
+    let settings = {
+        SolverType = SolverType.CBC
+        MaxDuration = 10_000L
+        WriteLPFile = None
+    }
+
+    let result = solve settings model
+    printfn "%A" result
 
 let simpleModel () =
-    let x1 = Decision.createContinuous "x1" 0.0M Decimal.MaxValue
-    let x2 = Decision.createContinuous "x2" 0M Decimal.MaxValue
+    let x1 = Decision.createContinuous "x1" 0.0 infinity
+    let x2 = Decision.createContinuous "x2" 0.0 infinity
     
     let objExpr = 2.0 * x1 + 3.0 * x2
     let objective = Objective.create "Get big" Maximize objExpr
@@ -50,7 +85,7 @@ let constraintBuilderExample () =
     let decisions = 
         [for s in sources do
             for d in destinations ->
-                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
+                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
         |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -120,7 +155,7 @@ let mapSlicingExample () =
     let decisions = 
         [for s in sources do
             for d in destinations ->
-                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
+                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
         |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints

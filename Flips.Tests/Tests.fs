@@ -208,8 +208,8 @@ module ModelTests =
 
     [<Fact>]
     let ``Simple Model solves`` () =
-        let x1 = Decision.createContinuous "x1" 0.0M Decimal.MaxValue
-        let x2 = Decision.createContinuous "x2" 0M Decimal.MaxValue
+        let x1 = Decision.createContinuous "x1" 0.0 infinity
+        let x2 = Decision.createContinuous "x2" 0.0 infinity
         
         let objExpr = 2.0 * x1 + 3.0 * x2
         let objective = Objective.create "Get big" Maximize objExpr

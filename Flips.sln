@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Console", "Flips.Console\Flips.Console.fsproj", "{44E39E9C-7A97-4AA8-8287-78DADA1BF929}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Examples", "Flips.Examples\Flips.Examples.fsproj", "{44E39E9C-7A97-4AA8-8287-78DADA1BF929}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Flips.Tests", "Flips.Tests\Flips.Tests.fsproj", "{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Tests", "Flips.Tests\Flips.Tests.fsproj", "{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
