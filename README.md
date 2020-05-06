@@ -107,3 +107,14 @@ Press any key to close...
 ```
 
 The rows below the `-- Result --` line show the values the solver found. The solver estimates that we can achieve a profit of $690.00 if we pack for 300 Hamburgers and 200 Hot Dogs. You can run this exmaple problem for yourself by running the `FoodTruckExample` problem in the `Flips.Examples` project.
+
+### Using Indices
+
+While the above formulation did work, it does not scale automatically with the number of food items. A better way to formulate this problem would be to store parameter data and decision variables in `Map` instances and use product names as the keys. This means we add a new first step: define the indices. This means the steps to modeling are now:
+
+1. Define the Indices/Keys for your data
+2. Define your data as Maps using your defined Keys
+3. Create Decision Variables Maps using your defined Keys
+4. Formulating your Objective Function
+5. Adding Constraints
+6. Solving the Model
