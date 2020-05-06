@@ -5,10 +5,70 @@ open Flips.Domain
 open Flips.Solve
 open Flips.SliceMap
 
+let FoodTruckExample () =
+
+    // Declare the parameters for our model
+    let hamburgerProfit = 1.50
+    let hotdogProfit = 1.20
+    let hamburgerBuns = 300.0
+    let hotdogBuns = 200.0
+    let hamburgerWeight = 0.5
+    let hotdogWeight = 0.4
+    let maxTruckWeight = 500.0
+
+    // Create Decision Variable with a Lower Bound of 0.0 and an Upper Bound of Infinity
+    let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infinity
+    let numberOfHotdogs = Decision.createContinuous "NumberOfHotDogs" 0.0 infinity
+
+    // Create the Linear Expression for the objective
+    let objectiveExpression = hamburgerProfit * numberOfHamburgers + hotdogProfit * numberOfHotdogs
+
+    // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
+    // the Objective Expression
+    let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
+    
+    // Create a Constraint for the max number of Hamburger considering the number of buns
+    let maxHamburger = Constraint.create "MaxHamburger" (numberOfHamburgers <== hamburgerBuns)
+    // Create a Constraint for the max number of Hot Dogs considering the number of buns
+    let maxHotDog = Constraint.create "MaxHotDog" (numberOfHotdogs <== hotdogBuns)
+    // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
+    let maxWeight = Constraint.create "MaxWeight" (numberOfHotdogs * hotdogWeight + numberOfHamburgers * hamburgerWeight <== maxTruckWeight)
+
+    // Create a Model type and pipe it through the addition of the constraitns
+    let model =
+        Model.create objective
+        |> Model.addConstraint maxHamburger
+        |> Model.addConstraint maxHotDog
+        |> Model.addConstraint maxWeight
+
+    // Create a Settings type which tells the Solver which types of underlying solver to use,
+    // the time alloted for solving, and whether to write an LP file to disk
+    let settings = {
+        SolverType = SolverType.CBC
+        MaxDuration = 10_000L
+        WriteLPFile = None
+    }
+
+    // Call the `solve` function in the Solve module to evaluate the model
+    let result = solve settings model
+
+    printfn "-- Result --"
+
+    // Math the result of the call to solve
+    // If the model could not be solved it will return a `Suboptimal` case with a message as to why
+    // If the model could be solved, it will print the value of the Objective Function and the
+    // values for the Decision Variables
+    match result with
+    | Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
+    | Optimal solution ->
+        printfn "Objective Value: %f" solution.ObjectiveResult
+
+        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %s\tValue: %f" name value
 
 let simpleModel () =
-    let x1 = Decision.createContinuous "x1" 0.0M Decimal.MaxValue
-    let x2 = Decision.createContinuous "x2" 0M Decimal.MaxValue
+    let x1 = Decision.createContinuous "x1" 0.0 infinity
+    let x2 = Decision.createContinuous "x2" 0.0 infinity
     
     let objExpr = 2.0 * x1 + 3.0 * x2
     let objective = Objective.create "Get big" Maximize objExpr
@@ -26,7 +86,6 @@ let simpleModel () =
     
     let result = solve settings model
     printfn "%A" result
-
 
 let constraintBuilderExample () =
     let sources = [1 .. 3]
@@ -50,7 +109,7 @@ let constraintBuilderExample () =
     let decisions = 
         [for s in sources do
             for d in destinations ->
-                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
+                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
         |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -120,7 +179,7 @@ let mapSlicingExample () =
     let decisions = 
         [for s in sources do
             for d in destinations ->
-                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0M Decimal.MaxValue]
+                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
         |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -176,9 +235,10 @@ let mapSlicingExample () =
 [<EntryPoint>]
 let main argv =
     
+    FoodTruckExample ()
     //simpleModel ()
-    constraintBuilderExample ()
-    mapSlicingExample ()
+    //constraintBuilderExample ()
+    //mapSlicingExample ()
 
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore

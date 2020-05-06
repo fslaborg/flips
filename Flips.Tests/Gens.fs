@@ -3,28 +3,35 @@
 open Flips.Domain
 open FsCheck
 
+let MIN_FLOAT = -1e18
+let MAX_FLOAT = 1e18
+
+let FloatGen = Arb.generate<float>.Where(fun x -> x > MIN_FLOAT && x < MAX_FLOAT)
+
+let PositiveFloatGen = Arb.generate<float>.Where(fun x -> x > 0.0 && x < MAX_FLOAT)
 
 let ScalarGen =
     gen {
-        let! f = Arb.generate<float>.Where(fun x -> x > -1e10 && x < 1e10)
+        let! f = FloatGen
         return Scalar f
     }
 
 let IntegerBoundsGen =
     gen {
-        let! lb = Arb.generate<int>
-        let! PositiveInt d = Arb.generate<PositiveInt>
-        let lowerBound = int64 lb
-        let delta = int64 d
+        let! lb = FloatGen
+        let! d = PositiveFloatGen
+        let lowerBound = lb
+        let delta = d
         let upperBound = lowerBound + delta
         return Integer (lowerBound, upperBound)
     }
     
 let ContinuousBoundsGen =
     gen {
-        let! lowerBound = Arb.generate<decimal>
-        let! PositiveInt d = Arb.generate<PositiveInt>
-        let delta = decimal d
+        let! lb = FloatGen
+        let! d = PositiveFloatGen
+        let lowerBound = lb
+        let delta = d
         let upperBound = lowerBound + delta
         return Continuous (lowerBound, upperBound)
     }
