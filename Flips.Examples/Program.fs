@@ -78,12 +78,12 @@ let FoodTruckMapExample () =
     // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
     // with a Lower Bound of 0.0 and an Upper Bound of Infinity
     let numberOfItem =
-        items
-        |> List.map (fun x -> x, Decision.createContinuous (sprintf "NumberOf%s" x) 0.0 infinity)
+        [for item in items do
+            item, Decision.createContinuous (sprintf "NumberOf%s" item) 0.0 infinity]
         |> Map.ofList
 
     // Create the Linear Expression for the objective
-    let objectiveExpression = items |> List.sumBy (fun item -> profit.[item] * numberOfItem.[item])
+    let objectiveExpression = List.sum [for item in items -> profit.[item] * numberOfItem.[item]]
 
     // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
     // the Objective Expression
@@ -91,11 +91,11 @@ let FoodTruckMapExample () =
     
     // Create a Max Item Constraints
     let maxItemConstraints =
-        items
-        |> List.map (fun item -> Constraint.create (sprintf "MaxOf%s" item) (numberOfItem.[item] <== maxIngredients.[item]) )
+        [for item in items ->
+            Constraint.create (sprintf "MaxOf%s" item) (numberOfItem.[item] <== maxIngredients.[item])]
 
     // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
-    let weightExpression = items |> List.sumBy (fun item -> itemWeight.[item] * numberOfItem.[item])
+    let weightExpression = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[item]]
     let maxWeight = Constraint.create "MaxWeight" (weightExpression<== maxTruckWeight)
 
     // Create a Model type and pipe it through the addition of the constraints
@@ -141,12 +141,12 @@ let FoodTruckConstraintBuilderExample () =
     // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
     // with a Lower Bound of 0.0 and an Upper Bound of Infinity
     let numberOfItem =
-        items
-        |> List.map (fun x -> x, Decision.createContinuous (sprintf "NumberOf%s" x) 0.0 infinity)
+        [for item in items do
+            item, Decision.createContinuous (sprintf "NumberOf%s" item) 0.0 infinity]
         |> Map.ofList
 
     // Create the Linear Expression for the objective
-    let objectiveExpression = items |> List.sumBy (fun item -> profit.[item] * numberOfItem.[item])
+    let objectiveExpression = List.sum [for item in items -> profit.[item] * numberOfItem.[item]]
 
     // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
     // the Objective Expression
@@ -161,7 +161,94 @@ let FoodTruckConstraintBuilderExample () =
     }
 
     // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
-    let weightExpression = items |> List.sumBy (fun item -> itemWeight.[item] * numberOfItem.[item])
+    let weightExpression = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[item]]
+    let maxWeight = Constraint.create "MaxWeight" (weightExpression <== maxTruckWeight)
+
+    // Create a Model type and pipe it through the addition of the constraints
+    let model =
+        Model.create objective
+        |> Model.addConstraints maxItemConstraints
+        |> Model.addConstraint maxWeight
+
+    // Create a Settings type which tells the Solver which types of underlying solver to use,
+    // the time alloted for solving, and whether to write an LP file to disk
+    let settings = {
+        SolverType = SolverType.CBC
+        MaxDuration = 10_000L
+        WriteLPFile = None
+    }
+
+    // Call the `solve` function in the Solve module to evaluate the model
+    let result = solve settings model
+
+    printfn "-- Result --"
+
+    // Match the result of the call to solve
+    // If the model could not be solved it will return a `Suboptimal` case with a message as to why
+    // If the model could be solved, it will print the value of the Objective Function and the
+    // values for the Decision Variables
+    match result with
+    | Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
+    | Optimal solution ->
+        printfn "Objective Value: %f" solution.ObjectiveResult
+
+        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %s\tValue: %f" name value
+
+let MultipleFoodTruckExample () =
+    
+    // Declare the parameters for our model
+    let items = ["Hamburger"; "HotDog"]
+    let locations = ["Woodstock"; "Sellwood"; "Portland"]
+    let profit = Map.ofList [("Hamburger", 1.50); ("HotDog", 1.20)]
+    let maxIngredients = Map.ofList [("Hamburger", 300.0); ("HotDog", 200.0)]
+    let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4)]
+    let maxTruckWeight = 500.0
+
+    // Create Decision Variable which is keyed by the tuple of Item and Location.
+    // The resulting type is a Map<(string*string),Decision> 
+    // to represent how much of each item we should pack for each location
+    // with a Lower Bound of 0.0 and an Upper Bound of Infinity
+    let numberOfItem =
+        [for item in items do
+            for location in locations do
+                let decName = sprintf "NumberOf_%s_At_%s" item location
+                let decision = Decision.createContinuous decName 0.0 infinity
+                (item, location), decision]
+        |> Map.ofList
+
+    // Create the Linear Expression for the objective
+    let objectiveExpression = 
+        [for item in items do
+            for location in locations ->
+                profit.[item] * numberOfItem.[item, location]]
+        |> List.sum            
+
+    // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
+    // the Objective Expression
+    let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
+    
+    let maxItemConstraints =
+        [for item in items do
+            for location in locations do
+                let name = sprintf "MaxItem|%s_%s" item location
+                Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
+        
+
+    // Create a Max Item Constraints using the `ConstraintBuilder` the first argument for the builder
+    // is the prefix used for naming the constraint. The second argument is the F# expression which
+    // it will use for generating the `ConstraintExpressions`
+    let maxItemConstraints = ConstraintBuilder "MaxItem" {
+        for item in items do
+            for location in locations -> 
+                numberOfItem.[item,location] <== maxIngredients.[item]
+    }
+
+    // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
+    let weightExpression = 
+        List.sum [for item in items do 
+                    for location in locations -> 
+                        itemWeight.[item] * numberOfItem.[item, location]]
     let maxWeight = Constraint.create "MaxWeight" (weightExpression<== maxTruckWeight)
 
     // Create a Model type and pipe it through the addition of the constraints
@@ -238,7 +325,8 @@ let constraintBuilderExample () =
     let decisions = 
         [for s in sources do
             for d in destinations ->
-                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
+                let decName = (sprintf "FlowFrom%iTo%s" s d)
+                (s, d), 1.0 * Decision.createContinuous decName 0.0 infinity]
         |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints

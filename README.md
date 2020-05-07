@@ -87,18 +87,6 @@ let FoodTruckExample () =
 If we run this code we will get the following output
 
 ```console
-Welcome to the CBC MILP Solver
-Version: 2.10.3
-Build Date: Jan 27 2020
-
-command line - cbc -solve -quit (default strategy 1)
-Presolve 0 (-3) rows, 0 (-3) columns and 0 (-4) elements
-Empty problem - 0 rows, 0 columns and 0 elements
-Optimal - objective value 690
-After Postsolve, objective 690, infeasibilities - dual 0 (0), primal 0 (0)
-Optimal objective 690 - 0 iterations time 0.002, Presolve 0.00
-Total time (CPU seconds):       0.00   (Wallclock seconds):       0.00
-
 -- Result --
 Objective Value: 690.000000
 Decision: NumberOfHamburgers    Value: 300.000000
@@ -148,7 +136,7 @@ let FoodTruckMapExample () =
     // Create a Max Item Constraints
     let maxItemConstraints =
         items
-        |> List.map (fun item -> Constraint.create (sprintf "MaxOf%s" item) (numberOfItem.[item] <== maxIngredients.[item]) )
+        |> List.map (fun item -> Constraint.create (sprintf "MaxItem|%s" item) (numberOfItem.[item] <== maxIngredients.[item]) )
 
     // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
     let weightExpression = items |> List.sumBy (fun item -> itemWeight.[item] * numberOfItem.[item])
@@ -188,76 +176,46 @@ let FoodTruckMapExample () =
 
 We now have a formulation of the problem that will scale to an arbitrary number of items. This is a more maintainable formulation and will not require updating as what is and is not avilable to sell changes over time.
 
+## SliceMaps
+
+### Why do I care about SliceMaps?
+
+Up to this point we have been using the built in `Map` type for holding our data and Decision Variables. One of the challenges we will quickly run into when modeling optimization problems is that it is common to take ranges of values. For these reasons it is common to use N-dimensional Arrays so that you can take slices across different dimensions. Just using the built-in F# `Array` type has limitations though since you can only index the values with `int`. What we really want is something that allows us to look up a particular value using an arbitrary index type but also allows us to select ranges of values.
+
+So, we need something that has `Map` like lookup but also allows us to slice across different dimensions...? I know, let's create a new type, a `SliceMap`!
+
+> **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`. The numbers correspond to the dimensionality of the `Key` used in the map. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
+
 ### Constraint Builder
 
-It is common to need to create Constraints for a range of values. In this case it is nice to have facility express these sets of constraints succinctly. Fortunately, F# has the concept of Computation Expressions. Explaining how they work at this time is beyond the scope of this tutorial. Suffice it to say, Computation Expressions allow you define special behavior in the context of a Builder. A Builder is a class which takes an F# expression and can transform how it behaves. In this case, there is a `ConstraintBuilder` which automatically names constraints in a consistent fashion. Here is the Food Truck problem again but for the Max Item Constraints we have used a `ConstraintBuilder` instead of the `List.map`.
+Since the creation of constraints is such a common occurence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
 
 ```fsharp
-let FoodTruckConstraintBuilderExample () =
+let items = ["Hamburger"; "HotDog"]
+let locations = ["Woodstock"; "Sellwood"; "Portland"]
 
-    // Declare the parameters for our model
-    let items = ["Hamburger"; "HotDog"]
-    let profit = Map.ofList [("Hamburger", 1.50); ("HotDog", 1.20)]
-    let maxIngredients = Map.ofList [("Hamburger", 300.0); ("HotDog", 200.0)]
-    let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4)]
-    let maxTruckWeight = 500.0
+// Create Decision Variable which is keyed by the tuple of Item and Location.
+let numberOfItem =
+    [for item in items do
+        for location in locations do
+            let decName = sprintf "NumberOf_%s_At_%s" item location
+            let decision = Decision.createContinuous decName 0.0 infinity
+            (item, location), decision]
+    |> Map.ofList
 
-    // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
-    // with a Lower Bound of 0.0 and an Upper Bound of Infinity
-    let numberOfItem =
-        items
-        |> List.map (fun x -> x, Decision.createContinuous (sprintf "NumberOf%s" x) 0.0 infinity)
-        |> Map.ofList
+// How you would write the MaxItem constraints without `ConstraintBuilder`
+let maxItemConstraints =
+    [for item in items do
+        for location in locations do
+            let name = sprintf "MaxItem|%s_%s" item location
+            Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
 
-    // Create the Linear Expression for the objective
-    let objectiveExpression = items |> List.sumBy (fun item -> profit.[item] * numberOfItem.[item])
-
-    // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
-    // the Objective Expression
-    let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
-    
-    // Create a Max Item Constraints using the `ConstraintBuilder` the first argument for the builder
-    // is the prefix used for naming the constraint. The second argument is the F# expression which
-    // it will use for generating the `ConstraintExpressions`
-    let maxItemConstraints = ConstraintBuilder "MaxItem" {
-        for item in items ->
-            numberOfItem.[item] <== maxIngredients.[item]
-    }
-
-    // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
-    let weightExpression = items |> List.sumBy (fun item -> itemWeight.[item] * numberOfItem.[item])
-    let maxWeight = Constraint.create "MaxWeight" (weightExpression<== maxTruckWeight)
-
-    // Create a Model type and pipe it through the addition of the constraints
-    let model =
-        Model.create objective
-        |> Model.addConstraints maxItemConstraints
-        |> Model.addConstraint maxWeight
-
-    // Create a Settings type which tells the Solver which types of underlying solver to use,
-    // the time alloted for solving, and whether to write an LP file to disk
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 10_000L
-        WriteLPFile = None
-    }
-
-    // Call the `solve` function in the Solve module to evaluate the model
-    let result = solve settings model
-
-    printfn "-- Result --"
-
-    // Math the result of the call to solve
-    // If the model could not be solved it will return a `Suboptimal` case with a message as to why
-    // If the model could be solved, it will print the value of the Objective Function and the
-    // values for the Decision Variables
-    match result with
-    | Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
-    | Optimal solution ->
-        printfn "Objective Value: %f" solution.ObjectiveResult
-
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+// The equivalent statement using a `ConstraintBuilder`
+let maxItemConstraints = ConstraintBuilder "MaxItem" {
+    for item in items do
+        for location in locations -> 
+            numberOfItem.[item,location] <== maxIngredients.[item]
+}
 ```
 
-While this may not seem exciting initially, what is powerful about the `ConstraintBuilder` is that it will name correctly even if there are nested `for .. in` loops in the F# expression.
+`ConstraintBuilder` simply removes the need to define how to name the constraints. It is not necessary to use the `ConstrantBuilder` but it is there to streamline your modeling.
