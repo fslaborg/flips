@@ -186,6 +186,187 @@ So, we need something that has `Map` like lookup but also allows us to slice acr
 
 > **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`. The numbers correspond to the dimensionality of the `Key` used in the map. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
 
+### Motivating Problem
+
+Sometimes the best way to see the utility of something is to experience working on a problem without the right tools. Let's take our Food Cart problem and add some complexity. Now we are not managing a single food cart but multiple. We have three different locations we are managing now and we have added Pizza to the menus. Each food cart has a different weight limit and a different profit amount per item.
+
+```fsharp
+// Declare the parameters for our model
+let items = ["Hamburger"; "HotDog"; "Pizza"]
+let locations = ["Woodstock"; "Sellwood"; "Portland"]
+let profit = 
+    [
+        (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
+        (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
+        (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
+    ] |> Map.ofList
+
+let maxIngredients = Map.ofList [("Hamburger", 900.0); ("HotDog", 600.0); ("Pizza", 400.0)]
+let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4); ("Pizza", 0.6)]
+let maxTruckWeight = Map.ofList [("Woodstock", 200.0); ("Sellwood", 300.0); ("Portland", 280.0) ]
+
+// Create Decision Variable which is keyed by the tuple of Item and Location.
+// The resulting type is a Map<(string*string),Decision> 
+// to represent how much of each item we should pack for each location
+// with a Lower Bound of 0.0 and an Upper Bound of Infinity
+let numberOfItem =
+    [for item in items do
+        for location in locations do
+            let decName = sprintf "NumberOf_%s_At_%s" item location
+            let decision = Decision.createContinuous decName 0.0 infinity
+            (location, item), decision]
+    |> Map.ofList
+
+// Create the Linear Expression for the objective
+let objectiveExpression = 
+    [for item in items do
+        for location in locations ->
+            profit.[location, item] * numberOfItem.[location, item]]
+    |> List.sum            
+
+// Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
+// the Objective Expression
+let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
+
+// Create Total Item Maximum constraints for each item
+let maxItemConstraints =
+    [for item in items do
+        // The total of the Item is the sum across the Locations
+        let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
+        let name = sprintf "MaxItemTotal|%s" item
+        Constraint.create name (locationSum <== maxIngredients.[item])
+    ]
+
+
+// Create a Constraint for the Max combined weight of items for each Location
+let maxWeightConstraints = 
+    [for location in locations -> 
+        let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
+        let name = sprintf "MaxTotalWeight|%s" location
+        Constraint.create name (weightSum <== maxTruckWeight.[location])
+    ]
+
+// Create a Model type and pipe it through the addition of the constraints
+let model =
+    Model.create objective
+    |> Model.addConstraints maxItemConstraints
+    |> Model.addConstraints maxWeightConstraints
+```
+
+When we create out `maxItemConstraints` and `maxWeightConstraints` we are having to sum the decisions across a new dimension. For the `maxItemsConstraints` we have to sum the items across the Location dimensions:
+
+```fsharp
+let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
+```
+
+For the `maxWeightConstraints` we have to sum across the Items dimension:
+
+```fsharp
+let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
+```
+
+In this example this is not so bad but imagine problems where the dimensionsality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let's revisit the problem but we will use SliceMaps instead of the built in `Map` type. Instead of storing our data and decisions in the `Map` type, we will be using a corresponding `SliceMap`. If the Key for the data in a single dimension we will use a `SMap`. If the key is two dimensional we will use an `SMap2`.
+
+```fsharp
+// Declare the parameters for our model
+let items = ["Hamburger"; "HotDog"; "Pizza"]
+let locations = ["Woodstock"; "Sellwood"; "Portland"]
+let profit = 
+    [
+        (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
+        (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
+        (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
+    ] |> SMap2.ofList
+
+let maxIngredients = SMap.ofList [("Hamburger", 900.0); ("HotDog", 600.0); ("Pizza", 400.0)]
+let itemWeight = SMap.ofList [("Hamburger", 0.5); ("HotDog", 0.4); ("Pizza", 0.6)]
+let maxTruckWeight = SMap.ofList [("Woodstock", 200.0); ("Sellwood", 300.0); ("Portland", 280.0) ]
+
+let numberOfItem =
+    [for item in items do
+        for location in locations do
+            let decName = sprintf "NumberOf_%s_At_%s" item location
+            let decision = Decision.createContinuous decName 0.0 infinity
+            (location, item), decision]
+    |> SMap2.ofList
+
+// Use the .* operator to perform an element-wise multiplication of the two SliceMaps
+// Sum the result of the element-wise multiplication using the `sum` function.
+// The `sum` function calls the `sum` method of the type
+let objectiveExpression = sum (profit .* numberOfItem)
+
+let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
+
+// Create Total Item Maximum constraints for each item
+let maxItemConstraints =
+    [for item in items do
+        let name = sprintf "MaxItemTotal|%s" item
+        Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
+    ]
+
+
+// Create a Constraint for the Max combined weight of items for each Location
+let maxWeightConstraints = 
+    [for location in locations -> 
+        let name = sprintf "MaxTotalWeight|%s" location
+        Constraint.create name (sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location])
+    ]
+
+// Create a Model type and pipe it through the addition of the constraints
+let model =
+    Model.create objective
+    |> Model.addConstraints maxItemConstraints
+    |> Model.addConstraints maxWeightConstraints
+```
+
+We can see that things look a little different now. The first change is that we are storing our data in a `SMap` or `SMap2`. All of the SliceMaps support being created from a `List`, `Seq`, or `Array`. This behavior is the same as the equivalent functions for `Map`. You can even create a SliceMap from a `Map` if the dimensionality of the `'Key` matches what the SliceMap is expecting.
+
+The next major change is in the `objectiveExpression` creation:
+
+```fsharp
+let objectiveExpression = sum (profit .* numberOfItem)
+```
+
+Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. Where the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from Matlab and has been implemented in other languages.
+
+The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type can calls its associated `sum` function. All of the SliceMaps have a `sum` method. When sum is called, all of the values in the SliceMap are summed together using the `+` operator. SliceMaps are intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
+
+The next change we see in the model formulation is in the creation of `maxItemConstraints`. Specifically on the line create we create the constraint.
+
+```fsharp
+Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
+```
+
+We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left hand side of our Constraint Expression.
+
+SliceMaps have several different types of slices they support:
+
+- All : All Keys will match
+- Equal : Key must be qual to this value
+- GreaterThan : Key must be greater than this value
+- GreaterOrEqual : Key must be greater or equal to this value
+- LessThan : Key must be less than this value
+- LessOrEqual : Key must be less or equal to this value
+- Between : Key must be between these values (inclusive)
+- In : Key must be contained in this set
+- NotIn : Key must not be in this set
+- Where : Key must return true for the predicate
+
+SliceMaps also support scalar multiplication.
+
+```fsharp
+let profit = 
+    [
+        (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
+        (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
+        (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
+    ] |> SMap2.ofList
+
+> profit * 2.0
+val it : SMap2<string,string,float> =
+  Map2D map [((Portland, Hamburger), 3.8); ((Portland, HotDog), 3.6); ((Portland, Pizza), 4); ... ]
+```
+
 ### Constraint Builder
 
 Since the creation of constraints is such a common occurence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
