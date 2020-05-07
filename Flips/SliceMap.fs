@@ -27,8 +27,9 @@ type SliceType<'a when 'a : comparison> =
     | GreaterOrEqual of 'a
     | LessThan of 'a
     | LessOrEqual of 'a
-    | In of Set<'a>
     | Between of 'a * 'a
+    | In of Set<'a>
+    | NotIn of Set<'a>
     | Where of ('a -> bool)
 
 
@@ -40,8 +41,9 @@ let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
     | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
     | LessThan k1 -> fun k2 -> k2 < k1
     | LessOrEqual k1 -> fun k2 -> k2 <= k1
-    | In set -> fun k2 -> Set.contains k2 set
     | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
+    | In set -> fun k2 -> Set.contains k2 set
+    | NotIn set -> fun k2 -> not (Set.contains k2 set)
     | Where f -> f
 
 
@@ -50,7 +52,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
     member this.Values = m
 
     override this.ToString() =
-        sprintf "Map1D %O" this.Values
+        sprintf "SMap %O" this.Values
 
     override this.Equals(obj) =
         match obj with
@@ -138,7 +140,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     member this.Values = m
 
     override this.ToString () = 
-        sprintf "Map2D %O" this.Values
+        sprintf "SMap2 %O" this.Values
 
     override this.Equals(obj) =
         match obj with
@@ -243,7 +245,7 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     member this.Values = m
 
     override this.ToString() =
-        sprintf "Map3D %O" this.Values
+        sprintf "SMap3 %O" this.Values
 
     override this.Equals(obj) =
         match obj with
@@ -378,7 +380,7 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
     member this.Values = m
 
     override this.ToString() =
-        sprintf "Map4D %O" this.Values
+        sprintf "SMap4 %O" this.Values
 
     override this.Equals(obj) =
         match obj with

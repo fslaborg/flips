@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
-    <Version>1.0.0-RC1</Version>
+    <Version>1.0.0</Version>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>

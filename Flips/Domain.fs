@@ -289,6 +289,7 @@ module Decision =
             Name = DecisionName decisionName
             Type = DecisionType.Boolean
         }
+        |> LinearExpression.OfDecision
 
     let createInteger decisionName lowerBound upperBound =
         if System.String.IsNullOrEmpty(decisionName) then
@@ -299,6 +300,7 @@ module Decision =
             Name = DecisionName decisionName
             Type = DecisionType.Integer (lowerBound, upperBound)
         }
+        |> LinearExpression.OfDecision
 
     let createContinuous decisionName lowerBound upperBound =
         if System.String.IsNullOrEmpty(decisionName) then
@@ -308,7 +310,8 @@ module Decision =
         {
             Name = DecisionName decisionName
             Type = DecisionType.Continuous (lowerBound, upperBound)
-        }    
+        }
+        |> LinearExpression.OfDecision
 
 module Constraint =
 
