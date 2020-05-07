@@ -12,15 +12,15 @@ open Flips
 open Flips.Domain
 open Flips.SliceMap
 
-let profit = 
-    [
-        (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
-        (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
-        (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
-    ] |> SMap2.ofList
+//let profit = 
+//    [
+//        (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
+//        (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
+//        (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
+//    ] |> SMap2.ofList
 
-let x = profit * 2.0
-x
+//let x = profit * 2.0
+//x
 //let hamburgerProfit = 1.50
 //let hotdogProfit = 1.20
 //let hamburgerBuns = 300.0
@@ -69,11 +69,13 @@ x
 //f1 + f2
 //f1 .* f2
 
-//let x = SMap.ofList [for i in 1..3 -> i, float i]
-//let y = SMap.ofList [for i in 1..3 -> i, 2.0 * float i]
+let x = SMap.ofList [for i in 1..3 -> i, float i]
+let y = SMap.ofList [for i in 2..4 -> i, 2.0 * float i]
+x + y
 
-//x + y
-//x .* y
+x * 2.0
+
+x .* y
 
 //f1.[All, "b"] .* x
 //f1.[1, "b"]

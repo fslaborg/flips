@@ -355,16 +355,22 @@ SliceMaps have several different types of slices they support:
 SliceMaps also support scalar multiplication.
 
 ```fsharp
-let profit = 
-    [
-        (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
-        (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
-        (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
-    ] |> SMap2.ofList
+let x = SMap.ofList [for i in 1..3 -> i, float i]
 
-> profit * 2.0
-val it : SMap2<string,string,float> =
-  Map2D map [((Portland, Hamburger), 3.8); ((Portland, HotDog), 3.6); ((Portland, Pizza), 4); ... ]
+> x * 2.0
+val it : SMap<int,float> =
+  Map1D {Values = map [(1, 2.0); (2, 4.0); (3, 6.0)];}
+```
+
+You can also add SliceMaps together. The types of the Keys have to match and the contained values need to support addition with one another. In the cases where there are matching Keys, the values are added together. The values where the Keys do not match are still returned in the new SliceMap.
+
+```fsharp
+let x = SMap.ofList [for i in 1..3 -> i, float i]
+let y = SMap.ofList [for i in 2..4 -> i, 2.0 * float i]
+x + y
+> 
+val it : SMap<int,float> =
+  Map1D {Values = map [(1, 1.0); (2, 6.0); (3, 9.0); (4, 8.0)];}
 ```
 
 ### Constraint Builder
