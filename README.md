@@ -3,11 +3,11 @@
 
 ### Introduction
 
-Flips is an F# library for modeling and solving Linear Programming and Mixed-Integer Programming problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the Google OR-Tools library which is excellent. In the future I hope to support more solver backends.
+Flips is an F# library for modeling and solving Linear Programming and Mixed-Integer Programming problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding Google OR-Tools library. In the future I hope to support more solver backends.
 
 F# is a great language to work with but many of the existing APIs for modeling Optimization problems are heavily influenced by Object-Oriented concepts. While there is nothing wrong with OO, this is an attempt to take a functional-first approach to the problem.
 
-This library tries to making the modeling of Optimization Models clean and simple. The idea was to make it as straightforward as possible for an Operation Researcher or an Optimization domain expert to express their ideas in F#. These practictioners are used to working with Mathematical constructs like Sets, Sigma-notation, and summations. Reducing the mental distance between the mathematical formulation of problems and the F# representation was a key design goal.
+This library tries to make the modeling of Optimization Models clean and simple. The idea was to make it straightforward for an Operation Researcher or Optimization domain expert to express their ideas in F#. These practictioners are used to working with Mathematical constructs like Sets, Sigma-notation, and summations. Reducing the mental distance between the mathematical formulation of problems and the F# representation was a key design goal.
 
 ### Simple Example Problem
 
@@ -19,7 +19,7 @@ For anyone not familiar with Mathematical Optimization, the process of creating 
 4. Adding Constraints
 5. Solving the Model
 
-Let us work an example problem to see how this works. We are managing a Food Truck and we need to figure out what ingredients we need to pack for the day. In this example we only sell Hamburgers and Hotdogs. Each Hamburger we sell provides us $1.50 in profit. Each Hotdog we sell provides $1.20 in profit. We only have enough Hamburger buns for up to 300 Hamburgers and only 200 buns for Hot Dogs. The ingredients for a single Hamburger weight 0.5 kg and the ingredients for a Hot Dog weigh 0.4 kg. Our Food Truck can only up to 500 kg. The question becomes, how many ingredients do we pack for Hamburgers and how many for Hot Dogs? Let's answer this question by formulating an Optimization model to answer it.
+Let us go through an example problem to see how this works. We are managing a Food Truck and we need to figure out what ingredients we need to pack for the day. In this example we only sell Hamburgers and Hotdogs. Each Hamburger we sell provides us $1.50 in profit. Each Hotdog we sell provides $1.20 in profit. We only have enough Hamburger buns for up to 300 Hamburgers and only 200 buns for Hotdogs. The ingredients for a single Hamburger weight 0.5 kg and the ingredients for a Hotdog weigh 0.4 kg. Our Food Truck can only hold up to 500 kg. The question becomes, how many ingredients do we pack for Hamburgers and how many for Hotdogs? Let's answer this question by formulating an Optimization model.
 
 ```fsharp
 let FoodTruckExample () =
@@ -31,7 +31,7 @@ let FoodTruckExample () =
     let hotdogBuns = 200.0
     let hamburgerWeight = 0.5
     let hotdogWeight = 0.4
-    let maxTruckWeight = 500.0
+    let maxTruckWeight = 200.0
 
     // Create Decision Variable with a Lower Bound of 0.0 and an Upper Bound of Infinity
     let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infinity
@@ -71,7 +71,7 @@ let FoodTruckExample () =
 
     printfn "-- Result --"
 
-    // Math the result of the call to solve
+    // Match the result of the call to solve
     // If the model could not be solved it will return a `Suboptimal` case with a message as to why
     // If the model could be solved, it will print the value of the Objective Function and the
     // values for the Decision Variables
@@ -88,17 +88,17 @@ If we run this code we will get the following output
 
 ```console
 -- Result --
-Objective Value: 690.000000
-Decision: NumberOfHamburgers    Value: 300.000000
+Objective Value: 600.000000
+Decision: NumberOfHamburgers    Value: 240.000000
 Decision: NumberOfHotDogs       Value: 200.000000
 Press any key to close...
 ```
 
-The rows below the `-- Result --` line show the values the solver found. The solver estimates that we can achieve a profit of $690.00 if we pack for 300 Hamburgers and 200 Hot Dogs. You can run this exmaple problem for yourself by running the `FoodTruckExample` problem in the `Flips.Examples` project.
+The rows below the `-- Result --` line show the values the solver found. The solver estimates that we can achieve a profit of $600.00 if we pack for 240 Hamburgers and 200 Hotdogs. You can run this exmaple problem for yourself by running the `FoodTruckExample` problem in the `Flips.Examples` project.
 
 ### Using Indices
 
-While the above formulation did work, it does not scale automatically with the number of food items. A better way to formulate this problem would be to store parameter data and decision variables in `Map` instances and use product names as the keys. This means we add a new first step: define the indices. This means the steps to modeling are now:
+While the above formulation did work, it does not scale automatically with the number of food items. A better way to formulate this problem would be to store parameter data and decision variables in `Map` instances and use product names as the keys. This means we add a new first step: define the indices. The steps to modeling are now:
 
 1. Define the Indices/Keys for your data
 2. Define your data as Maps using your defined Keys
@@ -117,7 +117,7 @@ let FoodTruckMapExample () =
     let profit = Map.ofList [("Hamburger", 1.50); ("HotDog", 1.20)]
     let maxIngredients = Map.ofList [("Hamburger", 300.0); ("HotDog", 200.0)]
     let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4)]
-    let maxTruckWeight = 500.0
+    let maxTruckWeight = 200.0
 
     // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
     // with a Lower Bound of 0.0 and an Upper Bound of Infinity
@@ -174,21 +174,21 @@ let FoodTruckMapExample () =
             printfn "Decision: %s\tValue: %f" name value
 ```
 
-We now have a formulation of the problem that will scale to an arbitrary number of items. This is a more maintainable formulation and will not require updating as what is and is not avilable to sell changes over time.
+We now have a formulation of the problem that will scale to an arbitrary number of items. This is a more maintainable formulation and will not require updating as the variety of items changes over time. Only the input data to the model formulation code need change.
 
 ## SliceMaps
 
 ### Why do I care about SliceMaps?
 
-Up to this point we have been using the built in `Map` type for holding our data and Decision Variables. One of the challenges we will quickly run into when modeling optimization problems is that it is common to take ranges of values. For these reasons it is common to use N-dimensional Arrays so that you can take slices across different dimensions. Just using the built-in F# `Array` type has limitations though since you can only index the values with `int`. What we really want is something that allows us to look up a particular value using an arbitrary index type but also allows us to select ranges of values.
+Up to this point we have been using the built in `Map` type for holding our data and Decision Variables. One of the challenges we will quickly run into when modeling optimization problems is that it is common to operate on subsets of values, often refered to as slices. For these reasons it is common to use N-dimensional Arrays so that you can take slices across different dimensions. Just using the built-in F# `Array` type has limitations though since you can only index the values with an `int`. What we really want is something that allows us to look up a particular value using an arbitrary index type but also allows us to select ranges of values.
 
 So, we need something that has `Map` like lookup but also allows us to slice across different dimensions...? I know, let's create a new type, a `SliceMap`!
 
-> **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`. The numbers correspond to the dimensionality of the `Key` used in the map. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
+> **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`. The numbers correspond to the dimensionality of the `Key` used in the `Map`. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
 
 ### Motivating Problem
 
-Sometimes the best way to see the utility of something is to experience working on a problem without the right tools. Let's take our Food Cart problem and add some complexity. Now we are not managing a single food cart but multiple. We have three different locations we are managing now and we have added Pizza to the menus. Each food cart has a different weight limit and a different profit amount per item.
+Sometimes the best way to see the utility of a new tool is to experience working on a problem without it. Let's take our Food Cart problem and add some complexity. Now we are not managing a single food cart but multiple. We have three different locations we are managing and we have added Pizza to the menus. Each food cart has a different weight limit and a different profit amount per item.
 
 ```fsharp
 // Declare the parameters for our model
@@ -253,7 +253,7 @@ let model =
     |> Model.addConstraints maxWeightConstraints
 ```
 
-When we create out `maxItemConstraints` and `maxWeightConstraints` we are having to sum the decisions across a new dimension. For the `maxItemsConstraints` we have to sum the items across the Location dimensions:
+When we create our `maxItemConstraints` and `maxWeightConstraints` we are having to sum the decisions across a new dimension. For the `maxItemsConstraints` we have to sum the items across the Location dimension:
 
 ```fsharp
 let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
@@ -327,11 +327,11 @@ The next major change is in the `objectiveExpression` creation:
 let objectiveExpression = sum (profit .* numberOfItem)
 ```
 
-Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. Where the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from Matlab and has been implemented in other languages.
+Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. When the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from Matlab and has been implemented in other languages.
 
-The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type can calls its associated `sum` function. All of the SliceMaps have a `sum` method. When sum is called, all of the values in the SliceMap are summed together using the `+` operator. SliceMaps are intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
+The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type and calls its associated `sum` function. All of the SliceMaps have a `sum` method. When sum is called, all of the values in the SliceMap are summed together using the `+` operator. SliceMaps are intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
 
-The next change we see in the model formulation is in the creation of `maxItemConstraints`. Specifically on the line create we create the constraint.
+The next change we see in the model formulation is in the creation of `maxItemConstraints`. Specifically on the line where we create the constraint.
 
 ```fsharp
 Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])

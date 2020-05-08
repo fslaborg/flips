@@ -14,7 +14,7 @@ let FoodTruckExample () =
     let hotdogBuns = 200.0
     let hamburgerWeight = 0.5
     let hotdogWeight = 0.4
-    let maxTruckWeight = 500.0
+    let maxTruckWeight = 200.0
 
     // Create Decision Variable with a Lower Bound of 0.0 and an Upper Bound of Infinity
     let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infinity
@@ -73,7 +73,7 @@ let FoodTruckMapExample () =
     let profit = Map.ofList [("Hamburger", 1.50); ("HotDog", 1.20)]
     let maxIngredients = Map.ofList [("Hamburger", 300.0); ("HotDog", 200.0)]
     let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4)]
-    let maxTruckWeight = 500.0
+    let maxTruckWeight = 200.0
 
     // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
     // with a Lower Bound of 0.0 and an Upper Bound of Infinity
@@ -136,7 +136,7 @@ let FoodTruckConstraintBuilderExample () =
     let profit = Map.ofList [("Hamburger", 1.50); ("HotDog", 1.20)]
     let maxIngredients = Map.ofList [("Hamburger", 300.0); ("HotDog", 200.0)]
     let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4)]
-    let maxTruckWeight = 500.0
+    let maxTruckWeight = 200.0
 
     // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
     // with a Lower Bound of 0.0 and an Upper Bound of Infinity
@@ -554,11 +554,11 @@ let mapSlicingExample () =
 [<EntryPoint>]
 let main argv =
     
-    //FoodTruckExample ()
+    FoodTruckExample ()
     //FoodTruckMapExample ()
     //FoodTruckConstraintBuilderExample ()
-    MultipleFoodTruckExample ()
-    MultipleFoodTruckWithSliceMapExample ()
+    //MultipleFoodTruckExample ()
+    //MultipleFoodTruckWithSliceMapExample ()
     //simpleModel ()
     //constraintBuilderExample ()
     //mapSlicingExample ()
