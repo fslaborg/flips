@@ -69,16 +69,29 @@ open Flips.SliceMap
 //f1 + f2
 //f1 .* f2
 
-let x = SMap.ofList [for i in 1..3 -> i, float i]
-let y = SMap.ofList [for i in 2..4 -> i, 2.0 * float i]
-x + y
+let x1 = SMap.ofList [for i in 1..5 -> i, i]
+x1.[1]
 
-x * 2.0
+let x = SMap.ofList [for i in 1..5 -> i, i]
+x.[GreaterThan 3]
 
-x .* y
+let x = SMap.ofList [for i in 1..5 -> i, i]
+x.[GreaterOrEqual 3]
 
-//f1.[All, "b"] .* x
-//f1.[1, "b"]
-////let x = .> "CHicken"
+let x = SMap.ofList [for i in 1..5 -> i, i]
+x.[LessThan 3]
 
-////f.[1, "a"]
+let x1 = SMap.ofList [for i in 1..5 -> i, i]
+x1.[All]
+
+
+
+let x2 = [for i in 1..3 do
+            for j in 1..3 ->
+                    (i, j), i + j]
+        |> SMap2.ofList
+x2.[1, 2]
+
+x2.[All, All]
+
+
