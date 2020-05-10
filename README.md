@@ -1,13 +1,28 @@
-# Flips : **F**# **LI**near **P**rogramming **S**ystem
+# Flips : **F**# **LI**near **P**rogramming **S**ystem <!-- omit in toc -->
 
-## Table of Contents
+## Table of Contents <!-- omit in toc -->
 
-1. [Introduction](##Introduction)
-   1. [Simple Example Problem](###Simple-Example-Problem)
-   2. [Using Indices](###Using-Indices)
-2. [SliceMaps](##SliceMaps) 
-   1. [What is Slicing](##What-is-Slicing)
-
+- [Introduction](#introduction)
+  - [Simple Example Problem](#simple-example-problem)
+  - [Using Indices](#using-indices)
+- [SliceMaps](#slicemaps)
+  - [What is Slicing](#what-is-slicing)
+  - [Types of SliceMaps](#types-of-slicemaps)
+  - [Types of Slicing](#types-of-slicing)
+    - [`GreaterThan` Slicing](#greaterthan-slicing)
+    - [`GreaterOrEqual` Slicing](#greaterorequal-slicing)
+    - [`LessThan` Slicing](#lessthan-slicing)
+    - [`LessOrEqual` Slicing](#lessorequal-slicing)
+    - [`Between` Slicing](#between-slicing)
+    - [`In` Slicing](#in-slicing)
+    - [`NotIn` Slicing](#notin-slicing)
+    - [`All` Slicing](#all-slicing)
+    - [`Where` Slicing](#where-slicing)
+  - [Slicing for 2D, 3D, and 4D SliceMaps](#slicing-for-2d-3d-and-4d-slicemaps)
+  - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
+  - [Operators for SliceMaps](#operators-for-slicemaps)
+  - [Using SliceMaps](#using-slicemaps)
+- [Constraint Builder](#constraint-builder)
 
 ## Introduction
 
@@ -171,7 +186,7 @@ So, we need something that has `Map` like lookup but also allows us to slice acr
 
 ### Types of SliceMaps
 
-SliceMaps are not a single type, they are a family of types akin to Tuples. Tuples can have any number elements: 2, 3, 4, etc. SliceMaps are like tuples in that they have different levels of dimensionality. An `SMap` has a key which is a single element. An `SMap2` has a key which is made up of two elements. An `SMap3` has a key which is made up of three elements. The family of SliceMaps goes up to 4 element keys at this time. The type signatures for SliceMaps are the following:
+SliceMaps are not a single type, they are a family of types akin to Tuples. Tuples can have any number elements: 2, 3, 4, etc. SliceMaps are like tuples in that they have different levels of dimensionality. An `SMap` has a key which is a single element. An `SMap2` has a key which is made up of two elements. An `SMap3` has a key which is made up of three elements. The family of SliceMaps goes up to 4-element keys at this time. The type signatures for SliceMaps are the following:
 
 ```fsahrp
 SMap<'Key, 'Value>
@@ -303,7 +318,7 @@ x.[Where isDivisibleBy2] // Return SMap<int,int> = SMap map [(2, 2); (4, 4)]
 
 In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
 
-#### Slicing for 2D, 3D, and 4D SliceMaps
+### Slicing for 2D, 3D, and 4D SliceMaps
 
 The examples above have shown what the slicing behavior is for a 1D SliceMap, a `SMap`. While useful for a single dimensional SliceMap, the utility of slicing is increased when you have higher dimensional data. When working with 2, 3, and 4 dimensional SliceMaps, it is important to not that the returned keys and values must meet all of the conditions of the slices. Let's see how this plays out with a `SMap2`.
 
@@ -332,7 +347,7 @@ x.[GreaterOrEqual 2, LessOrEqual "b"]
 
 Here we are only returning the entries where the value of the first key dimension is greater or equal to 2 and the value of the second dimension is less or equal to "b". The great thing about F# is that you can use any type for the key dimensions as long as they support `comparison`.
 
-#### Slicing and Domain Driven Design
+### Slicing and Domain Driven Design
 
 One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
 
@@ -351,7 +366,7 @@ x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
 //                    ((Index 3, City "a"), 4.0); ((Index 3, City "b"), 1.5)]
 ```
 
-You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#.
+You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#. While the wrapping of the primitives in single-case DUs may feel over the top for simple modeling, it has payed dividends in real-world scenarios.
 
 ### Operators for SliceMaps
 SliceMaps also scalar multiplication through the use of `*`.
@@ -544,7 +559,7 @@ let y = SMap.ofList [for i in 2..5 -> i, i]
 x + y // Returns SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
 ```
 
-### Constraint Builder
+## Constraint Builder
 
 Since the creation of constraints is such a common occurence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
 
