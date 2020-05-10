@@ -3,7 +3,11 @@
 ## Table of Contents <!-- omit in toc -->
 
 - [Introduction](#introduction)
-  - [Simple Example Problem](#simple-example-problem)
+  - [Optimization, What art thou?](#optimization-what-art-thou)
+    - [Lack of Awareness](#lack-of-awareness)
+    - [Lack of Tools](#lack-of-tools)
+  - [Why do we need Flips?](#why-do-we-need-flips)
+  - [Intro Problem](#intro-problem)
   - [Using Indices](#using-indices)
 - [SliceMaps](#slicemaps)
   - [What is Slicing](#what-is-slicing)
@@ -32,9 +36,31 @@ F# is a great language to work with but many of the existing APIs for modeling O
 
 This library tries to make the modeling of Optimization Models clean and simple. The idea was to make it straightforward for an Operation Researcher or Optimization domain expert to express their ideas in F#. These practictioners are used to working with Mathematical constructs like Sets, Sigma-notation, and summations. Reducing the mental distance between the mathematical formulation of problems and the F# representation was a key design goal.
 
-### Simple Example Problem
+### Optimization, What art thou?
 
-For anyone not familiar with Mathematical Optimization, the process of creating and solving a model is composed of the following steps:
+The word "Optimization" is an overloaded term and is used in many domains. It can mean something as simple as, "We looked at the process and made some minor tweaks," all the way to more formal definitions found in [Mathematical Optimization](https://en.wikipedia.org/wiki/Mathematical_optimization). Linear Programming (LP) and Mixed-Integer Programming (MIP) are sub-fields of Mathematical Optimization. It is important to note that LP/MIP emerged as fields of study before Software Programming. The word "Programming" used to mean "Planning". Therefore, it is best to think of LP/MIP as tools for Mathematical Planning. These fields focus on answering the question: Given a set of decisions to be made, what is the best possible plan, while obeying a set of constraints?
+
+The tools of Linear/Mixed-Integer Programming are underutilized. Businesses frequently have problems that would be trivialy solved using these tools but instead use complex heuristics involving copy/paste in Excel files instead. There have been many instances where I have observed a domain-expert slaving away for hours at a time with a giant Excel file to answer the question, "What should we do?" After sitting down and talking with these domain-experts it becomes clear they have a planning problem which could be reduced to a 5 minute problem for a computer. There are at least two major reasons for the lack of adoption: lack of awareness and lack of tools.
+
+#### Lack of Awareness
+
+LP/MIP is typically found in Operations Research curriculum. In some cases people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldly as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relagated to exper users who likely studied it more seriously in univeristy.
+
+#### Lack of Tools
+
+LP/MIP were severly limited by the computational power of compters at the time the techniques were first developed. Over time, computers become far more powerful and enormous advances in the underlying algorithms were made. We are now able to solve huge LP/MIP problems. Until recently though, to utilize that power you had to learn a specialized language to formulate your problems. This relagated the use of LP/MIP to those who had studied these domain-specific languages.
+
+In the last few years Python has done an incredible service to the software development community by providing a gentle onramp to writing code. Combine Python with Jupyter notebooks and you have a powerful tool for experimenting without all of the formalism of "professional" software development. There are some in the LP/MIP community who have recognized this trend and have created libraries for using LP/MIP from Python. I recommend looking at the work of [PuLP](https://github.com/coin-or/pulp) and the excellent [Gurobi Python library](https://www.gurobi.com/documentation/9.0/quickstart_mac/py_python_interface.html).
+
+### Why do we need Flips?
+
+Many of the existing libraries for using LP/MIP are either array-based or heavily Object-Oriented. There is nothing wrong with these approaches but they run counter to idiomatic F#. F# provides a rich set of tools for expressing problems and algorithms in a functional-first style. After spending several years working in F# and Mathematical Planning, it appeared that there was a gap in the market. A library was needed that allowed an F# developer to express their LP/MIP in a functional way.
+
+Flips is intended to make building an solving LP/MIP problems in F# simple. The hope is that by filling in the gap between current LP/MIP libraries and F# developers the adoption of the awesome tool of LP/MIP will be accelerated.
+
+### Intro Problem
+
+For anyone not familiar with LP/MIP, the process of creating and solving a model is composed of the following steps:
 
 1. Defining your parameters
 2. Creating your Decision Variables
@@ -163,7 +189,7 @@ let maxItemConstraints =
 
 // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
 let weightExpression = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[item]]
-let maxWeight = Constraint.create "MaxWeight" (weightExpression<== maxTruckWeight)
+let maxWeight = Constraint.create "MaxWeight" (weightExpression <== maxTruckWeight)
 
 // Create a Model type and pipe it through the addition of the constraints
 let model =
@@ -212,23 +238,23 @@ let x2 = [for i in 1..3 do
 x2.[1, 2] // Returns val it : int = 3
 ```
 
-The real power of SliceMaps for Optimization Modeling comes from their ability to "slice" the values across the dimensions of the key. This takes the ability to slice `Array` and `List` but extends it. The slicing built into F# is powerful but it limited to slicing by the index of the values. SliceMaps support a similar ability but extend it by more advanced filtering criteria which is useful in the Optimization domain.
+The real power of SliceMaps for Optimization Modeling comes from their ability to "slice" the values across the dimensions of the key. This takes the ability to slice `Array` and `List` but extends it. The slicing built into F# is powerful but it limited to slicing contiguous values. SliceMaps support the same ability but extend it by offering more advanced filtering criteria which is useful in the Optimization domain.
 
 
 ### Types of Slicing
 
 SliceMaps have several different types of slices they support:
 
-- All : All Keys will match
-- Equal : Key must be qual to this value
-- GreaterThan : Key must be greater than this value
-- GreaterOrEqual : Key must be greater or equal to this value
-- LessThan : Key must be less than this value
-- LessOrEqual : Key must be less or equal to this value
-- Between : Key must be between these values (inclusive)
-- In : Key must be contained in this set
-- NotIn : Key must not be in this set
-- Where : Key must return true for the predicate
+- `All` : All Keys will match
+- `Equal x` : Key must be equal to `x`
+- `GreaterThan x` : Key values in this dimension must be greater than `x`
+- `GreaterOrEqual x` : Key values in this dimension must be greater or equal to `x`
+- `LessThan x` : Key values in this dimension must be less than `x`
+- `LessOrEqual x` : Key values in this dimension must be less or equal to `x`
+- `Between (x, y)` : Key value in this dimension must be between `x` and `y` (inclusive)
+- `In (x:Set<'a>)` : Key value in this dimension must be contained in the set `x`
+- `NotIn (x:Set<'a>)` : Key value in this dimension must not be in this set `x`
+- `Where ('a -> bool)` : Key value in this dimension must return true for the predicate
 
 #### `GreaterThan` Slicing
 
@@ -236,7 +262,8 @@ This creates a SliceMap where the Key element is greater than the corresponding 
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
-x.[GreaterThan 3] // Returns SMap<int,int> = SMap map [(4, 4); (5, 5)]
+x.[GreaterThan 3] 
+// Returns SMap<int,int> = SMap map [(4, 4); (5, 5)]
 ```
 
 #### `GreaterOrEqual` Slicing
@@ -245,7 +272,8 @@ This creates a SliceMap where the Key element is greater than or equal the corre
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
-x.[GreaterOrEqual 3] // Returns SMap map [(3, 3); (4, 4); (5, 5)]
+x.[GreaterOrEqual 3] 
+// Returns SMap map [(3, 3); (4, 4); (5, 5)]
 ```
 
 #### `LessThan` Slicing
@@ -254,7 +282,8 @@ This creates a SliceMap where the Key element is greater than the corresponding 
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
-x.[LessThan 3] // Returns SMap<int,int> = SMap map [(1, 1); (2, 2)]
+x.[LessThan 3] 
+// Returns SMap<int,int> = SMap map [(1, 1); (2, 2)]
 ```
 
 #### `LessOrEqual` Slicing
@@ -263,7 +292,8 @@ This creates a SliceMap where the Key element is greater than the corresponding 
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
-x.[LessOrEqual 3] // Returns SMap<int,int> = SMap map [(1, 1); (2, 2); (3, 3)]
+x.[LessOrEqual 3] 
+// Returns SMap<int,int> = SMap map [(1, 1); (2, 2); (3, 3)]
 ```
 
 #### `Between` Slicing
@@ -272,7 +302,8 @@ This creates a SliceMap where the Key element is between the Lower Bound and Upp
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
-x.[Between (3, 4)] // Returns SMap<int,int> = SMap map [(3, 3); (4, 4)]
+x.[Between (3, 4)] 
+// Returns SMap<int,int> = SMap map [(3, 3); (4, 4)]
 ```
 
 #### `In` Slicing
@@ -282,7 +313,8 @@ The `In` slice takes a set of values. If the Key value for that dimension is in 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
 let indexSet = Set.ofList [2; 4]
-x.[In indexSet] // Returns SMap<int,int> = SMap map [(2, 2); (4, 4)]
+x.[In indexSet] 
+// Returns SMap<int,int> = SMap map [(2, 2); (4, 4)]
 ```
 
 #### `NotIn` Slicing
@@ -292,7 +324,8 @@ The `NotIn` slice takes a set of values. If the Key value for that dimension is 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
 let indexSet = Set.ofList [2; 4]
-x.[NotIn indexSet] // SMap<int,int> = SMap map [(1, 1); (3, 3); (5, 5)]
+x.[NotIn indexSet] 
+// Returns SMap<int,int> = SMap map [(1, 1); (3, 3); (5, 5)]
 ```
 
 #### `All` Slicing
@@ -301,7 +334,8 @@ The `All` Slice is used to select all of the values in a given dimension. It is 
 
 ```fsharp
 let x1 = SMap.ofList [for i in 1..5 -> i, i]
-x1.[All] // Return SMap map [(1, 1); (2, 2); (3, 3); ... ]
+x1.[All] 
+// Return SMap map [(1, 1); (2, 2); (3, 3); ... ]
 ```
 
 In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
@@ -313,7 +347,8 @@ In the case of an `SMap` the `All` slicing is not exciting. It is simply returni
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
 let isDivisibleBy2 x = x % 2 = 0
-x.[Where isDivisibleBy2] // Return SMap<int,int> = SMap map [(2, 2); (4, 4)]
+x.[Where isDivisibleBy2] 
+// Return SMap<int,int> = SMap map [(2, 2); (4, 4)]
 ```
 
 In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
@@ -328,8 +363,9 @@ let x = SMap2.ofList [
     (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
     (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
 ]
-x.[GreaterThan 1, LessThan "b"] // Returns SMap2 map [((2, a), 3); 
-                                //                    ((3, a), 4)]
+x.[GreaterThan 1, LessThan "b"] 
+// Returns SMap2 map [((2, a), 3); 
+//                    ((3, a), 4)]
 ```
 
 In this case we are saying that the keys of the first dimension must be greater than 1 and the keys of the second dimension must be less than "b". This leaves only two entries from the original `SMap2`. Let's look at another example.
@@ -351,7 +387,7 @@ Here we are only returning the entries where the value of the first key dimensio
 
 One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
 
-For our use case, the use of Single-Case DUs allows us to keep track of what the basic types (`int`, `float`, `string`) actually correspond to. It is highly encourage to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior will still work as you would expect.
+For our use case, the use of Single-Case DUs allows us to keep track of what the basic types (`int`, `float`, `string`) actually correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior will still work as you would expect.
 
 ```fsharp
 type City = City of string
@@ -369,32 +405,33 @@ x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
 You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#. While the wrapping of the primitives in single-case DUs may feel over the top for simple modeling, it has payed dividends in real-world scenarios.
 
 ### Operators for SliceMaps
-SliceMaps also scalar multiplication through the use of `*`.
+SliceMaps support scalar multiplication through the use of `*`.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..3 -> i, float i]
 
 > x * 2.0
-val it : SMap<int,float> =
-  Map1D {Values = map [(1, 2.0); (2, 4.0); (3, 6.0)];}
+// Returns SMap<int,float> = SMap map [(1, 2.0); (2, 4.0); (3, 6.0)]
 ```
 
-SliceMaps can also be added together. In the case where the keys match, the underlying values are added together. In the cases where the key exists in only one map, the value is still returned. The assumption is that the value in the other SliceMap was a `Zero` equivalent.
+SliceMaps can also be added together. In the case where the keys match, the underlying values are added together. In the cases where the key exists in only one map, the value is still returned. The assumption is that the value in the other SliceMap was a `Zero` equivalent. The dimensionality of the SliceMap must match and the key types must align as well.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..3 -> i, i]
 let y = SMap.ofList [for i in 2..5 -> i, i]
-x + y // Returns SMap<int,int> = SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
+x + y 
+// Returns SMap<int,int> = SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
 ```
 
-Finally, SliceMaps support element-wise multiplication using the `.*` operator. This operator was first seen in Matlab but has been adopted by other languages as well. The SliceMaps will have their values multiplied together where the keys match. When the keys do not match, no value is returned. This behavior is similar to inner-joins in SQL.
+Finally, SliceMaps support element-wise multiplication using the `.*` operator. This operator was first seen in Matlab but has been adopted by other languages as well. The SliceMaps will have their values multiplied together where the keys match. When the keys do not match, no value is returned. This behavior is similar to inner-joins in SQL. The behavior is intended to be the same as the [Hadamard Opertor](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) in Linear Algebra. The difference is that SliceMaps can be keyed by any type that supports `comparison`, not just `int`.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..3 -> i, i]
 let y = SMap.ofList [for i in 2..5 -> i, i]
-x .* y // Return SMap<int,int> = SMap map [(2, 4); (3, 9)]
+x .* y 
+// Return SMap<int,int> = SMap map [(2, 4); (3, 9)]
 ```
-The `.*` becomes incredibly useful in formulating Constraints as you will see in the next section.
+The `.*` becomes incredibly useful in formulating Constraints as you will see in future examples.
 
 ### Using SliceMaps
 
