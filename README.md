@@ -338,11 +338,11 @@ x1.[All]
 // Return SMap map [(1, 1); (2, 2); (3, 3); ... ]
 ```
 
-In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
+In the case of an `SMap` (1-dimensional SliceMap) the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
 
 #### `Where` Slicing
 
- The `Where` slice is provided to give you the ability to slice with some arbitrary predicate. You provide a function for which will be used to evaluate the key along the dimensions. For the keys where the predicate returns `true`, the entry will be returned. Where the predicate returns `false` the value will not be included in the returned SliceMap.
+ The `Where` slice is provided to give you the ability to slice with some arbitrary predicate. You provide a function which will be used to evaluate the key along the dimension. For the keys where the predicate returns `true`, the entry will be returned. Where the predicate returns `false` the value will not be included in the returned SliceMap.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
@@ -351,11 +351,9 @@ x.[Where isDivisibleBy2]
 // Return SMap<int,int> = SMap map [(2, 2); (4, 4)]
 ```
 
-In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
-
 ### Slicing for 2D, 3D, and 4D SliceMaps
 
-The examples above have shown what the slicing behavior is for a 1D SliceMap, a `SMap`. While useful for a single dimensional SliceMap, the utility of slicing is increased when you have higher dimensional data. When working with 2, 3, and 4 dimensional SliceMaps, it is important to not that the returned keys and values must meet all of the conditions of the slices. Let's see how this plays out with a `SMap2`.
+The examples above have shown what the slicing behavior is for a 1D SliceMap, a `SMap`. While useful for a single dimensional SliceMap, the utility of slicing is increased when you have higher dimensional data. When working with 2, 3, and 4 dimensional SliceMaps, it is important to note that the returned keys and values must meet all of the conditions of the slices. Let's see how this plays out with a `SMap2`.
 
 ```fsharp
 let x = SMap2.ofList [
@@ -387,7 +385,7 @@ Here we are only returning the entries where the value of the first key dimensio
 
 One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
 
-For our use case, the use of Single-Case DUs allows us to keep track of what the basic types (`int`, `float`, `string`) actually correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior will still work as you would expect.
+For our use case, the use of Single-Case DUs allows us to keep track of what the primitive types (`int`, `float`, `string`) actually correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior still work as you would expect.
 
 ```fsharp
 type City = City of string
@@ -512,7 +510,7 @@ For the `maxWeightConstraints` we have to sum across the Items dimension:
 let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
 ```
 
-In this example this is not so bad but imagine problems where the dimensionsality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let's revisit the problem but we will use SliceMaps instead of the built in `Map` type. Instead of storing our data and decisions in the `Map` type, we will be using a corresponding `SliceMap`. If the Key for the data in a single dimension we will use a `SMap`. If the key is two dimensional we will use an `SMap2`.
+In this example this is not so bad but imagine problems where the dimensionsality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let's revisit the problem but we will use SliceMaps instead of the built in `Map` type. Instead of storing our data and decisions in the `Map` type, we will be using a corresponding `SliceMap`. If the Key for the data is a single dimension we will use an `SMap`. If the key is two dimensional we will use an `SMap2`.
 
 ```fsharp
 // Declare the parameters for our model
