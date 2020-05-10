@@ -217,7 +217,7 @@ SliceMaps have several different types of slices they support:
 
 #### `GreaterThan` Slicing
 
-This create a SliceMap where the Key element is greater than the corresponding value.
+This creates a SliceMap where the Key element is greater than the corresponding value.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
@@ -226,7 +226,7 @@ x.[GreaterThan 3] // Returns SMap<int,int> = SMap map [(4, 4); (5, 5)]
 
 #### `GreaterOrEqual` Slicing
 
-This create a SliceMap where the Key element is greater than or equal the corresponding value.
+This creates a SliceMap where the Key element is greater than or equal the corresponding value.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
@@ -235,16 +235,54 @@ x.[GreaterOrEqual 3] // Returns SMap map [(3, 3); (4, 4); (5, 5)]
 
 #### `LessThan` Slicing
 
-This create a SliceMap where the Key element is greater than the corresponding value.
+This creates a SliceMap where the Key element is greater than the corresponding value.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..5 -> i, i]
 x.[LessThan 3] // Returns SMap<int,int> = SMap map [(1, 1); (2, 2)]
 ```
 
+#### `LessOrEqual` Slicing
+
+This creates a SliceMap where the Key element is greater than the corresponding value.
+
+```fsharp
+let x = SMap.ofList [for i in 1..5 -> i, i]
+x.[LessOrEqual 3] // Returns SMap<int,int> = SMap map [(1, 1); (2, 2); (3, 3)]
+```
+
+#### `Between` Slicing
+
+This creates a SliceMap where the Key element is between the Lower Bound and Upper Bound inclusive.
+
+```fsharp
+let x = SMap.ofList [for i in 1..5 -> i, i]
+x.[Between (3, 4)] // Returns SMap<int,int> = SMap map [(3, 3); (4, 4)]
+```
+
+#### `In` Slicing
+
+The `In` slice takes a set of values. If the Key value for that dimension is in that set, then the filter will include the entry.
+
+```fsharp
+let x = SMap.ofList [for i in 1..5 -> i, i]
+let indexSet = Set.ofList [2; 4]
+x.[In indexSet] // Returns SMap<int,int> = SMap map [(2, 2); (4, 4)]
+```
+
+#### `NotIn` Slicing
+
+The `NotIn` slice takes a set of values. If the Key value for that dimension is NOT in that set, then the filter will include the entry.
+
+```fsharp
+let x = SMap.ofList [for i in 1..5 -> i, i]
+let indexSet = Set.ofList [2; 4]
+x.[NotIn indexSet] // SMap<int,int> = SMap map [(1, 1); (3, 3); (5, 5)]
+```
+
 #### `All` Slicing
 
-The `All` Slice is used to select all of the values along a given dimension. It is the akin of a wildcard.
+The `All` Slice is used to select all of the values in a given dimension. It is the akin of a wildcard.
 
 ```fsharp
 let x1 = SMap.ofList [for i in 1..5 -> i, i]
@@ -253,12 +291,70 @@ x1.[All] // Return SMap map [(1, 1); (2, 2); (3, 3); ... ]
 
 In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
 
-#### `Equal` Slicing
+#### `Where` Slicing
 
+ The `Where` slice is provided to give you the ability to slice with some arbitrary predicate. You provide a function for which will be used to evaluate the key along the dimensions. For the keys where the predicate returns `true`, the entry will be returned. Where the predicate returns `false` the value will not be included in the returned SliceMap.
 
+```fsharp
+let x = SMap.ofList [for i in 1..5 -> i, i]
+let isDivisibleBy2 x = x % 2 = 0
+x.[Where isDivisibleBy2] // Return SMap<int,int> = SMap map [(2, 2); (4, 4)]
+```
 
-### Other Properties of SliceMaps
-SliceMaps also support scalar multiplication.
+In the case of an `SMap` the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
+
+#### Slicing for 2D, 3D, and 4D SliceMaps
+
+The examples above have shown what the slicing behavior is for a 1D SliceMap, a `SMap`. While useful for a single dimensional SliceMap, the utility of slicing is increased when you have higher dimensional data. When working with 2, 3, and 4 dimensional SliceMaps, it is important to not that the returned keys and values must meet all of the conditions of the slices. Let's see how this plays out with a `SMap2`.
+
+```fsharp
+let x = SMap2.ofList [
+    (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
+    (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
+    (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
+]
+x.[GreaterThan 1, LessThan "b"] // Returns SMap2 map [((2, a), 3); 
+                                //                    ((3, a), 4)]
+```
+
+In this case we are saying that the keys of the first dimension must be greater than 1 and the keys of the second dimension must be less than "b". This leaves only two entries from the original `SMap2`. Let's look at another example.
+
+```fsharp
+let x = SMap2.ofList [
+    (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
+    (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
+    (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
+]
+x.[GreaterOrEqual 2, LessOrEqual "b"] 
+// Returns SMap2 map [((2, "a"), 3.0); ((2, "b"), 1.0); 
+//                    ((3, "a"), 4.0); ((3, "b"), 1.5)]
+```
+
+Here we are only returning the entries where the value of the first key dimension is greater or equal to 2 and the value of the second dimension is less or equal to "b". The great thing about F# is that you can use any type for the key dimensions as long as they support `comparison`.
+
+#### Slicing and Domain Driven Design
+
+One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
+
+For our use case, the use of Single-Case DUs allows us to keep track of what the basic types (`int`, `float`, `string`) actually correspond to. It is highly encourage to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior will still work as you would expect.
+
+```fsharp
+type City = City of string
+type Index = Index of int
+let x = SMap2.ofList [
+    (Index 1, City "a"), 2.0; (Index 1, City "b"), 2.0; (Index 1, City "c"), 2.1; 
+    (Index 2, City "a"), 3.0; (Index 2, City "b"), 1.0; (Index 2, City "c"), 2.3; 
+    (Index 3, City "a"), 4.0; (Index 3, City "b"), 1.5; (Index 3, City "c"), 2.4; 
+]
+x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
+// Returns SMap2 map [((Index 2, City "a"), 3.0); ((Index 2, City "b"), 1.0);
+//                    ((Index 3, City "a"), 4.0); ((Index 3, City "b"), 1.5)]
+```
+
+You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#.
+
+### Operators for SliceMaps
+SliceMaps also scalar multiplication through the use of `*`.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..3 -> i, float i]
@@ -268,7 +364,24 @@ val it : SMap<int,float> =
   Map1D {Values = map [(1, 2.0); (2, 4.0); (3, 6.0)];}
 ```
 
-### Motivating Problem
+SliceMaps can also be added together. In the case where the keys match, the underlying values are added together. In the cases where the key exists in only one map, the value is still returned. The assumption is that the value in the other SliceMap was a `Zero` equivalent.
+
+```fsharp
+let x = SMap.ofList [for i in 1..3 -> i, i]
+let y = SMap.ofList [for i in 2..5 -> i, i]
+x + y // Returns SMap<int,int> = SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
+```
+
+Finally, SliceMaps support element-wise multiplication using the `.*` operator. This operator was first seen in Matlab but has been adopted by other languages as well. The SliceMaps will have their values multiplied together where the keys match. When the keys do not match, no value is returned. This behavior is similar to inner-joins in SQL.
+
+```fsharp
+let x = SMap.ofList [for i in 1..3 -> i, i]
+let y = SMap.ofList [for i in 2..5 -> i, i]
+x .* y // Return SMap<int,int> = SMap map [(2, 4); (3, 9)]
+```
+The `.*` becomes incredibly useful in formulating Constraints as you will see in the next section.
+
+### Using SliceMaps
 
 Sometimes the best way to see the utility of a new tool is to experience working on a problem without it. Let's take our Food Cart problem and add some complexity. Now we are not managing a single food cart but multiple. We have three different locations we are managing and we have added Pizza to the menus. Each food cart has a different weight limit and a different profit amount per item.
 
@@ -426,12 +539,9 @@ We are using the slicing capability of SliceMaps. For this constraint we are wan
 You can also add SliceMaps together. The types of the Keys have to match and the contained values need to support addition with one another. In the cases where there are matching Keys, the values are added together. The values where the Keys do not match are still returned in the new SliceMap.
 
 ```fsharp
-let x = SMap.ofList [for i in 1..3 -> i, float i]
-let y = SMap.ofList [for i in 2..4 -> i, 2.0 * float i]
-x + y
-> 
-val it : SMap<int,float> =
-  Map1D {Values = map [(1, 1.0); (2, 6.0); (3, 9.0); (4, 8.0)];}
+let x = SMap.ofList [for i in 1..3 -> i, i]
+let y = SMap.ofList [for i in 2..5 -> i, i]
+x + y // Returns SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
 ```
 
 ### Constraint Builder
