@@ -1,6 +1,32 @@
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
-[TOC]
+- [Flips : **F**# **LI**near **P**rogramming **S**ystem](#flips--f-linear-programming-system)
+  - [Introduction](#introduction)
+    - [Optimization, What art thou?](#optimization-what-art-thou)
+      - [Lack of Awareness](#lack-of-awareness)
+      - [Lack of Tools](#lack-of-tools)
+    - [Why do we need Flips?](#why-do-we-need-flips)
+    - [Intro Problem](#intro-problem)
+    - [Using Indices](#using-indices)
+  - [SliceMaps](#slicemaps)
+    - [What is Slicing](#what-is-slicing)
+    - [Types of SliceMaps](#types-of-slicemaps)
+    - [Types of Slicing](#types-of-slicing)
+      - [`GreaterThan` Slicing](#greaterthan-slicing)
+      - [`GreaterOrEqual` Slicing](#greaterorequal-slicing)
+      - [`LessThan` Slicing](#lessthan-slicing)
+      - [`LessOrEqual` Slicing](#lessorequal-slicing)
+      - [`Between` Slicing](#between-slicing)
+      - [`In` Slicing](#in-slicing)
+      - [`NotIn` Slicing](#notin-slicing)
+      - [`All` Slicing](#all-slicing)
+      - [`Where` Slicing](#where-slicing)
+    - [Slicing for 2D, 3D, and 4D SliceMaps](#slicing-for-2d-3d-and-4d-slicemaps)
+    - [Sub-setting SliceMaps](#sub-setting-slicemaps)
+    - [Operators for SliceMaps](#operators-for-slicemaps)
+    - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
+    - [Example Using SliceMaps](#example-using-slicemaps)
+  - [Constraint Builder](#constraint-builder)
 
 ## Introduction
 
