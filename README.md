@@ -1,63 +1,38 @@
-# Flips : **F**# **LI**near **P**rogramming **S**ystem <!-- omit in toc -->
+# Flips : **F**# **LI**near **P**rogramming **S**ystem
 
-## Table of Contents <!-- omit in toc -->
-
-- [Introduction](#introduction)
-  - [Optimization, What art thou?](#optimization-what-art-thou)
-    - [Lack of Awareness](#lack-of-awareness)
-    - [Lack of Tools](#lack-of-tools)
-  - [Why do we need Flips?](#why-do-we-need-flips)
-  - [Intro Problem](#intro-problem)
-  - [Using Indices](#using-indices)
-- [SliceMaps](#slicemaps)
-  - [What is Slicing](#what-is-slicing)
-  - [Types of SliceMaps](#types-of-slicemaps)
-  - [Types of Slicing](#types-of-slicing)
-    - [`GreaterThan` Slicing](#greaterthan-slicing)
-    - [`GreaterOrEqual` Slicing](#greaterorequal-slicing)
-    - [`LessThan` Slicing](#lessthan-slicing)
-    - [`LessOrEqual` Slicing](#lessorequal-slicing)
-    - [`Between` Slicing](#between-slicing)
-    - [`In` Slicing](#in-slicing)
-    - [`NotIn` Slicing](#notin-slicing)
-    - [`All` Slicing](#all-slicing)
-    - [`Where` Slicing](#where-slicing)
-  - [Slicing for 2D, 3D, and 4D SliceMaps](#slicing-for-2d-3d-and-4d-slicemaps)
-  - [Subsetting SliceMaps](#subsetting-slicemaps)
-  - [Operators for SliceMaps](#operators-for-slicemaps)
-  - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
-  - [Using SliceMaps](#using-slicemaps)
-- [Constraint Builder](#constraint-builder)
+[TOC]
 
 ## Introduction
 
-Flips is an F# library for modeling and solving Linear Programming and Mixed-Integer Programming problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding Google OR-Tools library. In the future I hope to support more solver backends.
+Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding Google OR-Tools library. In the future I hope to support more solver backends.
 
 F# is a great language to work with but many of the existing APIs for modeling Optimization problems are heavily influenced by Object-Oriented concepts. While there is nothing wrong with OO, this is an attempt to take a functional-first approach to the problem.
 
-This library tries to make the modeling of Optimization Models clean and simple. The idea was to make it straightforward for an Operation Researcher or Optimization domain expert to express their ideas in F#. These practictioners are used to working with Mathematical constructs like Sets, Sigma-notation, and summations. Reducing the mental distance between the mathematical formulation of problems and the F# representation was a key design goal.
+This library tries to make the modeling of Optimization Models (LP/MIP) clean and simple. The idea was to make it straightforward for an Operation Researcher or Optimization domain expert to express their ideas in F#. These practitioners are used to working with Mathematical constructs like Sets, Sigma-notation, and summations. Reducing the mental distance between the mathematical formulation of problems and the F# representation was a key design goal.
+
+F# developers should also find it comfortable to use this library. Over time I will be adding tutorials and training material on how to model Optimization Problems using this library. With a little training any F# developer will be able to add the powerful tool of Optimization to their repertoire.
 
 ### Optimization, What art thou?
 
 The word "Optimization" is an overloaded term and is used in many domains. It can mean something as simple as, "We looked at the process and made some minor tweaks," all the way to more formal definitions found in [Mathematical Optimization](https://en.wikipedia.org/wiki/Mathematical_optimization). Linear Programming (LP) and Mixed-Integer Programming (MIP) are sub-fields of Mathematical Optimization. It is important to note that LP/MIP emerged as fields of study before Software Programming. The word "Programming" used to mean "Planning". Therefore, it is best to think of LP/MIP as tools for Mathematical Planning. These fields focus on answering the question: Given a set of decisions to be made, what is the best possible plan, while obeying a set of constraints?
 
-The tools of Linear/Mixed-Integer Programming are underutilized. Businesses frequently have problems that would be trivialy solved using these tools but instead use complex heuristics involving copy/paste in Excel files instead. There have been many instances where I have observed a domain-expert slaving away for hours at a time with a giant Excel file to answer the question, "What should we do?" After sitting down and talking with these domain-experts it becomes clear they have a planning problem which could be reduced to a 5 minute problem for a computer. There are at least two major reasons for the lack of adoption: lack of awareness and lack of tools.
+The tools of Linear/Mixed-Integer Programming are underutilized. Businesses frequently have problems that would be trivially solved using these tools but instead use complex heuristics involving copy/paste in Excel files instead. There have been many instances where I have observed a domain-expert slaving away for hours at a time with a giant Excel file to answer the question, "What should we do?" After sitting down and talking with these domain-experts it becomes clear they have a planning problem which could be reduced to a 5-minute problem for a computer. There are at least two major reasons for the lack of adoption: lack of awareness and lack of tools.
 
 #### Lack of Awareness
 
-LP/MIP is typically found in Operations Research curriculum. In some cases people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldly as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relagated to exper users who likely studied it more seriously in univeristy.
+LP/MIP is typically found in Operations Research curriculum. In some cases, people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldly as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relegated to expert users who likely studied it more seriously in university.
 
 #### Lack of Tools
 
-LP/MIP were severly limited by the computational power of compters at the time the techniques were first developed. Over time, computers become far more powerful and enormous advances in the underlying algorithms were made. We are now able to solve huge LP/MIP problems. Until recently though, to utilize that power you had to learn a specialized language to formulate your problems. This relagated the use of LP/MIP to those who had studied these domain-specific languages.
+When LP/MIP emerged, they were severely limited by the computational power of computers at the time. Eventually, computers become far more powerful and enormous advances in the underlying algorithms were made. We are now able to solve huge LP/MIP problems. Until recently though, to utilize that power you had to learn a specialized language to formulate your problems. This relegated the use of LP/MIP to those who had studied these domain-specific languages.
 
-In the last few years Python has done an incredible service to the software development community by providing a gentle onramp to writing code. Combine Python with Jupyter notebooks and you have a powerful tool for experimenting without all of the formalism of "professional" software development. There are some in the LP/MIP community who have recognized this trend and have created libraries for using LP/MIP from Python. I recommend looking at the work of [PuLP](https://github.com/coin-or/pulp) and the excellent [Gurobi Python library](https://www.gurobi.com/documentation/9.0/quickstart_mac/py_python_interface.html).
+In the last few years Python has done an incredible service to the software development community by providing a gentle onramp to writing code. Combine Python with Jupyter notebooks and you have a powerful tool for experimenting without all the formalism of "professional" software development. There are some in the LP/MIP community who have recognized this trend and have created libraries for using LP/MIP from Python. I recommend looking at the work of [PuLP](https://github.com/coin-or/pulp) and the excellent [Gurobi Python library](https://www.gurobi.com/documentation/9.0/quickstart_mac/py_python_interface.html).
 
 ### Why do we need Flips?
 
-Many of the existing libraries for using LP/MIP are either array-based or heavily Object-Oriented. There is nothing wrong with these approaches but they run counter to idiomatic F#. F# provides a rich set of tools for expressing problems and algorithms in a functional-first style. After spending several years working in F# and Mathematical Planning, it appeared that there was a gap in the market. A library was needed that allowed an F# developer to express their LP/MIP in a functional way.
+Many of the existing libraries for using LP/MIP are either array-based or heavily Object-Oriented. There is nothing wrong with these approaches, but they run counter to idiomatic F#. F# provides a rich set of tools for expressing problems and algorithms in a functional-first style. After spending several years working in F# and Mathematical Planning, it appeared that there was a gap in the market. A library was needed that allowed an F# developer to express their LP/MIP in a functional way.
 
-Flips is intended to make building an solving LP/MIP problems in F# simple. The hope is that by filling in the gap between current LP/MIP libraries and F# developers the adoption of the awesome tool of LP/MIP will be accelerated.
+Flips is intended to make building and solving LP/MIP problems in F# simple. The hope is that by filling in the gap between current LP/MIP libraries and F# developers the adoption of the awesome tool of LP/MIP will be accelerated.
 
 ### Intro Problem
 
@@ -69,7 +44,7 @@ For anyone not familiar with LP/MIP, the process of creating and solving a model
 4. Adding Constraints
 5. Solving the Model
 
-Let us go through an example problem to see how this works. We are managing a Food Truck and we need to figure out what ingredients we need to pack for the day. In this example we only sell Hamburgers and Hotdogs. Each Hamburger we sell provides us $1.50 in profit. Each Hotdog we sell provides $1.20 in profit. We only have enough Hamburger buns for up to 300 Hamburgers and only 200 buns for Hotdogs. The ingredients for a single Hamburger weight 0.5 kg and the ingredients for a Hotdog weigh 0.4 kg. Our Food Truck can only hold up to 500 kg. The question becomes, how many ingredients do we pack for Hamburgers and how many for Hotdogs? Let's answer this question by formulating an Optimization model.
+Let us go through an example problem to see how this works. We are managing a Food Truck and we need to figure out what ingredients we need to pack for the day. In this example we only sell Hamburgers and Hotdogs. Each Hamburger we sell provides us $1.50 in profit. Each Hotdog we sell provides $1.20 in profit. We only have enough Hamburger buns for up to 300 Hamburgers and only 200 buns for Hotdogs. The ingredients for a single Hamburger weight 0.5 kg and the ingredients for a Hotdog weigh 0.4 kg. Our Food Truck can only hold up to 500 kg. The question becomes, how many ingredients do we pack for Hamburgers and how many for Hotdogs? Let us answer this question by formulating an Optimization model.
 
 ```fsharp
 open System
@@ -136,7 +111,7 @@ match result with
         printfn "Decision: %s\tValue: %f" name value
 ```
 
-If we run this code we will get the following output
+If we run this code, we will get the following output
 
 ```console
 -- Result --
@@ -146,7 +121,7 @@ Decision: NumberOfHotDogs       Value: 200.000000
 Press any key to close...
 ```
 
-The rows below the `-- Result --` line show the values the solver found. The solver estimates that we can achieve a profit of $600.00 if we pack for 240 Hamburgers and 200 Hotdogs. You can run this exmaple problem for yourself by running the `FoodTruckExample` problem in the `Flips.Examples` project.
+The rows below the `-- Result --` line show the values the solver found. The solver estimates that we can achieve a profit of $600.00 if we pack for 240 Hamburgers and 200 Hotdogs. You can run this example problem for yourself by running the `FoodTruckExample` problem in the `Flips.Examples` project.
 
 ### Using Indices
 
@@ -205,15 +180,15 @@ We now have a formulation of the problem that will scale to an arbitrary number 
 
 ### What is Slicing
 
-Up to this point we have been using the built in `Map` type for holding our data and Decision Variables. One of the challenges we will quickly run into when modeling optimization problems is that it is common to operate on subsets of values, often refered to as slices. For these reasons it is common to use N-dimensional Arrays so that you can take slices across different dimensions. Just using the built-in F# `Array` type has limitations though since you can only index the values with an `int`. What we really want is something that allows us to look up a particular value using an arbitrary index type but also allows us to select ranges of values.
+Up to this point we have been using the built in `Map` type for holding our data and Decision Variables. One of the challenges we will quickly run into when modeling optimization problems is that it is common to operate on subsets of values, often referred to as slices. For these reasons it is common to use N-dimensional Arrays so that you can take slices across different dimensions. Just using the built-in F# `Array` type has limitations though since you can only index the values with an `int`. What we really want is something that allows us to look up a value using an arbitrary index type but also allows us to select ranges of values.
 
-So, we need something that has `Map` like lookup but also allows us to slice across different dimensions...? I know, let's create a new type, a `SliceMap`!
+So, we need something that has `Map` like lookup but also allows us to slice across different dimensions...? I know, let us create a new type, a `SliceMap`!
 
 > **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`. The numbers correspond to the dimensionality of the `Key` used in the `Map`. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
 
 ### Types of SliceMaps
 
-SliceMaps are not a single type, they are a family of types akin to Tuples. Tuples can have any number elements: 2, 3, 4, etc. SliceMaps are like tuples in that they have different levels of dimensionality. An `SMap` has a key which is a single element. An `SMap2` has a key which is made up of two elements. An `SMap3` has a key which is made up of three elements. The family of SliceMaps goes up to 4-element keys at this time. The type signatures for SliceMaps are the following:
+SliceMaps are not a single type, they are a family of types akin to Tuples. Tuples can have any number elements: 2, 3, 4, etc. SliceMaps are like tuples in that they have different levels of dimensionality. An `SMap` has a key which is a single element. An `SMap2` has a key which is made up of two elements. An `SMap3` has a key which is made up of three elements. The family of SliceMaps goes up to 4-element keys currently. The type signatures for SliceMaps are the following:
 
 ```fsahrp
 SMap<'Key, 'Value>
@@ -222,7 +197,7 @@ SMap3<'Key1, 'Key2, 'Key3, 'Value>
 SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value>
 ```
 
-> **Note:** If I come across a compelling reason to create SMap5, SMap6, etc I will. At this time, I have not come across a real-world problem which would benefit for having higher dimensional SliceMaps.
+> **Note:** If I come across a compelling reason to create SMap5, SMap6, etc. I will. At this time, I have not come across a real-world problem which would benefit for having higher dimensional SliceMaps.
 
 SliceMaps support the ability to perform lookup by key, just like the standard F# `Map` type.
 
@@ -339,7 +314,7 @@ x1.[All]
 // Return SMap map [(1, 1); (2, 2); (3, 3); ... ]
 ```
 
-In the case of an `SMap` (1-dimensional SliceMap) the `All` slicing is not exciting. It is simply returning all of the values. It becomes more useful when dealing with higher dimensional SliceMaps.
+In the case of an `SMap` (1-dimensional SliceMap) the `All` slicing is not exciting. It is simply returning all the values. It becomes more useful when dealing with higher dimensional SliceMaps.
 
 #### `Where` Slicing
 
@@ -354,7 +329,7 @@ x.[Where isDivisibleBy2]
 
 ### Slicing for 2D, 3D, and 4D SliceMaps
 
-The examples above have shown what the slicing behavior is for a 1D SliceMap, a `SMap`. While useful for a single dimensional SliceMap, the utility of slicing is increased when you have higher dimensional data. When working with 2, 3, and 4 dimensional SliceMaps, it is important to note that the returned keys and values must meet all of the conditions of the slices. Let's see how this plays out with a `SMap2`.
+The examples above have shown what the slicing behavior is for a 1D SliceMap, a `SMap`. While useful for a single dimensional SliceMap, the utility of slicing is increased when you have higher dimensional data. When working with 2, 3, and 4 dimensional SliceMaps, it is important to note that the returned keys and values must meet all the conditions of the slices. Let us see how this plays out with a `SMap2`.
 
 ```fsharp
 let x = SMap2.ofList [
@@ -367,7 +342,7 @@ x.[GreaterThan 1, LessThan "b"]
 //                    ((3, a), 4)]
 ```
 
-In this case we are saying that the keys of the first dimension must be greater than 1 and the keys of the second dimension must be less than "b". This leaves only two entries from the original `SMap2`. Let's look at another example.
+In this case we are saying that the keys of the first dimension must be greater than 1 and the keys of the second dimension must be less than "b". This leaves only two entries from the original `SMap2`. Let us look at another example.
 
 ```fsharp
 let x = SMap2.ofList [
@@ -380,13 +355,13 @@ x.[GreaterOrEqual 2, LessOrEqual "b"]
 //                    ((3, "a"), 4.0); ((3, "b"), 1.5)]
 ```
 
-Here we are only returning the entries where the value of the first key dimension is greater or equal to 2 and the value of the second dimension is less or equal to "b". The great thing about F# is that you can use any type for the key dimensions as long as they support `comparison`.
+Here we are only returning the entries where the value of the first key dimension is greater or equal to 2 and the value of the second dimension is less or equal to "b". The great thing about F# is that you can use any type for the key dimensions if they support `comparison`.
 
-### Subsetting SliceMaps
+### Sub-setting SliceMaps
 
-In many mainstream programming languages, programmers are not required to think about the dimensionality of their data. Most languages will have scalar values and collections of values. Though we may not think about it, a Scalar (`int`, `string`, `float`) value is a 0-Dimensional piece of data. When we add collections, the dimensionality can increase. An `Array` in F# is a 1-Dimensional storage of data. The same can be said of `Map` and `List`. Now, F# also has 2D and 3D Array. To look up data in these data structures you need to specifiy multiple index values because data is organized in multiple dimensions.
+In many mainstream programming languages, programmers are not required to think about the dimensionality of their data. Most languages will have scalar values and collections of values. Though we may not think about it, a Scalar (`int`, `string`, `float`) value is a 0-Dimensional piece of data. When we add collections, the dimensionality can increase. An `Array` in F# is a 1-Dimensional storage of data. The same can be said of `Map` and `List`. Now, F# also has 2D and 3D Array. To look up data in these data structures you need to specify multiple index values because data is organized in multiple dimensions.
 
-Now, let's see what item look and slicing looks like for a 2D Array in F#.
+Now, let us see what item look and slicing looks like for a 2D Array in F#.
 
 ```fsharp
 let x = array2D [ [ 1; 2]; [3; 4] ] // Create a 2D Array
@@ -398,9 +373,9 @@ let xSlice = x.[*, 1] // Take all rows, but only the second column
 // Returns val xSlice : int [] = [|2; 4|]
 ```
 
-At first we create our 2D Array `x`. You will see that `x` is a 2D Array by its type signature, `int [,]`. We then assign `y` the value at row index `1` and column index `1`. You will notice that `y` is 0-Dimensional, it is a Scalar. We then assign `xSlice` a slice of `x` by taking all the rows but only the column at index `1`. You will notice that `xSlice` is a 1-Dimensional array.
+At first, we create our 2D Array `x`. You will see that `x` is a 2D Array by its type signature, `int [,]`. We then assign `y` the value at row index `1` and column index `1`. You will notice that `y` is 0-Dimensional, it is a Scalar. We then assign `xSlice` a slice of `x` by taking all the rows but only the column at index `1`. You will notice that `xSlice` is a 1-Dimensional array.
 
-What I am trying to drive home is that when you lookup an item or slice an Array, you can get different dimensionality of data. SliceMaps have the same behavior as F# Arrays. Let's walk through some examples using a 2-dimensional SliceMap, a `SMap2`.
+What I am trying to drive home is that when you look up an item or slice an Array, you can get different dimensionality of data. SliceMaps have the same behavior as F# Arrays. Let us walk through some examples using a 2-dimensional SliceMap, a `SMap2`.
 
 ```fsharp
 // Create our `SMap2`
@@ -429,10 +404,11 @@ let c = x.[GreaterThan 1, LessThan "b"]
 // val c : SMap2<int,string,float> = SMap2 map [((2, a), 3); ((3, a), 4)]
 ```
 
-Note that `c` is a subset of `x` but it is still 2-dimensional, an `SMap2`. This type of behavior holds true for all of the SliceMaps.
+Note that `c` is a subset of `x` but it is still 2-dimensional, an `SMap2`. This type of behavior holds true for all the SliceMaps.
 
 ### Operators for SliceMaps
-SliceMaps support scalar multiplication through the use of `*`.
+
+SliceMaps support scalar multiplication using `*`.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..3 -> i, float i]
@@ -450,7 +426,7 @@ x + y
 // Returns SMap<int,int> = SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
 ```
 
-Finally, SliceMaps support element-wise multiplication using the `.*` operator. This operator was first seen in Matlab but has been adopted by other languages as well. The SliceMaps will have their values multiplied together where the keys match. When the keys do not match, no value is returned. This behavior is similar to inner-joins in SQL. The behavior is intended to be the same as the [Hadamard Opertor](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) in Linear Algebra. The difference is that SliceMaps can be keyed by any type that supports `comparison`, not just `int`.
+Finally, SliceMaps support element-wise multiplication using the `.*` operator. This operator was first seen in MatLab but has been adopted by other languages as well. The SliceMaps will have their values multiplied together where the keys match. When the keys do not match, no value is returned. This behavior is similar to inner-joins in SQL. The behavior is intended to be the same as the [Hadamard Opertor](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) in Linear Algebra. The difference is that SliceMaps can be keyed by any type that supports `comparison`, not just `int`.
 
 ```fsharp
 let x = SMap.ofList [for i in 1..3 -> i, i]
@@ -458,13 +434,14 @@ let y = SMap.ofList [for i in 2..5 -> i, i]
 x .* y 
 // Return SMap<int,int> = SMap map [(2, 4); (3, 9)]
 ```
+
 The `.*` becomes incredibly useful in formulating Constraints as you will see in future examples.
 
 ### Slicing and Domain Driven Design
 
-One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
+One of the most powerful facilities of F# is the ability to accurately model a domain. Instead of a `string` just being a string, it is a City Name. Instead of a `int` just being an `int`, it is an Index. This is often done using Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
 
-For our use case, the use of Single-Case DUs allows us to keep track of what the primitive types (`int`, `float`, `string`) actually correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior still work as you would expect.
+For our use case, the use of Single-Case DUs allows us to keep track of what the primitive types (`int`, `float`, `string`) correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior still work as you would expect.
 
 ```fsharp
 type City = City of string
@@ -481,9 +458,9 @@ x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
 
 You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#. While the wrapping of the primitives in single-case DUs may feel over the top for simple modeling, it has payed dividends in real-world scenarios.
 
-### Using SliceMaps
+### Example Using SliceMaps
 
-Sometimes the best way to see the utility of a new tool is to experience working on a problem without it. Let's take our Food Cart problem and add some complexity. Now we are not managing a single food cart but multiple. We have three different locations we are managing and we have added Pizza to the menus. Each food cart has a different weight limit and a different profit amount per item.
+Sometimes the best way to see the utility of a new tool is to experience working on a problem without it. Let us take our Food Cart problem and add some complexity. Now we are not managing a single food cart but multiple. We have three different locations we are managing, and we have added Pizza to the menus. Each food cart has a different weight limit and a different profit amount per item.
 
 ```fsharp
 // Declare the parameters for our model
@@ -548,7 +525,7 @@ let model =
     |> Model.addConstraints maxWeightConstraints
 ```
 
-When we create our `maxItemConstraints` and `maxWeightConstraints` we are having to sum the decisions across a new dimension. For the `maxItemsConstraints` we have to sum the items across the Location dimension:
+When we create our `maxItemConstraints` and `maxWeightConstraints` we are having to sum the decisions across a new dimension. For the `maxItemsConstraints` we must sum the items across the Location dimension:
 
 ```fsharp
 let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
@@ -560,7 +537,7 @@ For the `maxWeightConstraints` we have to sum across the Items dimension:
 let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
 ```
 
-In this example this is not so bad but imagine problems where the dimensionsality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let's revisit the problem but we will use SliceMaps instead of the built in `Map` type. If the Key for the data is a single dimension, we will use an `SMap`. If the key is two dimensional, we will use an `SMap2`.
+In this example this is not so bad but imagine problems where the dimensionality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let us revisit the problem but we will use SliceMaps instead of the built in `Map` type. If the Key for the data is a single dimension, we will use an `SMap`. If the key is two dimensional, we will use an `SMap2`.
 
 ```fsharp
 // Declare the parameters for our model
@@ -613,7 +590,7 @@ let model =
     |> Model.addConstraints maxWeightConstraints
 ```
 
-We can see that things look a little different now. The first change is that we are storing our data in a `SMap` or `SMap2`. All of the SliceMaps support being created from a `List`, `Seq`, or `Array`. This behavior is the same as the equivalent functions for `Map`. You can even create a SliceMap from a `Map` if the dimensionality of the `'Key` matches what the SliceMap is expecting.
+We can see that things look a little different now. The first change is that we are storing our data in a `SMap` or `SMap2`. All the SliceMaps support being created from a `List`, `Seq`, or `Array`. This behavior is the same as the equivalent functions for `Map`. You can even create a SliceMap from a `Map` if the dimensionality of the `'Key` matches what the SliceMap is expecting.
 
 The next major change is in the `objectiveExpression` creation:
 
@@ -621,21 +598,21 @@ The next major change is in the `objectiveExpression` creation:
 let objectiveExpression = sum (profit .* numberOfItem)
 ```
 
-Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. When the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from Matlab and has been implemented in other languages. It is the [Hadamard Opertor](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) if you are curious.
+Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. When the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from MATLAB and has been implemented in other languages. It is the [Hadamard Opertor](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) if you are curious.
 
-The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type and calls its associated `sum` method. All of the SliceMaps have a `sum` method. When sum is called, all of the values in the SliceMap are summed together using the `+` operator. SliceMaps were intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
+The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type and calls its associated `sum` method. All the SliceMaps have a `sum` method. When sum is called, all the values in the SliceMap are summed together using the `+` operator. SliceMaps were intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
 
-The next change we see in the model formulation is in the creation of `maxItemConstraints`. Specifically on the line where we create the constraint.
+The next change we see in the model formulation is in the creation of `maxItemConstraints`. Specifically, on the line where we create the constraint.
 
 ```fsharp
 Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
 ```
 
-We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left hand side of our Constraint Expression.
+We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left-hand side of our Constraint Expression.
 
 ## Constraint Builder
 
-Since the creation of constraints is such a common occurence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
+Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
 
 ```fsharp
 let items = ["Hamburger"; "HotDog"]
