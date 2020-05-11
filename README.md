@@ -23,8 +23,9 @@
     - [`All` Slicing](#all-slicing)
     - [`Where` Slicing](#where-slicing)
   - [Slicing for 2D, 3D, and 4D SliceMaps](#slicing-for-2d-3d-and-4d-slicemaps)
-  - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
+  - [Subsetting SliceMaps](#subsetting-slicemaps)
   - [Operators for SliceMaps](#operators-for-slicemaps)
+  - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
   - [Using SliceMaps](#using-slicemaps)
 - [Constraint Builder](#constraint-builder)
 
@@ -381,26 +382,54 @@ x.[GreaterOrEqual 2, LessOrEqual "b"]
 
 Here we are only returning the entries where the value of the first key dimension is greater or equal to 2 and the value of the second dimension is less or equal to "b". The great thing about F# is that you can use any type for the key dimensions as long as they support `comparison`.
 
-### Slicing and Domain Driven Design
+### Subsetting SliceMaps
 
-One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
+In many mainstream programming languages, programmers are not required to think about the dimensionality of their data. Most languages will have scalar values and collections of values. Though we may not think about it, a Scalar (`int`, `string`, `float`) value is a 0-Dimensional piece of data. When we add collections, the dimensionality can increase. An `Array` in F# is a 1-Dimensional storage of data. The same can be said of `Map` and `List`. Now, F# also has 2D and 3D Array. To look up data in these data structures you need to specifiy multiple index values because data is organized in multiple dimensions.
 
-For our use case, the use of Single-Case DUs allows us to keep track of what the primitive types (`int`, `float`, `string`) actually correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior still work as you would expect.
+Now, let's see what item look and slicing looks like for a 2D Array in F#.
 
 ```fsharp
-type City = City of string
-type Index = Index of int
-let x = SMap2.ofList [
-    (Index 1, City "a"), 2.0; (Index 1, City "b"), 2.0; (Index 1, City "c"), 2.1; 
-    (Index 2, City "a"), 3.0; (Index 2, City "b"), 1.0; (Index 2, City "c"), 2.3; 
-    (Index 3, City "a"), 4.0; (Index 3, City "b"), 1.5; (Index 3, City "c"), 2.4; 
-]
-x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
-// Returns SMap2 map [((Index 2, City "a"), 3.0); ((Index 2, City "b"), 1.0);
-//                    ((Index 3, City "a"), 4.0); ((Index 3, City "b"), 1.5)]
+let x = array2D [ [ 1; 2]; [3; 4] ] // Create a 2D Array
+// Returns int [,] = [[1; 2]
+//                    [3; 4]]
+let y = x.[1, 1] // Select an element
+// Returns val y : int = 4
+let xSlice = x.[*, 1] // Take all rows, but only the second column
+// Returns val xSlice : int [] = [|2; 4|]
 ```
 
-You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#. While the wrapping of the primitives in single-case DUs may feel over the top for simple modeling, it has payed dividends in real-world scenarios.
+At first we create our 2D Array `x`. You will see that `x` is a 2D Array by its type signature, `int [,]`. We then assign `y` the value at row index `1` and column index `1`. You will notice that `y` is 0-Dimensional, it is a Scalar. We then assign `xSlice` a slice of `x` by taking all the rows but only the column at index `1`. You will notice that `xSlice` is a 1-Dimensional array.
+
+What I am trying to drive home is that when you lookup an item or slice an Array, you can get different dimensionality of data. SliceMaps have the same behavior as F# Arrays. Let's walk through some examples using a 2-dimensional SliceMap, a `SMap2`.
+
+```fsharp
+// Create our `SMap2`
+let x = SMap2.ofList [
+    (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
+    (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
+    (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
+]
+let a = x.[1, "a"] // Select a single element
+// val a : float = 2.0
+```
+
+Notice that `a` is a Scalar, a 0-Dimensional piece of data
+
+```fsharp
+// Slice across the first dimension, select only the "a" values in the second
+let b = x.[GreaterThan 1, "a"] 
+// val b : SMap<int,float> = SMap map [(2, 3); (3, 4)]
+```
+
+Here `b` no longer has the second-dimension index. It is an `SMap`. This is because we selected only the data where the second index was equal to "a".
+
+```fsharp
+// Slice across the first and second dimensions
+let c = x.[GreaterThan 1, LessThan "b"]
+// val c : SMap2<int,string,float> = SMap2 map [((2, a), 3); ((3, a), 4)]
+```
+
+Note that `c` is a subset of `x` but it is still 2-dimensional, an `SMap2`. This type of behavior holds true for all of the SliceMaps.
 
 ### Operators for SliceMaps
 SliceMaps support scalar multiplication through the use of `*`.
@@ -430,6 +459,27 @@ x .* y
 // Return SMap<int,int> = SMap map [(2, 4); (3, 9)]
 ```
 The `.*` becomes incredibly useful in formulating Constraints as you will see in future examples.
+
+### Slicing and Domain Driven Design
+
+One of the most powerful facilities of F# is the ability to occurately model a domain. Instead of a `string` just being a string, it is actually a City Name. Instead of a `int` just being an `int`, it is actually an Index. This is often done through the use of Single-Case Discriminated Unions. The topic of Domain Driven Design is beyond the scope of this intro. For further reading, please refer to the excellent book [Domain Modeling Made Functional](https://pragprog.com/book/swdddf/domain-modeling-made-functional) by Scott Wlaschin.
+
+For our use case, the use of Single-Case DUs allows us to keep track of what the primitive types (`int`, `float`, `string`) actually correspond to. It is highly encouraged to wrap these primitives in single-case DUs when they are being used as keys in SliceMaps. The slicing behavior still work as you would expect.
+
+```fsharp
+type City = City of string
+type Index = Index of int
+let x = SMap2.ofList [
+    (Index 1, City "a"), 2.0; (Index 1, City "b"), 2.0; (Index 1, City "c"), 2.1; 
+    (Index 2, City "a"), 3.0; (Index 2, City "b"), 1.0; (Index 2, City "c"), 2.3; 
+    (Index 3, City "a"), 4.0; (Index 3, City "b"), 1.5; (Index 3, City "c"), 2.4; 
+]
+x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
+// Returns SMap2 map [((Index 2, City "a"), 3.0); ((Index 2, City "b"), 1.0);
+//                    ((Index 3, City "a"), 4.0); ((Index 3, City "b"), 1.5)]
+```
+
+You can see that the slicing behavior understands it needs to operate on the inner value of the single-case DU. This is due to the magic of F#. While the wrapping of the primitives in single-case DUs may feel over the top for simple modeling, it has payed dividends in real-world scenarios.
 
 ### Using SliceMaps
 
@@ -510,7 +560,7 @@ For the `maxWeightConstraints` we have to sum across the Items dimension:
 let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
 ```
 
-In this example this is not so bad but imagine problems where the dimensionsality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let's revisit the problem but we will use SliceMaps instead of the built in `Map` type. Instead of storing our data and decisions in the `Map` type, we will be using a corresponding `SliceMap`. If the Key for the data is a single dimension we will use an `SMap`. If the key is two dimensional we will use an `SMap2`.
+In this example this is not so bad but imagine problems where the dimensionsality is higher. You end up having nested `List` comprehensions. This summation across dimensions is so common that the `SliceMap` family of types was created. Let's revisit the problem but we will use SliceMaps instead of the built in `Map` type. If the Key for the data is a single dimension, we will use an `SMap`. If the key is two dimensional, we will use an `SMap2`.
 
 ```fsharp
 // Declare the parameters for our model
@@ -549,7 +599,6 @@ let maxItemConstraints =
         Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
     ]
 
-
 // Create a Constraint for the Max combined weight of items for each Location
 let maxWeightConstraints = 
     [for location in locations -> 
@@ -572,9 +621,9 @@ The next major change is in the `objectiveExpression` creation:
 let objectiveExpression = sum (profit .* numberOfItem)
 ```
 
-Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. When the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from Matlab and has been implemented in other languages.
+Here we are using two of the features that SliceMaps provide: summation and element-wise multiplication. The `.*` operator is an element-wise multiplication of the values in the SliceMaps. When the keys match in both SliceMaps, the values are multiplied together. In the cases where the keys do not match, nothing is returned. If you are familiar with SQL, this behavior is the equivalent of an inner-join. The `.*` comes from Matlab and has been implemented in other languages. It is the [Hadamard Opertor](https://en.wikipedia.org/wiki/Hadamard_product_(matrices)) if you are curious.
 
-The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type and calls its associated `sum` function. All of the SliceMaps have a `sum` method. When sum is called, all of the values in the SliceMap are summed together using the `+` operator. SliceMaps are intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
+The `sum` function is a convenience function to make modeling more streamlined. It can only be used on types which have a `sum` method declared on them. It simply looks at the type and calls its associated `sum` method. All of the SliceMaps have a `sum` method. When sum is called, all of the values in the SliceMap are summed together using the `+` operator. SliceMaps were intended to be used with types which implement `+`, `*`, and `Zero`. The mathematical term is a [Ring](https://en.wikipedia.org/wiki/Ring_(mathematics)).
 
 The next change we see in the model formulation is in the creation of `maxItemConstraints`. Specifically on the line where we create the constraint.
 
@@ -583,16 +632,6 @@ Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
 ```
 
 We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left hand side of our Constraint Expression.
-
-
-
-You can also add SliceMaps together. The types of the Keys have to match and the contained values need to support addition with one another. In the cases where there are matching Keys, the values are added together. The values where the Keys do not match are still returned in the new SliceMap.
-
-```fsharp
-let x = SMap.ofList [for i in 1..3 -> i, i]
-let y = SMap.ofList [for i in 2..5 -> i, i]
-x + y // Returns SMap map [(1, 1); (2, 4); (3, 6); (4, 4); (5, 5)]
-```
 
 ## Constraint Builder
 
