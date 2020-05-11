@@ -143,3 +143,16 @@ let x = SMap2.ofList [
     (Index 3, City "a"), 4.0; (Index 3, City "b"), 1.5; (Index 3, City "c"), 2.4; 
 ]
 x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
+
+let x = array2D [ [ 1; 2]; [3; 4] ]
+let y = x.[1, 1]
+let xSlice = x.[*, 1]
+
+let x = SMap2.ofList [
+    (1, "a"), 2.0; (1, "b"), 2.0; (1, "c"), 2.1; 
+    (2, "a"), 3.0; (2, "b"), 1.0; (2, "c"), 2.3; 
+    (3, "a"), 4.0; (3, "b"), 1.5; (3, "c"), 2.4; 
+]
+let a = x.[1, "a"]
+let b = x.[GreaterThan 1, "a"]
+let c = x.[GreaterThan 1, LessThan "b"]
