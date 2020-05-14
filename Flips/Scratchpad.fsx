@@ -142,6 +142,7 @@ let x = SMap2.ofList [
     (Index 2, City "a"), 3.0; (Index 2, City "b"), 1.0; (Index 2, City "c"), 2.3; 
     (Index 3, City "a"), 4.0; (Index 3, City "b"), 1.5; (Index 3, City "c"), 2.4; 
 ]
+x
 x.[GreaterOrEqual (Index 2), LessOrEqual (City "b")]
 
 let x = array2D [ [ 1; 2]; [3; 4] ]
@@ -156,3 +157,6 @@ let x = SMap2.ofList [
 let a = x.[1, "a"]
 let b = x.[GreaterThan 1, "a"]
 let c = x.[GreaterThan 1, LessThan "b"]
+
+let y = SMap2.reKey (fun (i, c) -> c, i) x
+y
