@@ -17,8 +17,17 @@ let inline private additionMerge (lhs:Map<_,_>) (rhs:Map<_,_>) =
     |> Map.map (fun k lhsV -> match Map.tryFind k rhs with | Some rhsV -> lhsV + rhsV | None -> lhsV)
     |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
+
 let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
     ((^a) : (static member Sum: ^a -> ^b) k1)
+
+
+let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
+                          and ^a: (static member (+): ^a * ^a -> ^a)
+                          and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
+    let r = Seq.sum k1
+    ((^a) : (static member Sum: ^a -> ^b) r)
+
 
 type SliceType<'a when 'a : comparison> =
     | All
