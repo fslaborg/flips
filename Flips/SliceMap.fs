@@ -116,6 +116,9 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
         | false -> additionMerge rhs.Values lhs.Values
         |> SMap
 
+    static member inline (-) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
+        lhs + (-1.0 * rhs)
+
     static member inline Sum (m:SMap<_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
 
@@ -230,6 +233,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         | true ->  additionMerge lhs.Values rhs.Values
         | false -> additionMerge rhs.Values lhs.Values
         |> SMap2
+
+    static member inline (-) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
+        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap2<_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
@@ -392,6 +398,9 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         | true ->  additionMerge lhs.Values rhs.Values
         | false -> additionMerge rhs.Values lhs.Values
         |> SMap3
+
+    static member inline (-) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
+        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
@@ -616,6 +625,9 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         | true ->  additionMerge lhs.Values rhs.Values
         | false -> additionMerge rhs.Values lhs.Values
         |> SMap4
+
+    static member inline (-) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
+        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd

@@ -29,6 +29,15 @@ type Scalar = Scalar of float with
     static member (*) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs * rhs)
 
+    static member (-) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
+        Scalar (lhs - rhs)
+
+    static member (-) (Scalar s:Scalar, f:float) =
+        Scalar (s - f)
+
+    static member (-) (f:float, Scalar s:Scalar) =
+        Scalar (f - s)
+
     static member Zero = Scalar 0.0
 
     override this.GetHashCode () =
@@ -82,6 +91,18 @@ with
 
     static member (+) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision + expr
+
+    static member (-) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar + (-1.0 * decision)
+
+    static member (-) (decision:Decision, scalar:Scalar) =
+        LinearExpression.OfDecision decision + (-1.0 * scalar)
+
+    static member (-) (decision:Decision, rightDecision:Decision) =
+        LinearExpression.OfDecision decision + (-1.0 * rightDecision)
+
+    static member (-) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.OfDecision decision + (-1.0 * expr)
 
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
@@ -214,6 +235,27 @@ with
 
     static member (*) (scalar:Scalar, expr:LinearExpression) =
         expr * scalar
+
+    static member (-) (expr:LinearExpression, f:float) =
+        expr + (-1.0 * f)
+
+    static member (-) (f:float, expr:LinearExpression) =
+        f + (-1.0 * expr)
+
+    static member (-) (expr:LinearExpression, s:Scalar) =
+        expr + (-1.0 * s)
+
+    static member (-) (s:Scalar, expr:LinearExpression) =
+        s + (-1.0 * expr)
+
+    static member (-) (expr:LinearExpression, d:Decision) =
+        expr + (-1.0 * d)
+
+    static member (-) (d:Decision, expr:LinearExpression) =
+        d + (-1.0 * expr)
+
+    static member (-) (lExpr:LinearExpression, rExpr:LinearExpression) =
+        lExpr + (-1.0 * rExpr)
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
