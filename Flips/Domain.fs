@@ -140,9 +140,45 @@ with
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-and LinearExpression = 
+and 
+    [<CustomEquality; CustomComparison>]
+LinearExpression = 
     | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
 with
+
+    static member private equivalent (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression) (LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+        let isEqualOffset = (lOffset = rOffset)
+        let leftOnlyNames = lNames - rNames
+        let rightOnlyNames = rNames - lNames
+        let overlapNames = Set.intersect lNames rNames
+
+        let leftOnlyNamesAreZero = 
+            leftOnlyNames
+            |> Set.forall (fun n -> lCoefs.[n] = Scalar.Zero)
+
+        let rightOnlyNamesAreZero =
+            rightOnlyNames
+            |> Set.forall (fun n -> rCoefs.[n] = Scalar.Zero)
+
+        let overlapNamesMatch =
+            overlapNames
+            |> Set.forall (fun n -> lCoefs.[n] = rCoefs.[n])
+
+        isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero && overlapNamesMatch
+
+    override this.GetHashCode () =
+        hash this
+
+    override this.Equals(obj) =
+        match obj with
+        | :? LinearExpression as expr -> LinearExpression.equivalent this expr
+        | _ -> false
+
+    interface System.IComparable with
+        member this.CompareTo yObj =
+            match yObj with
+            | :? LinearExpression as expr -> compare this expr
+            | _ -> invalidArg "yObj" "Cannot compare values of different types"
 
     static member OfFloat (f:float) =
         LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)

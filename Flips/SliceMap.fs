@@ -1,5 +1,6 @@
 ﻿module Flips.SliceMap
 
+
 // Declared here so it can be used by any of the MapXD types
 let inline private getKeyCheck lb ub =
     match lb, ub with
@@ -9,12 +10,14 @@ let inline private getKeyCheck lb ub =
     | None, None -> fun _ -> true
 
 
-let inline private additionMerge (lhs:Map<_,_>) (rhs:Map<_,_>) =
+let inline private mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
     /// The assumption is that the LHS Map has more entries than the RHS Map
     let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
 
     lhs
-    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with | Some rhsV -> lhsV + rhsV | None -> lhsV)
+    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
+                              | Some rhsV -> lhsV + rhsV 
+                              | None -> lhsV)
     |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
 
@@ -112,12 +115,9 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
 
     static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge lhs.Values rhs.Values
-        | false -> additionMerge rhs.Values lhs.Values
+        | true ->  mergeAddition lhs.Values rhs.Values
+        | false -> mergeAddition rhs.Values lhs.Values
         |> SMap
-
-    static member inline (-) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap<_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
@@ -230,12 +230,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge lhs.Values rhs.Values
-        | false -> additionMerge rhs.Values lhs.Values
+        | true ->  mergeAddition lhs.Values rhs.Values
+        | false -> mergeAddition rhs.Values lhs.Values
         |> SMap2
-
-    static member inline (-) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
-        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap2<_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
@@ -395,12 +392,9 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge lhs.Values rhs.Values
-        | false -> additionMerge rhs.Values lhs.Values
+        | true ->  mergeAddition lhs.Values rhs.Values
+        | false -> mergeAddition rhs.Values lhs.Values
         |> SMap3
-
-    static member inline (-) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
-        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
@@ -622,12 +616,9 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     static member inline (+) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  additionMerge lhs.Values rhs.Values
-        | false -> additionMerge rhs.Values lhs.Values
+        | true ->  mergeAddition lhs.Values rhs.Values
+        | false -> mergeAddition rhs.Values lhs.Values
         |> SMap4
-
-    static member inline (-) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
-        lhs + (-1.0 * rhs)
 
     static member inline Sum (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd

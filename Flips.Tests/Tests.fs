@@ -370,7 +370,7 @@ module SliceMap4Tests =
         let r1 = s1 + s2
         let r2 = s2 + s1
         Assert.StrictEqual(r1, r2)
-    
+
     [<Property>]
     let ``SMap4 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
         let s1 = Map.ofList v1 |> SMap4
