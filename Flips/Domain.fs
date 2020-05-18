@@ -140,7 +140,7 @@ with
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-and [<CustomEquality; NoComparison>]  LinearExpression = 
+and [<CustomEquality; NoComparison>] LinearExpression = 
     | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
 with
 

@@ -197,6 +197,23 @@ module LinearExpression =
         let r = expr1 + expr2 - expr2
         Assert.Equal(expr1, r)
 
+    [<Property>]
+    let ``Adding then subtracting Scalar yields equivalent LinearExpression`` (s:Scalar) =
+        let numberOfDecisions = rng.Next(1, 100)
+        let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+        let expr = randomExpressionFromDecisions rng decisions
+        let r = expr + s - s
+        Assert.Equal(expr, r)
+
+    [<Property>]
+    let ``Adding then subtracting Decision yields equivalent LinearExpression`` () =
+        let numberOfDecisions = rng.Next(1, 100)
+        let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+        let d = Seq.item (rng.Next(Seq.length decisions)) decisions
+        let expr = randomExpressionFromDecisions rng decisions
+        let r = expr + d - d
+        Assert.Equal(expr, r)
+
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module ModelTests =
 
