@@ -140,13 +140,11 @@ with
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-and 
-    [<CustomEquality; CustomComparison>]
-LinearExpression = 
+and [<CustomEquality; NoComparison>]  LinearExpression = 
     | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
 with
 
-    static member private equivalent (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression) (LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+    static member private Equivalent (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression) (LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
         let isEqualOffset = (lOffset = rOffset)
         let leftOnlyNames = lNames - rNames
         let rightOnlyNames = rNames - lNames
@@ -171,14 +169,8 @@ with
 
     override this.Equals(obj) =
         match obj with
-        | :? LinearExpression as expr -> LinearExpression.equivalent this expr
+        | :? LinearExpression as expr -> LinearExpression.Equivalent this expr
         | _ -> false
-
-    interface System.IComparable with
-        member this.CompareTo yObj =
-            match yObj with
-            | :? LinearExpression as expr -> compare this expr
-            | _ -> invalidArg "yObj" "Cannot compare values of different types"
 
     static member OfFloat (f:float) =
         LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
