@@ -56,6 +56,16 @@ module Scalar =
         Assert.StrictEqual(a, r)
 
     [<Property>]
+    let ``Addition then Subtraction of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
+        let r = a + b - b
+        Assert.StrictEqual(a, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
+        let r = a - b + b
+        Assert.StrictEqual(a, r)
+
+    [<Property>]
     let ``Multiplication of Scalar is associative`` (a:Scalar) (b:Scalar) =
         let r1 = a * b
         let r2 = b * a
@@ -116,6 +126,32 @@ module Decision =
         let r1 = (x1 * d) + (x2 * d)
         let r2 = (x1 + x2) * d
         Assert.Equal(r1, r2)
+
+    [<Property>]
+    let ``Addition then Subtraction of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
+        let e = LinearExpression.OfDecision d
+        let r = d + s - s
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
+        let e = LinearExpression.OfDecision d
+        let r = d - s + s
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Addition then Subtraction of Decision returns Equivalent`` (d1:Decision) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e = LinearExpression.OfDecision d1
+        let r = d1 + d2 - d2
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of Decision returns Equivalent`` (d1:Decision) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e = LinearExpression.OfDecision d1
+        let r = d1 - d2 + d2
+        Assert.Equal(e, r)
 
     [<Property>]
     let ``Multiplication of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
@@ -189,7 +225,7 @@ module LinearExpression =
         Assert.Equal(expr, r2)
 
     [<Property>]
-    let ``Adding then subtracting LinearExpression yields equivalent LinearExpression`` () =
+    let ``Adding then Subtracting LinearExpression yields equivalent LinearExpression`` () =
         let numberOfDecisions = rng.Next(1, 100)
         let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
         let expr1 = randomExpressionFromDecisions rng decisions
@@ -198,7 +234,7 @@ module LinearExpression =
         Assert.Equal(expr1, r)
 
     [<Property>]
-    let ``Adding then subtracting Scalar yields equivalent LinearExpression`` (s:Scalar) =
+    let ``Adding then Subtracting Scalar yields equivalent LinearExpression`` (s:Scalar) =
         let numberOfDecisions = rng.Next(1, 100)
         let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
         let expr = randomExpressionFromDecisions rng decisions
@@ -206,7 +242,7 @@ module LinearExpression =
         Assert.Equal(expr, r)
 
     [<Property>]
-    let ``Adding then subtracting Decision yields equivalent LinearExpression`` () =
+    let ``Adding then Subtracting Decision yields equivalent LinearExpression`` () =
         let numberOfDecisions = rng.Next(1, 100)
         let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
         let d = Seq.item (rng.Next(Seq.length decisions)) decisions
