@@ -174,3 +174,24 @@ let n1 = System.BitConverter.DoubleToInt64Bits n
 let x1 = System.BitConverter.DoubleToInt64Bits 0.01358385106
 
 n1 - x1
+
+let x = SMap2.ofList [
+    (1, "a"), 1.0; (1, "b"), 2.0; (1, "c"), 3.0; 
+    (2, "a"), 4.0; (2, "b"), 5.0; (2, "c"), 6.0; 
+    (3, "a"), 7.0; (3, "b"), 8.0; (3, "c"), 9.0; 
+]
+
+let y = SMap.ofList [(1, 1.0); (2, 2.0); (3, 3.0)]
+
+x .* y
+
+let x = SMap2.ofList [
+    (1, "a"), 1.0; (1, "b"), 2.0; (1, "c"), 3.0; 
+    (2, "a"), 4.0; (2, "b"), 5.0; (2, "c"), 6.0; 
+    (3, "a"), 7.0; (3, "b"), 8.0; (3, "c"), 9.0; 
+]
+let z = SMap.ofList [("a", 1.0); ("b", 2.0); ("c", 3.0)]
+
+x .* z
+
+z .* x
