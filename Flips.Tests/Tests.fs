@@ -315,6 +315,23 @@ module SliceMapTests =
         Assert.StrictEqual(r1, r2)
 
     [<Property>]
+    let ``SliceMap element-wise multiplication is commutative`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap
+        let s2 = Map.ofList v2 |> SMap
+        let r1 = s1 .* s2
+        let r2 = s2 .* s1
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``SliceMap element-wise multiplication is associative`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) (v3:List<(NonEmptyString * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap
+        let s2 = Map.ofList v2 |> SMap
+        let s3 = Map.ofList v3 |> SMap
+        let r1 = (s1 .* s2) .* s3
+        let r2 = s1 .* (s2 .* s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
     let ``Multiply SliceMap by 1 yields same SliceMap`` (v:List<(NonEmptyString * Scalar)>)=
         let s = Map.ofList v |> SMap
         let r = 1.0 * s
@@ -364,6 +381,23 @@ module SliceMap2Tests =
         Assert.StrictEqual(r1, r2)
 
     [<Property>]
+    let ``SMap2 element-wise multiplication is commutative`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap2
+        let s2 = Map.ofList v2 |> SMap2
+        let r1 = s1 .* s2
+        let r2 = s2 .* s1
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``SMap2 element-wise multiplication is associative`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap2
+        let s2 = Map.ofList v2 |> SMap2
+        let s3 = Map.ofList v3 |> SMap2
+        let r1 = (s1 .* s2) .* s3
+        let r2 = s1 .* (s2 .* s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
     let ``Multiply SMap2 by 1 yields same SMap2`` (v:List<((NonEmptyString * NonEmptyString) * Scalar)>)=
         let s = Map.ofList v |> SMap2
         let r = 1.0 * s
@@ -400,6 +434,15 @@ module SliceMap2Tests =
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
+    [<Property>]
+    let ``Elementwise-multiplication of SMap by 1/SMap then by SMap2 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap2
+        let v2 = v1 |> List.map (fun ((k1, k2), v) -> k1, v) |> List.distinctBy fst
+        let s2 = v2 |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let r = s2 .* (s2Inverse .* s1)
+        Assert.StrictEqual(r, s1)
+
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module SliceMap3Tests =
@@ -420,6 +463,23 @@ module SliceMap3Tests =
         let s3 = Map.ofList v3 |> SMap3
         let r1 = (s1 + s2) + s3
         let r2 = s1 + (s2 + s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``SMap3 element-wise multiplication is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap3
+        let s2 = Map.ofList v2 |> SMap3
+        let r1 = s1 .* s2
+        let r2 = s2 .* s1
+        Assert.StrictEqual(r1, r2)
+    
+    [<Property>]
+    let ``SMap3 element-wise multiplication is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap3
+        let s2 = Map.ofList v2 |> SMap3
+        let s3 = Map.ofList v3 |> SMap3
+        let r1 = (s1 .* s2) .* s3
+        let r2 = s1 .* (s2 .* s3)
         Assert.StrictEqual(r1, r2)
 
     [<Property>]
@@ -468,6 +528,24 @@ module SliceMap3Tests =
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
+    [<Property>]
+    let ``Elementwise-multiplication of SMap by 1/SMap then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap3
+        let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> k1, v) |> List.distinctBy fst
+        let s2 = v2 |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let r = s2 .* (s2Inverse .* s1)
+        Assert.StrictEqual(r, s1)
+
+    [<Property>]
+    let ``Elementwise-multiplication of SMap2 by 1/SMap2 then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap3
+        let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> (k1, k2), v) |> List.distinctBy fst
+        let s2 = v2 |> SMap2.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap2.ofList
+        let r = s2 .* (s2Inverse .* s1)
+        Assert.StrictEqual(r, s1)
+
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module SliceMap4Tests =
@@ -488,6 +566,23 @@ module SliceMap4Tests =
         let s3 = Map.ofList v3 |> SMap4
         let r1 = (s1 + s2) + s3
         let r2 = s1 + (s2 + s3)
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``SMap4 element-wise multiplication is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let s2 = Map.ofList v2 |> SMap4
+        let r1 = s1 .* s2
+        let r2 = s2 .* s1
+        Assert.StrictEqual(r1, r2)
+
+    [<Property>]
+    let ``SMap4 element-wise multiplication is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let s2 = Map.ofList v2 |> SMap4
+        let s3 = Map.ofList v3 |> SMap4
+        let r1 = (s1 .* s2) .* s3
+        let r2 = s1 .* (s2 .* s3)
         Assert.StrictEqual(r1, r2)
 
     [<Property>]
@@ -543,4 +638,31 @@ module SliceMap4Tests =
         let s2 = v2 |> SMap3.ofList
         let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap3.ofList
         let r = s1 .* s2 .* s2Inverse
+        Assert.StrictEqual(r, s1)
+
+    [<Property>]
+    let ``Elementwise-multiplication of SMap by 1/SMap then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> k1, v) |> List.distinctBy fst
+        let s2 = v2 |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let r = s2 .* (s2Inverse .* s1)
+        Assert.StrictEqual(r, s1)
+
+    [<Property>]
+    let ``Elementwise-multiplication of SMap2 by 1/SMap2 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) |> List.distinctBy fst
+        let s2 = v2 |> SMap2.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap2.ofList
+        let r = s2 .* (s2Inverse .* s1)
+        Assert.StrictEqual(r, s1)
+
+    [<Property>]
+    let ``Elementwise-multiplication of SMap3 by 1/SMap3 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let s1 = Map.ofList v1 |> SMap4
+        let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) |> List.distinctBy fst
+        let s2 = v2 |> SMap3.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap3.ofList
+        let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
