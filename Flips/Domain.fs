@@ -38,6 +38,15 @@ type Scalar = Scalar of float with
     static member (-) (f:float, Scalar s:Scalar) =
         Scalar (f - s)
 
+    static member (/) (f:float, Scalar s:Scalar) =
+        Scalar (f / s)
+
+    static member (/) (Scalar s:Scalar, f:float) =
+        Scalar (s / f)
+
+    static member (/) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
+        Scalar (lhs / rhs)
+
     static member Zero = Scalar 0.0
 
     override this.GetHashCode () =
