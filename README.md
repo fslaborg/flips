@@ -241,7 +241,7 @@ let x2 = [for i in 1..3 do
 x2.[1, 2] // Returns val it : int = 3
 ```
 
-The real power of SliceMaps for Optimization Modeling comes from their ability to "slice" the values across the dimensions of the key. This takes the ability to slice `Array` and `List` but extends it. The slicing built into F# is powerful but it limited to slicing contiguous values. SliceMaps support the same ability but extend it by offering more advanced filtering criteria which is useful in the Optimization domain.
+The real power of SliceMaps for Optimization Modeling comes from their ability to "slice" the values across the dimensions of the key. This takes the ability to slice `Array` and `List` but extends it. The slicing built into F# is powerful but it is constrained to a limited set of slicing types. SliceMaps support the same types of slices but offer more advanced filtering criteria which is useful in the Optimization domain.
 
 
 ### Types of Slicing
