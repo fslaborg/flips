@@ -226,7 +226,11 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         |> SMap2
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
-        rhs .* lhs
+        let rlhs = lhs.Values
+        rhs.Values
+        |> Map.filter (fun (k1, k2) _ -> lhs.ContainsKey k1)
+        |> Map.map (fun (k1, k2) v -> v * lhs.[k1])
+        |> SMap2
 
     static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
