@@ -486,7 +486,7 @@ y .* x
 //            ((3, "a"), 21.0); ((3, "b"), 24.0); ((3, "c"), 27.0)];}
 ```
 
-You will notice that where the key of `y` matches the first element of the key for `x`, the values are multiplied. The resulting type is still a 2-dimensional SliceMap, `SMap2`. Something important to note is that in the `.*` operator is not commutative for SliceMaps of different dimensions. If you tried the following, you would get a compiler error saying no overloads can be found.
+You will notice that where the key of `y` matches the first element of the key for `x`, the values are multiplied. The resulting type is still a 2-dimensional SliceMap, `SMap2`. Something important to note is that in the `.*` operator is not commutative (i.e. positioning matters) for SliceMaps of different dimensions. If you tried the following, you would get a compiler error saying no overloads can be found.
 
 ```fsharp
 x .* y // No matching operator can be found
