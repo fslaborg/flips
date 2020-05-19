@@ -492,9 +492,9 @@ You will notice that where the key of `y` matches the first element of the key f
 x .* y // No matching operator can be found
 ```
 
-When broadcasting with the `.*` operator, it is required that the types used for the keys match. In the first case, the key for `y` is an `int`. `y` is on the left side of `x` so it is comparing to the first element of the key for `x`. The type of th efirst element of the key for `x` is an `int` therefore you can use `.*`.
+When broadcasting with the `.*` operator, it is required that the types used for the keys to line up. In the first case, the key for `y` is an `int`. `y` is on the left side of `x` so it is comparing to the first element of the key for `x`. The type of the first element of the key for `x` is an `int` therefore you can use `.*`.
 
-When you move `y` to the right side, the `.*` operator is checking the second element of the key for `x`. In this case, the type of the second part of the `x` key is a `string`. The types do not match. Let us create a new `SMap` using a `string` for the key and try this again.
+When you move `y` to the right side, the `.*` operator is checking the second element (or right-most element) of the key for `x`. In this case, the type of the second element of the `x` key is a `string`. The types do not match. Let us create a new `SMap` using a `string` for the key and try this again.
 
 ```fsharp
 let x = SMap2.ofList [
@@ -513,7 +513,7 @@ x .* z
 z .* x // Compiler error: No matching operator can be found
 ```
 
-You will notice now that `x` is multiplied by `z` where the second element of the key matches. The requirement for broadcasting can be summarized with these type signatures
+You will notice now that the value in `x` is multiplied by the value in `z` where the second element of the key for `x` matches. The requirement for broadcasting can be summarized with these type signatures
 
 ```fsharp
 SMap<'Key1, 'Value> .* SMap2<'Key1, 'Key2, 'Value>
