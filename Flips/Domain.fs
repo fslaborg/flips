@@ -9,7 +9,7 @@ type Scalar = Scalar of float with
         if (aValue >>> 63) <> (bValue >>> 63) then
             a = b
         else
-            System.Math.Abs(aValue - bValue) <= 100L
+            System.Math.Abs(aValue - bValue) <= 10_000L
 
     static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs + rhs)

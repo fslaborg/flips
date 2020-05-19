@@ -4,7 +4,7 @@
 //#r @"C:\Users\matth\.nuget\packages\google.ortools.runtime.win-x64\7.5.7466\runtimes\win-x64\native\google-ortools-native.dll"
 
 #load "Domain.fs"
-#load "Solve.fs"
+//#load "Solve.fs"
 #load "SliceMap.fs"
 
 open System
@@ -160,3 +160,17 @@ let c = x.[GreaterThan 1, LessThan "b"]
 
 let y = SMap2.reKey (fun (i, c) -> c, i) x
 y
+
+let x = Scalar 0.01358385106
+let y = Scalar 21.99286698
+let z = x + y - y
+z.ToString()
+x.ToString()
+x = y
+
+
+let (Scalar n) = z
+let n1 = System.BitConverter.DoubleToInt64Bits n
+let x1 = System.BitConverter.DoubleToInt64Bits 0.01358385106
+
+n1 - x1
