@@ -9,8 +9,8 @@ open System
 open Flips
 
 let rng = System.Random()
-let MIN_COEFFICIENT = -1_000_000_000.0
-let MAX_COEFFICIENT = 1_000_000_000.0
+let MIN_COEFFICIENT = -1_000_000_000_000_000.0
+let MAX_COEFFICIENT = 1_000_000_000_000_000.0
 
 let randomInRange lowerBound upperBound (rng:System.Random) =
     let range = upperBound - lowerBound
@@ -53,6 +53,16 @@ module Scalar =
     [<Property>]
     let ``Addition of Zero Scalar yields same Scalar`` (a:Scalar) =
         let r = a + Scalar.Zero
+        Assert.StrictEqual(a, r)
+
+    [<Property>]
+    let ``Addition then Subtraction of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
+        let r = a + b - b
+        Assert.StrictEqual(a, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
+        let r = a - b + b
         Assert.StrictEqual(a, r)
 
     [<Property>]
@@ -116,6 +126,32 @@ module Decision =
         let r1 = (x1 * d) + (x2 * d)
         let r2 = (x1 + x2) * d
         Assert.Equal(r1, r2)
+
+    [<Property>]
+    let ``Addition then Subtraction of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
+        let e = LinearExpression.OfDecision d
+        let r = d + s - s
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
+        let e = LinearExpression.OfDecision d
+        let r = d - s + s
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Addition then Subtraction of Decision returns Equivalent`` (d1:Decision) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e = LinearExpression.OfDecision d1
+        let r = d1 + d2 - d2
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of Decision returns Equivalent`` (d1:Decision) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e = LinearExpression.OfDecision d1
+        let r = d1 - d2 + d2
+        Assert.Equal(e, r)
 
     [<Property>]
     let ``Multiplication of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
@@ -187,6 +223,32 @@ module LinearExpression =
         let r1 = expr * x
         let r2 = r1 * (1.0 / x)
         Assert.Equal(expr, r2)
+
+    [<Property>]
+    let ``Adding then Subtracting LinearExpression yields equivalent LinearExpression`` () =
+        let numberOfDecisions = rng.Next(1, 100)
+        let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+        let expr1 = randomExpressionFromDecisions rng decisions
+        let expr2 = randomExpressionFromDecisions rng decisions
+        let r = expr1 + expr2 - expr2
+        Assert.Equal(expr1, r)
+
+    [<Property>]
+    let ``Adding then Subtracting Scalar yields equivalent LinearExpression`` (s:Scalar) =
+        let numberOfDecisions = rng.Next(1, 100)
+        let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+        let expr = randomExpressionFromDecisions rng decisions
+        let r = expr + s - s
+        Assert.Equal(expr, r)
+
+    [<Property>]
+    let ``Adding then Subtracting Decision yields equivalent LinearExpression`` () =
+        let numberOfDecisions = rng.Next(1, 100)
+        let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+        let d = Seq.item (rng.Next(Seq.length decisions)) decisions
+        let expr = randomExpressionFromDecisions rng decisions
+        let r = expr + d - d
+        Assert.Equal(expr, r)
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module ModelTests =
@@ -370,7 +432,7 @@ module SliceMap4Tests =
         let r1 = s1 + s2
         let r2 = s2 + s1
         Assert.StrictEqual(r1, r2)
-    
+
     [<Property>]
     let ``SMap4 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
         let s1 = Map.ofList v1 |> SMap4

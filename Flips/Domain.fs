@@ -9,7 +9,7 @@ type Scalar = Scalar of float with
         if (aValue >>> 63) <> (bValue >>> 63) then
             a = b
         else
-            System.Math.Abs(aValue - bValue) <= 100L
+            System.Math.Abs(aValue - bValue) <= 10_000L
 
     static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs + rhs)
@@ -28,6 +28,15 @@ type Scalar = Scalar of float with
 
     static member (*) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
         Scalar (lhs * rhs)
+
+    static member (-) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
+        Scalar (lhs - rhs)
+
+    static member (-) (Scalar s:Scalar, f:float) =
+        Scalar (s - f)
+
+    static member (-) (f:float, Scalar s:Scalar) =
+        Scalar (f - s)
 
     static member Zero = Scalar 0.0
 
@@ -83,6 +92,18 @@ with
     static member (+) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision + expr
 
+    static member (-) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar + (-1.0 * decision)
+
+    static member (-) (decision:Decision, scalar:Scalar) =
+        LinearExpression.OfDecision decision + (-1.0 * scalar)
+
+    static member (-) (decision:Decision, rightDecision:Decision) =
+        LinearExpression.OfDecision decision + (-1.0 * rightDecision)
+
+    static member (-) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.OfDecision decision + (-1.0 * expr)
+
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
 
@@ -119,9 +140,37 @@ with
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-and LinearExpression = 
+and [<CustomEquality; NoComparison>] LinearExpression = 
     | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
 with
+
+    static member private Equivalent (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression) (LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+        let isEqualOffset = (lOffset = rOffset)
+        let leftOnlyNames = lNames - rNames
+        let rightOnlyNames = rNames - lNames
+        let overlapNames = Set.intersect lNames rNames
+
+        let leftOnlyNamesAreZero = 
+            leftOnlyNames
+            |> Set.forall (fun n -> lCoefs.[n] = Scalar.Zero)
+
+        let rightOnlyNamesAreZero =
+            rightOnlyNames
+            |> Set.forall (fun n -> rCoefs.[n] = Scalar.Zero)
+
+        let overlapNamesMatch =
+            overlapNames
+            |> Set.forall (fun n -> lCoefs.[n] = rCoefs.[n])
+
+        isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero && overlapNamesMatch
+
+    override this.GetHashCode () =
+        hash this
+
+    override this.Equals(obj) =
+        match obj with
+        | :? LinearExpression as expr -> LinearExpression.Equivalent this expr
+        | _ -> false
 
     static member OfFloat (f:float) =
         LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
@@ -214,6 +263,27 @@ with
 
     static member (*) (scalar:Scalar, expr:LinearExpression) =
         expr * scalar
+
+    static member (-) (expr:LinearExpression, f:float) =
+        expr + (-1.0 * f)
+
+    static member (-) (f:float, expr:LinearExpression) =
+        f + (-1.0 * expr)
+
+    static member (-) (expr:LinearExpression, s:Scalar) =
+        expr + (-1.0 * s)
+
+    static member (-) (s:Scalar, expr:LinearExpression) =
+        s + (-1.0 * expr)
+
+    static member (-) (expr:LinearExpression, d:Decision) =
+        expr + (-1.0 * d)
+
+    static member (-) (d:Decision, expr:LinearExpression) =
+        d + (-1.0 * expr)
+
+    static member (-) (lExpr:LinearExpression, rExpr:LinearExpression) =
+        lExpr + (-1.0 * rExpr)
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
