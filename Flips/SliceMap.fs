@@ -218,16 +218,6 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         |> Map.map (fun (k1, k2) v -> v * rhs.[(k1, k2)])
         |> SMap2
 
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
-        let rhs = rhs.Values
-        lhs.Values
-        |> Map.filter (fun (k1, k2) _ -> rhs.ContainsKey k2)
-        |> Map.map (fun (k1, k2) v -> v * rhs.[k2])
-        |> SMap2
-
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
-        rhs .* lhs
-
     static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         match Map.count lhs.Values > Map.count rhs.Values with
         | true ->  mergeAddition lhs.Values rhs.Values
@@ -359,35 +349,10 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         |> Map.map (fun k v -> rhs * v)
         |> SMap3
 
-
     static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
         |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k1, k2, k3])
-        |> SMap3
-
-    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap2<_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey (k2, k3))
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k2, k3])
-        |> SMap3
-
-    static member inline (.*) (b:SMap2<_,_,_>, a:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k1, k2])
-        |> SMap3
-
-    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap<_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey k3)
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k3])
-        |> SMap3
-
-    static member inline (.*) (b:SMap<_,_>, a:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k1])
         |> SMap3
 
     static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
@@ -576,42 +541,6 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         lhs.Values
         |> Map.filter (fun k _ -> rhs.ContainsKey k)
         |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
-        |> SMap4
-
-    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k2, k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k2, k3, k4])
-        |> SMap4
-
-    static member inline (.*) (b:SMap3<_,_,_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2, k3))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2, k3])
-        |> SMap4
-
-    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap2<_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k3, k4])
-        |> SMap4
-
-    static member inline (.*) (b:SMap2<_,_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2])
-        |> SMap4
-
-    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap<_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k4)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k4])
-        |> SMap4
-
-    static member inline (.*) (b:SMap<_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1])
         |> SMap4
 
     static member inline (+) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
