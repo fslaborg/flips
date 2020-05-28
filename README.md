@@ -278,6 +278,8 @@ Once all of the `Constrain`s have been added the `solve` function can be called.
 
 ### Solution
 
+In the case that the `Model` was solved succesfully, a `SolveResult` is returned containing a `Solution`. The `Solution` contains two things: DecisionResults and ObjectiveResult. The DecisionResults is a `Map<DecisionName,float>` which provides the value the Solver found for the given `DecisionName`. The ObjectiveResult is a `float` representing the final value of the `LinearExpression` for the `Objective`.
+
 ### Constraint Builder
 
 Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression (CE) was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraints you are creating. Here is a side by side comparison of creating constraints without and with the `ConstraintBuilder` CE. The results of both methods are equivalent. The method with `ConstraintBuilder` CE is slightly more terse. Over time, the added brevity is appreciated. This is showing how to create constraints across two dimensions: Items and Locations.
