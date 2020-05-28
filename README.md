@@ -8,6 +8,14 @@
     - [Why do we need Flips?](#why-do-we-need-flips)
     - [Intro Problem](#intro-problem)
     - [Using Indices](#using-indices)
+  - [The Flips Domain](#the-flips-domain)
+    - [The Shape of Optimization Problems](#the-shape-of-optimization-problems)
+    - [Scalar](#scalar)
+    - [Decision](#decision)
+    - [LinearExpression](#linearexpression)
+    - [Objective](#objective)
+    - [Model](#model)
+    - [Solution](#solution)
   - [SliceMaps](#slicemaps)
     - [What is Slicing](#what-is-slicing)
     - [Types of SliceMaps](#types-of-slicemaps)
@@ -65,11 +73,12 @@ Flips is intended to make building and solving LP/MIP problems in F# simple. The
 
 For anyone not familiar with LP/MIP, the process of creating and solving a model is composed of the following steps:
 
-1. Defining your parameters
-2. Creating your Decision Variables
-3. Formulating your Objective Function
-4. Adding Constraints
-5. Solving the Model
+1. Define Parameters: This is the input data for your model
+2. Create Decisions: These are the choices that we want the Solver to make.
+3. Define the Objective: This is how success is measured
+4. Add Constraints: These are the rules that the Solver must objey for the solution to be valid
+5. Solve the Model: We give the optimization model to the Solver for it to find the best solution.
+6. Inspect the Result: Not all models are solvable. Depending on the formulation, there may be no solutions. We always check whether the Solver was able to find a solution to the model.
 
 Let us go through an example problem to see how this works. We are managing a Food Truck and we need to figure out what ingredients we need to pack for the day. In this example we only sell Hamburgers and Hotdogs. Each Hamburger we sell provides us $1.50 in profit. Each Hotdog we sell provides $1.20 in profit. We only have enough Hamburger buns for up to 300 Hamburgers and only 200 buns for Hotdogs. The ingredients for a single Hamburger weight 0.5 kg and the ingredients for a Hotdog weigh 0.4 kg. Our Food Truck can only hold up to 500 kg. The question becomes, how many ingredients do we pack for Hamburgers and how many for Hotdogs? Let us answer this question by formulating an Optimization model.
 
@@ -86,32 +95,54 @@ let hotdogBuns = 200.0
 let hamburgerWeight = 0.5
 let hotdogWeight = 0.4
 let maxTruckWeight = 200.0
+```
 
+Next we need to create the Decisions for the Solver to make. Decisions come in three varities: Boolean, Integer, and Continuous. Every Decision must be given a name and a Lower and Upper bound. In the case of a Boolean Decision, the Lower and Upper bound is implictly 0 and 1. For the case of Integer or Continuous, the bounds must be provided. This tells the Solver what is the legal range of values the Decision can take on. Most real-world Decisions have some bound to them. It is rare that something can be positive or negative infinity. There are three functions for creating Decisions in the `Decision` module. 
+
+```fsharp
+createBoolean: (name:string) -> LinearExpression
+createInteger: (name:string) -> (lowerBound:float) -> (upperBound:float) -> LinearExpression
+createContinuous: (name:string) -> (lowerBound:float) -> (upperBound:float) -> LinearExpression
+```
+
+> **Note:** You will notice the type they return is actually a `LinearExpression`. The `LinearExpression` type is a collection which obeys the rules of algebra (specifically: `+`, `-`, and `*`). `LinearExpression` holds a collection of `float` and `Decision` (ex: `2.3 + 4.5*x1 + 4.5*x2`). When we use these functions to create `Decision`s, we are getting a `LinearExpression` which only contains the `Decision` we created. The reason for this is to that it is easy to sum `LinearExpression`s together. If these functions did not do this, you would be forced to perform more boilerplate work so that they would compose nicely.
+
+For simplicity we will use the `createContinuous` in our example to create the Decisions to represent the number of Hamburgers and Hotdogs we are going to pack.
+
+```fsharp
 // Create Decision Variable with a Lower Bound of 0.0 and an Upper Bound of Infinity
 let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infinity
 let numberOfHotdogs = Decision.createContinuous "NumberOfHotDogs" 0.0 infinity
+```
 
+```fsharp
 // Create the Linear Expression for the objective
 let objectiveExpression = hamburgerProfit * numberOfHamburgers + hotdogProfit * numberOfHotdogs
 
 // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
 // the Objective Expression
 let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
-    
+  ```
+
+```fsharp  
 // Create a Constraint for the max number of Hamburger considering the number of buns
 let maxHamburger = Constraint.create "MaxHamburger" (numberOfHamburgers <== hamburgerBuns)
 // Create a Constraint for the max number of Hot Dogs considering the number of buns
 let maxHotDog = Constraint.create "MaxHotDog" (numberOfHotdogs <== hotdogBuns)
 // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
 let maxWeight = Constraint.create "MaxWeight" (numberOfHotdogs * hotdogWeight + numberOfHamburgers * hamburgerWeight <== maxTruckWeight)
+```
 
+```fsharp
 // Create a Model type and pipe it through the addition of the constraitns
 let model =
     Model.create objective
     |> Model.addConstraint maxHamburger
     |> Model.addConstraint maxHotDog
     |> Model.addConstraint maxWeight
+```
 
+```fsharp
 // Create a Settings type which tells the Solver which types of underlying solver to use,
 // the time alloted for solving, and whether to write an LP file to disk
 let settings = {
@@ -122,7 +153,9 @@ let settings = {
 
 // Call the `solve` function in the Solve module to evaluate the model
 let result = solve settings model
+```
 
+```fsharp
 printfn "-- Result --"
 
 // Match the result of the call to solve
@@ -202,6 +235,34 @@ let model =
 ```
 
 We now have a formulation of the problem that will scale to an arbitrary number of items. This is a more maintainable formulation and will not require updating as the variety of items changes over time. Only the input data to the model formulation code need change.
+
+## The Flips Domain
+
+### The Shape of Optimization Problems
+
+If you were to go and read up and Mathematical Optimization and specifically about LP/MIP, you would see that Optimization Models are written 
+
+### Scalar
+
+A `Scalar` is a single case DU which wraps a `float`. The reason for this was to ensure proper equality behavior. Equality is incredibly difficult with any floating-point type. In order to ensure that modeling works as intended it was necessary to take wrap the `float` value and specify the equality behavior.
+
+The `Scalar` type supports the basic algebraic operations: `+`, `-`, `*`, and `/`. Any time you perform an algebraic operation with a `Scalar` and a `float`, you will get a `Scalar` back. When perform an algebraic operation with a `Scalar` and a  `Decision` you will get a `LinearExpression` back. The `LinearExpression` is the basic building block of Optimization Models. For more information on `LinearExpresion`, please refer to its section.
+
+### Decision
+
+A `Decision` represents a choice that the Solver needs to make. It is a DU with three cases: `Boolean`, `Integer`, and `Continuous`. The `Boolean` case is meant to model a True/False, Yes/No type of decision. Examples are whether to build a factory or not, whether to open a store or not, start a power plant or not, or any other type of decision where a state must be true or false and nothing in between. The `Integer` case represents a decision that is allowed to take on discrete values. When you create them you must specify a Lower and Upper bound. The bounds are the limits for the Solver so that it knows what is the legal range of values for the decision. The `Continuous` case has Lower and Upper bounds like the `Integer` case except that any value within the bounds is allowed, not just the discrete values. `Continuous` decisions are the most common and should be the default for better performance from the Solver.
+
+### LinearExpression
+
+A `LinearExpression` is the addition of one or more `Scalar` or `Decision` values. It is meant to represent the math expressions like [`2.3 + 3.4*x1 + 4.5*x2`] where `x1` and `x2` are `Decision`s. `LinearExpression`s are meant as the unit of compositions for Optimization Models. Constraints and Objectives are expressed in terms of `LinearExpression`s. The `LinearExpression` type forms a Monoid with the `+` operator.
+
+Whenever you create a `Decision` with the built in create functions, they will return a `LinearExpression` which holds the corresponding `Decision` instead of giving you the raw `Decision` itself. This is because it is common to use the F# `List.sum` function when composing the model. The function signature for `List.sum` is `^T list -> ^T`. You notice that `List.sum` expects the input type and the output type to be the same. The function signature for `+` for `Decision` is `Decision * Decision -> LinearExpression`. `List.sum` and `Decision` addition are incompatible but `List.sum` and `LinearExpression` addition are compatible. To alleciate this pain point, it was decided that the create of a `Decision` would return a `LinearExpression` holding the `Decision` instead of just the `Decision` itself.
+
+### Objective
+
+### Model
+
+### Solution
 
 ## SliceMaps
 

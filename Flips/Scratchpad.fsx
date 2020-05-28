@@ -183,7 +183,7 @@ let x = SMap2.ofList [
 
 let y = SMap.ofList [(1, 1.0); (2, 2.0); (3, 3.0)]
 
-x .* y
+//x .* y
 
 let x = SMap2.ofList [
     (1, "a"), 1.0; (1, "b"), 2.0; (1, "c"), 3.0; 
@@ -194,4 +194,4 @@ let z = SMap.ofList [("a", 1.0); ("b", 2.0); ("c", 3.0)]
 
 x .* z
 
-z .* x
+//z .* x
