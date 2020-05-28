@@ -13,9 +13,11 @@
     - [Scalar](#scalar)
     - [Decision](#decision)
     - [LinearExpression](#linearexpression)
+    - [Constraint](#constraint)
     - [Objective](#objective)
     - [Model](#model)
     - [Solution](#solution)
+    - [Constraint Builder](#constraint-builder)
   - [SliceMaps](#slicemaps)
     - [What is Slicing](#what-is-slicing)
     - [Types of SliceMaps](#types-of-slicemaps)
@@ -35,7 +37,6 @@
       - [Broadcasting for SliceMaps](#broadcasting-for-slicemaps)
     - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
     - [Example Using SliceMaps](#example-using-slicemaps)
-  - [Constraint Builder](#constraint-builder)
 
 ## Introduction
 
@@ -258,11 +259,44 @@ A `LinearExpression` is the addition of one or more `Scalar` or `Decision` value
 
 Whenever you create a `Decision` with the built in create functions, they will return a `LinearExpression` which holds the corresponding `Decision` instead of giving you the raw `Decision` itself. This is because it is common to use the F# `List.sum` function when composing the model. The function signature for `List.sum` is `^T list -> ^T`. You notice that `List.sum` expects the input type and the output type to be the same. The function signature for `+` for `Decision` is `Decision * Decision -> LinearExpression`. `List.sum` and `Decision` addition are incompatible but `List.sum` and `LinearExpression` addition are compatible. To alleciate this pain point, it was decided that the create of a `Decision` would return a `LinearExpression` holding the `Decision` instead of just the `Decision` itself.
 
+
+### Constraint
+
+A `Constraint` is composed of a Name and a comparison (`==`, `<==`, `>==`) of two `LinearExpression`s. The Name for a `Constraint` should be indicitive of what it controlling for. Best practice is to prefix a set of `Constraint` with an identifier followed by the indices that the individual `Constraint` correspond to. There is actually a `ConstraintBuilder` Computation Expression to streamline this.
+
 ### Objective
+
+An `Objective` is composed of three parts: a `ObjectiveName`, a `ObjectiveSense`, and a `LinearExpression`. The `ObjectiveName` is meant to clarify what the goal of the Optimization Model is. For example, "MaximizeRevenue" or "MinimizeWaste" or "MaximizeSafety". The `ObjectiveName` has no bearing on what the Solver does. It is meant to document what the purpose of the Model was when it was written.
+
+The `ObjectiveSense` tells the Solver whether it is trying to Maximize or Minimize the `LinearExpression` in the `Objective`. The `LinearExpression` is the way the Solver will measure success. It will either try to make the expression be as large as possible for `Maximize` or as small as possible for `Minimize`.
 
 ### Model
 
+The `Model` type contains the full description of the problem. It holds the `Decision`s that need to be made, the `Constraint`s that must be adhered to, and the `Objective` that is trying to be achieved. An `Objective` must be provided when creating a `Model`. From there `Constraint`s can be added to the `Model` using the `Model.addConstraint` or `Model.addConstraints` functions. 
+
+Once all of the `Constrain`s have been added the `solve` function can be called. The `solve` function returns a `SolveResult` type. The `SolveResult` type is a DU with two cases: an `Optimal` case containing a `Solution` or the `Suboptimal` case containing an error message.
+
 ### Solution
+
+### Constraint Builder
+
+Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression (CE) was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraints you are creating. Here is a side by side comparison of creating constraints without and with the `ConstraintBuilder` CE. The results of both methods are equivalent. The method with `ConstraintBuilder` CE is slightly more terse. Over time, the added brevity is appreciated. This is showing how to create constraints across two dimensions: Items and Locations.
+
+```fsharp
+// How you would write the MaxItem constraints without `ConstraintBuilder`
+let maxItemConstraints =
+    [for item in items do
+        for location in locations do
+            let name = sprintf "MaxItem|%s_%s" item location
+            Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
+
+// The equivalent statement using a `ConstraintBuilder`
+let maxItemConstraints = ConstraintBuilder "MaxItem" {
+    for item in items do
+        for location in locations -> 
+            numberOfItem.[item,location] <== maxIngredients.[item]
+}
+```
 
 ## SliceMaps
 
@@ -773,36 +807,4 @@ Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
 
 We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left-hand side of our Constraint Expression.
 
-## Constraint Builder
 
-Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
-
-```fsharp
-let items = ["Hamburger"; "HotDog"]
-let locations = ["Woodstock"; "Sellwood"; "Portland"]
-
-// Create Decision Variable which is keyed by the tuple of Item and Location.
-let numberOfItem =
-    [for item in items do
-        for location in locations do
-            let decName = sprintf "NumberOf_%s_At_%s" item location
-            let decision = Decision.createContinuous decName 0.0 infinity
-            (item, location), decision]
-    |> Map.ofList
-
-// How you would write the MaxItem constraints without `ConstraintBuilder`
-let maxItemConstraints =
-    [for item in items do
-        for location in locations do
-            let name = sprintf "MaxItem|%s_%s" item location
-            Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
-
-// The equivalent statement using a `ConstraintBuilder`
-let maxItemConstraints = ConstraintBuilder "MaxItem" {
-    for item in items do
-        for location in locations -> 
-            numberOfItem.[item,location] <== maxIngredients.[item]
-}
-```
-
-`ConstraintBuilder` simply removes the need to define how to name the constraints. It is not necessary to use the `ConstrantBuilder` but it is there to streamline your modeling.
