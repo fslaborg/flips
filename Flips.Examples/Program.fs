@@ -64,7 +64,8 @@ let FoodTruckExample () =
         printfn "Objective Value: %f" solution.ObjectiveResult
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %A\tValue: %f" decision.Name value
+            let (DecisionName name) = decision.Name
+            printfn "Decision: %s\tValue: %f" name value
 
 let FoodTruckMapExample () =
 
@@ -127,7 +128,8 @@ let FoodTruckMapExample () =
         printfn "Objective Value: %f" solution.ObjectiveResult
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %A\tValue: %f" decision.Name value
+            let (DecisionName name) = decision.Name
+            printfn "Decision: %s\tValue: %f" name value
 
 let FoodTruckConstraintBuilderExample () =
 
@@ -595,7 +597,7 @@ let BinaryProgrammingExample () =
 [<EntryPoint>]
 let main argv =
     
-    //FoodTruckExample ()
+    FoodTruckExample ()
     //FoodTruckMapExample ()
     //FoodTruckConstraintBuilderExample ()
     //MultipleFoodTruckExample ()
@@ -603,7 +605,7 @@ let main argv =
     //simpleModel ()
     //buildersExample ()
     //mapSlicingExample ()
-    BinaryProgrammingExample ()
+    //BinaryProgrammingExample ()
 
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
