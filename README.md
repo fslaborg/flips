@@ -9,7 +9,6 @@
     - [Intro Problem](#intro-problem)
     - [Using Indices](#using-indices)
   - [The Flips Domain](#the-flips-domain)
-    - [The Shape of Optimization Problems](#the-shape-of-optimization-problems)
     - [Scalar](#scalar)
     - [Decision](#decision)
     - [LinearExpression](#linearexpression)
@@ -241,19 +240,15 @@ We now have a formulation of the problem that will scale to an arbitrary number 
 
 ## The Flips Domain
 
-### The Shape of Optimization Problems
-
-If you were to go and read up and Mathematical Optimization and specifically about LP/MIP, you would see that Optimization Models are written 
-
 ### Scalar
 
 A `Scalar` is a single case DU which wraps a `float`. The reason for this was to ensure proper equality behavior. Equality is incredibly difficult with any floating-point type. In order to ensure that modeling works as intended it was necessary to take wrap the `float` value and specify the equality behavior.
 
-The `Scalar` type supports the basic algebraic operations: `+`, `-`, `*`, and `/`. Any time you perform an algebraic operation with a `Scalar` and a `float`, you will get a `Scalar` back. When perform an algebraic operation with a `Scalar` and a  `Decision` you will get a `LinearExpression` back. The `LinearExpression` is the basic building block of Optimization Models. For more information on `LinearExpresion`, please refer to its section.
+The `Scalar` type supports the basic algebraic operations: `+`, `-`, `*`, and `/`. Any time you perform an algebraic operation with a `Scalar` and a `float`, you will get a `Scalar` back. When perform an algebraic operation with a `Scalar` and a `Decision` you will get a `LinearExpression` back. The `LinearExpression` is the basic building block of Optimization Models. For more information on `LinearExpresion`, please refer to its section.
 
 ### Decision
 
-A `Decision` represents a choice that the Solver needs to make. It is a DU with three cases: `Boolean`, `Integer`, and `Continuous`. The `Boolean` case is meant to model a True/False, Yes/No type of decision. Examples are whether to build a factory or not, whether to open a store or not, start a power plant or not, or any other type of decision where a state must be true or false and nothing in between. The `Integer` case represents a decision that is allowed to take on discrete values. When you create them you must specify a Lower and Upper bound. The bounds are the limits for the Solver so that it knows what is the legal range of values for the decision. The `Continuous` case has Lower and Upper bounds like the `Integer` case except that any value within the bounds is allowed, not just the discrete values. `Continuous` decisions are the most common and should be the default for better performance from the Solver.
+A `Decision` represents a choice that the Solver needs to make. It is a DU with three cases: `Boolean`, `Integer`, and `Continuous`. The `Boolean` case is meant to model a True/False, Yes/No type of decision. Examples are whether to build a factory or not, whether to open a store or not, start a power plant or not, or any other type of decision where a state must be true or false and nothing in between. The `Integer` case represents a decision that can take on discrete values. When you create them, you must specify a Lower and Upper bound. The bounds are the limits for the Solver so that it knows what the legal range of values for the decision is. The `Continuous` case has Lower and Upper bounds like the `Integer` case except that any value within the bounds is allowed, not just the discrete values. `Continuous` decisions are the most common and should be the default for better performance from the Solver.
 
 ### LinearExpression
 
@@ -261,7 +256,7 @@ A `LinearExpression` is the addition of one or more `Scalar` or `Decision` value
 
 ### Constraint
 
-A `Constraint` is composed of a Name and a comparison (`==`, `<==`, `>==`) of two `LinearExpression`s. The Name for a `Constraint` should be indicitive of what it controlling for. Best practice is to prefix a set of `Constraint` with an identifier followed by the indices that the individual `Constraint` correspond to. There is actually a `ConstraintBuilder` Computation Expression to streamline this.
+A `Constraint` is composed of a Name and a comparison (`==`, `<==`, `>==`) of two `LinearExpression`s. The Name for a `Constraint` should be indicative of what it is controlling for. Best practice is to prefix a set of `Constraint` with an identifier followed by the indices that the individual `Constraint` correspond to. There is a `ConstraintBuilder` Computation Expression to streamline this.
 
 ### Objective
 
@@ -273,7 +268,7 @@ The `ObjectiveSense` tells the Solver whether it is trying to Maximize or Minimi
 
 The `Model` type contains the full description of the problem. It holds the `Decision`s that need to be made, the `Constraint`s that must be adhered to, and the `Objective` that is trying to be achieved. An `Objective` must be provided when creating a `Model`. From there `Constraint`s can be added to the `Model` using the `Model.addConstraint` or `Model.addConstraints` functions. 
 
-Once all of the `Constraint`s have been added the `solve` function can be called. The `solve` function returns a `SolveResult` type. The `SolveResult` type is a DU with two cases: an `Optimal` case containing a `Solution` or the `Suboptimal` case containing an error message.
+Once all the `Constraint`s have been added the `solve` function can be called. The `solve` function returns a `SolveResult` type. The `SolveResult` type is a DU with two cases: an `Optimal` case containing a `Solution` or the `Suboptimal` case containing an error message.
 
 ### Solution
 
@@ -309,7 +304,7 @@ You will see that the `DecisionBuilder` removed some of the ceremony around nami
 
 ### Constraint Builder
 
-Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression (CE) was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraints you are creating. Here is a side by side comparison of creating constraints without and with the `ConstraintBuilder` CE. The results of both methods are equivalent. The method with `ConstraintBuilder` CE is slightly more terse. Over time, the added brevity is appreciated. This is showing how to create constraints across two dimensions: Items and Locations.
+Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression (CE) was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraints you are creating. Here is a side by side comparison of creating constraints without and with the `ConstraintBuilder` CE. The results of both methods are equivalent. The method with `ConstraintBuilder` CE is more succinct. Over time, the added brevity is appreciated. This is showing how to create constraints across two dimensions: Items and Locations.
 
 ```fsharp
 // How you would write the MaxItem constraints without `ConstraintBuilder`
