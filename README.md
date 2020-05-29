@@ -18,7 +18,7 @@
     - [Solution](#solution)
     - [Decision Builder](#decision-builder)
     - [Constraint Builder](#constraint-builder)
-      - [The `sum` and `sumAll` Functions](#the-sum-and-sumall-functions)
+    - [The `sum` and `sumAll` Functions](#the-sum-and-sumall-functions)
   - [SliceMaps](#slicemaps)
     - [What is Slicing](#what-is-slicing)
     - [Types of SliceMaps](#types-of-slicemaps)
@@ -322,7 +322,7 @@ let maxItemConstraints = ConstraintBuilder "MaxItem" {
 }
 ```
 
-#### The `sum` and `sumAll` Functions
+### The `sum` and `sumAll` Functions
 
 A couple of convenience functions were added for summing up the values held inside of collections. The `sum` functions calls the `Sum` method defined on the type. The `sumAll` functions is meant to sum a collection of summable types (Ex: `List<float>`). These are help a Domain Expert write code that more closely matches the math notation of optimization problems.
 
