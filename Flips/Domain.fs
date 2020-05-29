@@ -361,6 +361,14 @@ type Objective = {
 
 module Decision =
 
+    let create decisionName decisionType =
+        if System.String.IsNullOrEmpty(decisionName) then
+            invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
+        {
+            Name = DecisionName decisionName
+            Type = decisionType
+        }
+
     let createBoolean decisionName =
         if System.String.IsNullOrEmpty(decisionName) then
             invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
@@ -368,7 +376,6 @@ module Decision =
             Name = DecisionName decisionName
             Type = DecisionType.Boolean
         }
-        |> LinearExpression.OfDecision
 
     let createInteger decisionName lowerBound upperBound =
         if System.String.IsNullOrEmpty(decisionName) then
@@ -379,7 +386,6 @@ module Decision =
             Name = DecisionName decisionName
             Type = DecisionType.Integer (lowerBound, upperBound)
         }
-        |> LinearExpression.OfDecision
 
     let createContinuous decisionName lowerBound upperBound =
         if System.String.IsNullOrEmpty(decisionName) then
@@ -390,7 +396,6 @@ module Decision =
             Name = DecisionName decisionName
             Type = DecisionType.Continuous (lowerBound, upperBound)
         }
-        |> LinearExpression.OfDecision
 
 module Constraint =
 
@@ -496,7 +501,7 @@ module Model =
 
 
 type Solution = {
-    DecisionResults : Map<DecisionName,float>
+    DecisionResults : Map<Decision,float>
     ObjectiveResult : float
 }
 
@@ -514,13 +519,15 @@ type SolveResult =
     | Suboptimal of string
 
 
-type ConstraintBuilder (constraintSetPrefix:string) =
 
-    let isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
+[<AutoOpen>]
+module Builders =
 
-    let getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
+    let private isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
 
-    let rec flattenFields f =
+    let private getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
+
+    let rec private flattenFields f =
         f
         |> List.collect(
             fun t ->
@@ -530,27 +537,47 @@ type ConstraintBuilder (constraintSetPrefix:string) =
                     [t]
         )
 
-    let tupleToObjectList (t:obj) : List<obj> =
+    let private tupleToObjectList (t:obj) : List<obj> =
         if isTuple t then
             t |> getFields |> flattenFields
         else
             [t]
 
-    let constraintNamer (indices:obj) : string =
+
+    let private namer (prefix:string) (indices:obj) : string =
         tupleToObjectList indices
         |> List.map (sprintf "%O")
         |> String.concat "_"
-        |> (sprintf "%s|%s" constraintSetPrefix)
+        |> (sprintf "%s|%s" prefix)
 
-    member this.Yield (cExpr:ConstraintExpression) =
-        cExpr
 
-    member this.For(source:seq<'a>, body:'a -> seq<'b * ConstraintExpression>) =
-        source
-        |> Seq.collect (fun x -> body x |> Seq.map (fun (idx, expr) -> (x, idx), expr))
+    type ConstraintBuilder (constraintSetPrefix:string) =
 
-    member this.For(source:seq<'a>, body:'a -> ConstraintExpression) =
-        source |> Seq.map (fun x -> x, body x)
+        member this.Yield (cExpr:ConstraintExpression) =
+            cExpr
 
-    member this.Run(source:seq<'a * ConstraintExpression>) =
-        source |> Seq.map (fun (n, c) -> Constraint.create (constraintNamer n) c)
+        member this.For(source:seq<'a>, body:'a -> seq<'b * ConstraintExpression>) =
+            source
+            |> Seq.collect (fun x -> body x |> Seq.map (fun (idx, expr) -> (x, idx), expr))
+
+        member this.For(source:seq<'a>, body:'a -> ConstraintExpression) =
+            source |> Seq.map (fun x -> x, body x)
+
+        member this.Run(source:seq<'a * ConstraintExpression>) =
+            source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
+
+
+    type DecisionBuilder (decisionSetPrefix:string) =
+
+        member this.Yield (decisionType:DecisionType) =
+            decisionType
+
+        member this.For(source:seq<'a>, body:'a -> seq<'b * DecisionType>) =
+            source
+            |> Seq.collect (fun x -> body x |> Seq.map (fun (idx, decisionType) -> (x, idx), decisionType))
+
+        member this.For(source:seq<'a>, body:'a -> DecisionType) =
+            source |> Seq.map (fun x -> x, body x)
+
+        member this.Run(source:seq<'a * DecisionType>) =
+            source |> Seq.map (fun (n, c) -> n, Decision.create (namer decisionSetPrefix n) c)

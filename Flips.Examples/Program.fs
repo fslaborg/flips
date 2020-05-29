@@ -63,8 +63,8 @@ let FoodTruckExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let FoodTruckMapExample () =
 
@@ -126,8 +126,8 @@ let FoodTruckMapExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let FoodTruckConstraintBuilderExample () =
 
@@ -192,8 +192,8 @@ let FoodTruckConstraintBuilderExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let MultipleFoodTruckExample () =
     
@@ -238,7 +238,7 @@ let MultipleFoodTruckExample () =
     let maxItemConstraints =
         [for item in items do
             // The total of the Item is the sum across the Locations
-            let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
+            let locationSum = List.sum [for location in locations -> 1.0 * numberOfItem.[location, item]]
             let name = sprintf "MaxItemTotal|%s" item
             Constraint.create name (locationSum <== maxIngredients.[item])
         ]
@@ -280,8 +280,8 @@ let MultipleFoodTruckExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let MultipleFoodTruckWithSliceMapExample () =
     
@@ -322,7 +322,7 @@ let MultipleFoodTruckWithSliceMapExample () =
     let maxItemConstraints =
         [for item in items do
             let name = sprintf "MaxItemTotal|%s" item
-            Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
+            Constraint.create name (sum (1.0 * numberOfItem.[All, item]) <== maxIngredients.[item])
         ]
 
 
@@ -361,8 +361,8 @@ let MultipleFoodTruckWithSliceMapExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let simpleModel () =
     let x1 = Decision.createContinuous "x1" 0.0 infinity
@@ -463,8 +463,8 @@ let constraintBuilderExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let mapSlicingExample () =
     let sources = [1 .. 3]
@@ -548,8 +548,8 @@ let mapSlicingExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 [<EntryPoint>]
 let main argv =

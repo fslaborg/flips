@@ -70,11 +70,11 @@ let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<
         addConstraint vars c solver |> ignore
 
 
-let private buildSolution (vars:Map<DecisionName, Variable>) (solver:Solver) (objective:Objective) =
+let private buildSolution (decisions:Map<DecisionName,Decision>) (vars:Map<DecisionName, Variable>) (solver:Solver) (objective:Objective) =
     let decisions =
         vars
         |> Map.toSeq
-        |> Seq.map (fun (n, v) -> n, v.SolutionValue())
+        |> Seq.map (fun (n, v) -> decisions.[n], v.SolutionValue())
         |> Map.ofSeq
 
     {
@@ -102,7 +102,7 @@ let solve (settings:SolverSettings) (model:Flips.Domain.Model.Model) =
 
     match resultStatus with
     | Solver.ResultStatus.OPTIMAL -> 
-        buildSolution vars solver model.Objective
+        buildSolution model.Decisions vars solver model.Objective
         |> SolveResult.Optimal
     | _ ->
         "Unable to find optimal solution"
