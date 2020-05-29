@@ -116,6 +116,8 @@ let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infi
 let numberOfHotdogs = Decision.createContinuous "NumberOfHotDogs" 0.0 infinity
 ```
 
+We then create the expression for measuring success. This is called an Objective Expression. It is a mathematical formula for calculating whatever it is that you want to maximize or minimize. In this case, it is the calculation for revenue. Once we have the Objective Expression, we create an `Objective` which contains the name of the objective, what our goal is (Maximize or Minimize), and the Objective Expression.
+
 ```fsharp
 // Create the Linear Expression for the objective
 let objectiveExpression = hamburgerProfit * numberOfHamburgers + hotdogProfit * numberOfHotdogs
@@ -123,7 +125,11 @@ let objectiveExpression = hamburgerProfit * numberOfHamburgers + hotdogProfit * 
 // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
 // the Objective Expression
 let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
-  ```
+```
+
+We then must create the constraints which describe what is allowed. Whenever we create a `Constraint` we must provide a name and a `ConstraintExpression`. A `ConstraintExpression` is two `LinearExpression` with a comparison operator in between: `==`, `>==`, or `<==`.
+
+> **Note:** Due to .NET reserving the normal comparison operators of `=`, `>=`, and `<=` for use with `IComparable` it was necessary to use a different set of operatos. To keep it simple, it was decided to just add an additional equals sign so that there would not be conflict. This means when you want to create a `ConstraintExpression`, you use the following operators: `==`, `>==`, and `<==`.
 
 ```fsharp  
 // Create a Constraint for the max number of Hamburger considering the number of buns
@@ -134,6 +140,8 @@ let maxHotDog = Constraint.create "MaxHotDog" (numberOfHotdogs <== hotdogBuns)
 let maxWeight = Constraint.create "MaxWeight" (numberOfHotdogs * hotdogWeight + numberOfHamburgers * hamburgerWeight <== maxTruckWeight)
 ```
 
+Now that we have an `Objective` and some `Constraint`s, we can create a `Model` and add the `Constraint`s to it.
+
 ```fsharp
 // Create a Model type and pipe it through the addition of the constraitns
 let model =
@@ -142,6 +150,8 @@ let model =
     |> Model.addConstraint maxHotDog
     |> Model.addConstraint maxWeight
 ```
+
+To submit the `Model` to a solver we need to provide `SolverSettings`. Here we choose the use the CBC solver with a Max Duration of 10,000 ms. If you want to see the model written out as an LP file, you can provide a path to where you would like to see it written. Now that we have our `Model` and `SolverSettings`, we call the `solve` function in the `Solve` module to get the result.
 
 ```fsharp
 // Create a Settings type which tells the Solver which types of underlying solver to use,
@@ -156,6 +166,8 @@ let settings = {
 let result = solve settings model
 ```
 
+The `solve` function returns a `SolveResult` which is a DU with two cases: Optimal or Suboptimal. If the `SolveResult` is the `Optimal` case, it will contain a `Solution`. If the `SolveResult` case is `Suboptimal`, it will hold a `string` which describes what went wrong. In this case the `SolveResult` case is `Optimal` so we can match the case and print out the solution values. The `Solution` type contains `DecisionResult` which is a `Map<Decision,float>`. `DecisionResult` tells you which values the `Solver` picked for the `Decision`s you provided it. The field in the `Solution` is `ObjectiveResult` which is a `float` which tells you how well the `Solver` was able to do.
+
 ```fsharp
 printfn "-- Result --"
 
@@ -168,7 +180,8 @@ match result with
 | Optimal solution ->
     printfn "Objective Value: %f" solution.ObjectiveResult
 
-    for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
+    for (decision, value) in solution.DecisionResults |> Map.toSeq do
+        let (DecisionName name) = decision.Name
         printfn "Decision: %s\tValue: %f" name value
 ```
 
