@@ -17,7 +17,9 @@
     - [Objective](#objective)
     - [Model](#model)
     - [Solution](#solution)
+    - [Decision Builder](#decision-builder)
     - [Constraint Builder](#constraint-builder)
+      - [The `sum` and `sumAll` Functions](#the-sum-and-sumall-functions)
   - [SliceMaps](#slicemaps)
     - [What is Slicing](#what-is-slicing)
     - [Types of SliceMaps](#types-of-slicemaps)
@@ -255,10 +257,7 @@ A `Decision` represents a choice that the Solver needs to make. It is a DU with 
 
 ### LinearExpression
 
-A `LinearExpression` is the addition of one or more `Scalar` or `Decision` values. It is meant to represent the math expressions like [`2.3 + 3.4*x1 + 4.5*x2`] where `x1` and `x2` are `Decision`s. `LinearExpression`s are meant as the unit of compositions for Optimization Models. Constraints and Objectives are expressed in terms of `LinearExpression`s. The `LinearExpression` type forms a Monoid with the `+` operator.
-
-Whenever you create a `Decision` with the built in create functions, they will return a `LinearExpression` which holds the corresponding `Decision` instead of giving you the raw `Decision` itself. This is because it is common to use the F# `List.sum` function when composing the model. The function signature for `List.sum` is `^T list -> ^T`. You notice that `List.sum` expects the input type and the output type to be the same. The function signature for `+` for `Decision` is `Decision * Decision -> LinearExpression`. `List.sum` and `Decision` addition are incompatible but `List.sum` and `LinearExpression` addition are compatible. To alleciate this pain point, it was decided that the create of a `Decision` would return a `LinearExpression` holding the `Decision` instead of just the `Decision` itself.
-
+A `LinearExpression` is the addition of one or more `Scalar` or `Decision` values. It is meant to represent math expressions like [`2.3 + 3.4*x1 + 4.5*x2`] where `x1` and `x2` are `Decision`s. `LinearExpression`s are meant as the unit of compositions for Optimization Models. Constraints and Objectives are expressed in terms of `LinearExpression`s. The `LinearExpression` type forms a Monoid with the `+` operator.
 
 ### Constraint
 
@@ -274,11 +273,39 @@ The `ObjectiveSense` tells the Solver whether it is trying to Maximize or Minimi
 
 The `Model` type contains the full description of the problem. It holds the `Decision`s that need to be made, the `Constraint`s that must be adhered to, and the `Objective` that is trying to be achieved. An `Objective` must be provided when creating a `Model`. From there `Constraint`s can be added to the `Model` using the `Model.addConstraint` or `Model.addConstraints` functions. 
 
-Once all of the `Constrain`s have been added the `solve` function can be called. The `solve` function returns a `SolveResult` type. The `SolveResult` type is a DU with two cases: an `Optimal` case containing a `Solution` or the `Suboptimal` case containing an error message.
+Once all of the `Constraint`s have been added the `solve` function can be called. The `solve` function returns a `SolveResult` type. The `SolveResult` type is a DU with two cases: an `Optimal` case containing a `Solution` or the `Suboptimal` case containing an error message.
 
 ### Solution
 
-In the case that the `Model` was solved succesfully, a `SolveResult` is returned containing a `Solution`. The `Solution` contains two things: DecisionResults and ObjectiveResult. The DecisionResults is a `Map<DecisionName,float>` which provides the value the Solver found for the given `DecisionName`. The ObjectiveResult is a `float` representing the final value of the `LinearExpression` for the `Objective`.
+In the case that the `Model` was solved succesfully, a `SolveResult` is returned containing a `Solution`. The `Solution` contains two things: DecisionResults and ObjectiveResult. The DecisionResults is a `Map<Decision,float>` which provides the value the Solver found for the given `Decision`. The ObjectiveResult is a `float` representing the final value of the `LinearExpression` for the `Objective`.
+
+### Decision Builder
+
+It is common to need to create a `Decision` which corresponds to a set of one or more indices. In order to streamline this work a Computatino Expression was created called `DecisionBuilder`. `DecisionBuilder` takes the prefix you would like to use for the names of the `Decision`s you are about to create. It then automatically adds meaningful suffixes which correspond to the index you are create the `Decision` for. Here is an example of how this works without the `DecisionBuilder` and then again with the `DecisionBuilder` to show the difference.
+
+```fsharp
+let indexes = [1..3]
+let locations = ["CityA"; "CityB"; "CityC"]
+
+// Creating a Map of decisions without the DecisionBuilder
+let withoutDecisionBuilder =
+    [for i in indexes do
+        for l in locations ->
+            let name = sprintf "Test|%i_%s" i l
+            let decisionType = DecisionType.Continuous (0.0, infinity)
+            (i, l), Decision.create name decisionType
+    ] |> Map.ofList
+
+// Creating a Map of decisions with the DecisionBuilder
+let withDecisionBuilder =
+    DecisionBuilder "Test" {
+        for i in indexes do
+            for l in locations ->
+                Continuous (0.0, infinity)
+    } |> Map.ofSeq
+```
+
+You will see that the `DecisionBuilder` removed some of the ceremony around naming and indexing the `Decision`s.
 
 ### Constraint Builder
 
@@ -299,6 +326,10 @@ let maxItemConstraints = ConstraintBuilder "MaxItem" {
             numberOfItem.[item,location] <== maxIngredients.[item]
 }
 ```
+
+#### The `sum` and `sumAll` Functions
+
+A couple of convenience functions were added for summing up the values held inside of collections. The `sum` functions calls the `Sum` method defined on the type. The `sumAll` functions is meant to sum a collection of summable types (Ex: `List<float>`). These are help a Domain Expert write code that more closely matches the math notation of optimization problems.
 
 ## SliceMaps
 
