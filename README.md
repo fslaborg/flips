@@ -99,15 +99,14 @@ let hotdogWeight = 0.4
 let maxTruckWeight = 200.0
 ```
 
-Next we need to create the Decisions for the Solver to make. Decisions come in three varities: Boolean, Integer, and Continuous. Every Decision must be given a name and a Lower and Upper bound. In the case of a Boolean Decision, the Lower and Upper bound is implictly 0 and 1. For the case of Integer or Continuous, the bounds must be provided. This tells the Solver what is the legal range of values the Decision can take on. Most real-world Decisions have some bound to them. It is rare that something can be positive or negative infinity. There are three functions for creating Decisions in the `Decision` module. 
+Next we need to create the Decisions for the Solver to make. Decisions come in three varities: Boolean, Integer, and Continuous. Every Decision must be given a name and a Lower and Upper bound. In the case of a Boolean Decision, the Lower and Upper bound is implictly 0 and 1. For the case of Integer or Continuous, the bounds must be provided. This tells the Solver what is the legal range of values the Decision can take on. Most real-world Decisions have some bound to them. It is rare that something can be positive or negative infinity. There are four functions for creating Decisions in the `Decision` module. 
 
 ```fsharp
-createBoolean: (name:string) -> LinearExpression
-createInteger: (name:string) -> (lowerBound:float) -> (upperBound:float) -> LinearExpression
-createContinuous: (name:string) -> (lowerBound:float) -> (upperBound:float) -> LinearExpression
+create: (name:string) -> (decisionType:DecisionType) -> Decision
+createBoolean: (name:string) -> Decision
+createInteger: (name:string) -> (lowerBound:float) -> (upperBound:float) -> Decision
+createContinuous: (name:string) -> (lowerBound:float) -> (upperBound:float) -> Decision
 ```
-
-> **Note:** You will notice the type they return is actually a `LinearExpression`. The `LinearExpression` type is a collection which obeys the rules of algebra (specifically: `+`, `-`, and `*`). `LinearExpression` holds a collection of `float` and `Decision` (ex: `2.3 + 4.5*x1 + 4.5*x2`). When we use these functions to create `Decision`s, we are getting a `LinearExpression` which only contains the `Decision` we created. The reason for this is to that it is easy to sum `LinearExpression`s together. If these functions did not do this, you would be forced to perform more boilerplate work so that they would compose nicely.
 
 For simplicity we will use the `createContinuous` in our example to create the Decisions to represent the number of Hamburgers and Hotdogs we are going to pack.
 
