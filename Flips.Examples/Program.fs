@@ -63,8 +63,8 @@ let FoodTruckExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let FoodTruckMapExample () =
 
@@ -126,8 +126,8 @@ let FoodTruckMapExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let FoodTruckConstraintBuilderExample () =
 
@@ -192,8 +192,8 @@ let FoodTruckConstraintBuilderExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let MultipleFoodTruckExample () =
     
@@ -238,7 +238,7 @@ let MultipleFoodTruckExample () =
     let maxItemConstraints =
         [for item in items do
             // The total of the Item is the sum across the Locations
-            let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
+            let locationSum = List.sum [for location in locations -> 1.0 * numberOfItem.[location, item]]
             let name = sprintf "MaxItemTotal|%s" item
             Constraint.create name (locationSum <== maxIngredients.[item])
         ]
@@ -280,8 +280,8 @@ let MultipleFoodTruckExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let MultipleFoodTruckWithSliceMapExample () =
     
@@ -322,7 +322,7 @@ let MultipleFoodTruckWithSliceMapExample () =
     let maxItemConstraints =
         [for item in items do
             let name = sprintf "MaxItemTotal|%s" item
-            Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
+            Constraint.create name (sum (1.0 * numberOfItem.[All, item]) <== maxIngredients.[item])
         ]
 
 
@@ -361,8 +361,8 @@ let MultipleFoodTruckWithSliceMapExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let simpleModel () =
     let x1 = Decision.createContinuous "x1" 0.0 infinity
@@ -385,7 +385,7 @@ let simpleModel () =
     let result = solve settings model
     printfn "%A" result
 
-let constraintBuilderExample () =
+let buildersExample () =
     let sources = [1 .. 3]
     let sourceMax = Map.ofList [for s in sources -> s, 10.0 * float s]
 
@@ -405,25 +405,25 @@ let constraintBuilderExample () =
     ]
 
     let decisions = 
-        [for s in sources do
-            for d in destinations ->
-                let decName = (sprintf "FlowFrom%iTo%s" s d)
-                (s, d), 1.0 * Decision.createContinuous decName 0.0 infinity]
-        |> SMap2.ofList
+        DecisionBuilder "FlowAmount" {
+            for s in sources do
+                for d in destinations ->
+                    Continuous (0.0, infinity)
+        } |> SMap2.ofSeq
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let sourceConstraints = ConstraintBuilder "SourceMax" {
         for source in sources ->
             //let sourceDecs = decisions |> Map.filter (fun (s, d) v -> s = source)
-            sum decisions.[source, All] <== sourceMax.[source]
+            sum (1.0 * decisions.[source, All]) <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let destinationConstraints = ConstraintBuilder "DestinationMax" {
         for dest in destinations ->
-            sum decisions.[All, dest] <== destinationMax.[dest]
+            sum (1.0 * decisions.[All, dest]) <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -463,8 +463,8 @@ let constraintBuilderExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 let mapSlicingExample () =
     let sources = [1 .. 3]
@@ -548,20 +548,20 @@ let mapSlicingExample () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        for (DecisionName name, value) in solution.DecisionResults |> Map.toSeq do
-            printfn "Decision: %s\tValue: %f" name value
+        for (decision, value) in solution.DecisionResults |> Map.toSeq do
+            printfn "Decision: %A\tValue: %f" decision.Name value
 
 [<EntryPoint>]
 let main argv =
     
     FoodTruckExample ()
-    //FoodTruckMapExample ()
-    //FoodTruckConstraintBuilderExample ()
-    //MultipleFoodTruckExample ()
-    //MultipleFoodTruckWithSliceMapExample ()
-    //simpleModel ()
-    //constraintBuilderExample ()
-    //mapSlicingExample ()
+    FoodTruckMapExample ()
+    FoodTruckConstraintBuilderExample ()
+    MultipleFoodTruckExample ()
+    MultipleFoodTruckWithSliceMapExample ()
+    simpleModel ()
+    buildersExample ()
+    mapSlicingExample ()
 
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
