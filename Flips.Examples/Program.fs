@@ -385,7 +385,7 @@ let simpleModel () =
     let result = solve settings model
     printfn "%A" result
 
-let constraintBuilderExample () =
+let buildersExample () =
     let sources = [1 .. 3]
     let sourceMax = Map.ofList [for s in sources -> s, 10.0 * float s]
 
@@ -405,25 +405,25 @@ let constraintBuilderExample () =
     ]
 
     let decisions = 
-        [for s in sources do
-            for d in destinations ->
-                let decName = (sprintf "FlowFrom%iTo%s" s d)
-                (s, d), 1.0 * Decision.createContinuous decName 0.0 infinity]
-        |> SMap2.ofList
+        DecisionBuilder "FlowAmount" {
+            for s in sources do
+                for d in destinations ->
+                    Continuous (0.0, infinity)
+        } |> SMap2.ofSeq
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let sourceConstraints = ConstraintBuilder "SourceMax" {
         for source in sources ->
             //let sourceDecs = decisions |> Map.filter (fun (s, d) v -> s = source)
-            sum decisions.[source, All] <== sourceMax.[source]
+            sum (1.0 * decisions.[source, All]) <== sourceMax.[source]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
     // with sensible names
     let destinationConstraints = ConstraintBuilder "DestinationMax" {
         for dest in destinations ->
-            sum decisions.[All, dest] <== destinationMax.[dest]
+            sum (1.0 * decisions.[All, dest]) <== destinationMax.[dest]
     }
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
@@ -555,13 +555,13 @@ let mapSlicingExample () =
 let main argv =
     
     FoodTruckExample ()
-    //FoodTruckMapExample ()
-    //FoodTruckConstraintBuilderExample ()
-    //MultipleFoodTruckExample ()
-    //MultipleFoodTruckWithSliceMapExample ()
-    //simpleModel ()
-    //constraintBuilderExample ()
-    //mapSlicingExample ()
+    FoodTruckMapExample ()
+    FoodTruckConstraintBuilderExample ()
+    MultipleFoodTruckExample ()
+    MultipleFoodTruckWithSliceMapExample ()
+    simpleModel ()
+    buildersExample ()
+    mapSlicingExample ()
 
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
