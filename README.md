@@ -8,6 +8,17 @@
     - [Why do we need Flips?](#why-do-we-need-flips)
     - [Intro Problem](#intro-problem)
     - [Using Indices](#using-indices)
+  - [The Flips Domain](#the-flips-domain)
+    - [Scalar](#scalar)
+    - [Decision](#decision)
+    - [LinearExpression](#linearexpression)
+    - [Constraint](#constraint)
+    - [Objective](#objective)
+    - [Model](#model)
+    - [Solution](#solution)
+    - [Decision Builder](#decision-builder)
+    - [Constraint Builder](#constraint-builder)
+      - [The `sum` and `sumAll` Functions](#the-sum-and-sumall-functions)
   - [SliceMaps](#slicemaps)
     - [What is Slicing](#what-is-slicing)
     - [Types of SliceMaps](#types-of-slicemaps)
@@ -27,7 +38,6 @@
       - [Broadcasting for SliceMaps](#broadcasting-for-slicemaps)
     - [Slicing and Domain Driven Design](#slicing-and-domain-driven-design)
     - [Example Using SliceMaps](#example-using-slicemaps)
-  - [Constraint Builder](#constraint-builder)
 
 ## Introduction
 
@@ -65,11 +75,12 @@ Flips is intended to make building and solving LP/MIP problems in F# simple. The
 
 For anyone not familiar with LP/MIP, the process of creating and solving a model is composed of the following steps:
 
-1. Defining your parameters
-2. Creating your Decision Variables
-3. Formulating your Objective Function
-4. Adding Constraints
-5. Solving the Model
+1. Define Parameters: This is the input data for your model
+2. Create Decisions: These are the choices that we want the Solver to make.
+3. Define the Objective: This is how success is measured
+4. Add Constraints: These are the rules that the Solver must objey for the solution to be valid
+5. Solve the Model: We give the optimization model to the Solver for it to find the best solution.
+6. Inspect the Result: Not all models are solvable. Depending on the formulation, there may be no solutions. We always check whether the Solver was able to find a solution to the model.
 
 Let us go through an example problem to see how this works. We are managing a Food Truck and we need to figure out what ingredients we need to pack for the day. In this example we only sell Hamburgers and Hotdogs. Each Hamburger we sell provides us $1.50 in profit. Each Hotdog we sell provides $1.20 in profit. We only have enough Hamburger buns for up to 300 Hamburgers and only 200 buns for Hotdogs. The ingredients for a single Hamburger weight 0.5 kg and the ingredients for a Hotdog weigh 0.4 kg. Our Food Truck can only hold up to 500 kg. The question becomes, how many ingredients do we pack for Hamburgers and how many for Hotdogs? Let us answer this question by formulating an Optimization model.
 
@@ -86,32 +97,54 @@ let hotdogBuns = 200.0
 let hamburgerWeight = 0.5
 let hotdogWeight = 0.4
 let maxTruckWeight = 200.0
+```
 
+Next we need to create the Decisions for the Solver to make. Decisions come in three varities: Boolean, Integer, and Continuous. Every Decision must be given a name and a Lower and Upper bound. In the case of a Boolean Decision, the Lower and Upper bound is implictly 0 and 1. For the case of Integer or Continuous, the bounds must be provided. This tells the Solver what is the legal range of values the Decision can take on. Most real-world Decisions have some bound to them. It is rare that something can be positive or negative infinity. There are three functions for creating Decisions in the `Decision` module. 
+
+```fsharp
+createBoolean: (name:string) -> LinearExpression
+createInteger: (name:string) -> (lowerBound:float) -> (upperBound:float) -> LinearExpression
+createContinuous: (name:string) -> (lowerBound:float) -> (upperBound:float) -> LinearExpression
+```
+
+> **Note:** You will notice the type they return is actually a `LinearExpression`. The `LinearExpression` type is a collection which obeys the rules of algebra (specifically: `+`, `-`, and `*`). `LinearExpression` holds a collection of `float` and `Decision` (ex: `2.3 + 4.5*x1 + 4.5*x2`). When we use these functions to create `Decision`s, we are getting a `LinearExpression` which only contains the `Decision` we created. The reason for this is to that it is easy to sum `LinearExpression`s together. If these functions did not do this, you would be forced to perform more boilerplate work so that they would compose nicely.
+
+For simplicity we will use the `createContinuous` in our example to create the Decisions to represent the number of Hamburgers and Hotdogs we are going to pack.
+
+```fsharp
 // Create Decision Variable with a Lower Bound of 0.0 and an Upper Bound of Infinity
 let numberOfHamburgers = Decision.createContinuous "NumberOfHamburgers" 0.0 infinity
 let numberOfHotdogs = Decision.createContinuous "NumberOfHotDogs" 0.0 infinity
+```
 
+```fsharp
 // Create the Linear Expression for the objective
 let objectiveExpression = hamburgerProfit * numberOfHamburgers + hotdogProfit * numberOfHotdogs
 
 // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
 // the Objective Expression
 let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
-    
+  ```
+
+```fsharp  
 // Create a Constraint for the max number of Hamburger considering the number of buns
 let maxHamburger = Constraint.create "MaxHamburger" (numberOfHamburgers <== hamburgerBuns)
 // Create a Constraint for the max number of Hot Dogs considering the number of buns
 let maxHotDog = Constraint.create "MaxHotDog" (numberOfHotdogs <== hotdogBuns)
 // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
 let maxWeight = Constraint.create "MaxWeight" (numberOfHotdogs * hotdogWeight + numberOfHamburgers * hamburgerWeight <== maxTruckWeight)
+```
 
+```fsharp
 // Create a Model type and pipe it through the addition of the constraitns
 let model =
     Model.create objective
     |> Model.addConstraint maxHamburger
     |> Model.addConstraint maxHotDog
     |> Model.addConstraint maxWeight
+```
 
+```fsharp
 // Create a Settings type which tells the Solver which types of underlying solver to use,
 // the time alloted for solving, and whether to write an LP file to disk
 let settings = {
@@ -122,7 +155,9 @@ let settings = {
 
 // Call the `solve` function in the Solve module to evaluate the model
 let result = solve settings model
+```
 
+```fsharp
 printfn "-- Result --"
 
 // Match the result of the call to solve
@@ -202,6 +237,94 @@ let model =
 ```
 
 We now have a formulation of the problem that will scale to an arbitrary number of items. This is a more maintainable formulation and will not require updating as the variety of items changes over time. Only the input data to the model formulation code need change.
+
+## The Flips Domain
+
+### Scalar
+
+A `Scalar` is a single case DU which wraps a `float`. The reason for this was to ensure proper equality behavior. Equality is incredibly difficult with any floating-point type. In order to ensure that modeling works as intended it was necessary to take wrap the `float` value and specify the equality behavior.
+
+The `Scalar` type supports the basic algebraic operations: `+`, `-`, `*`, and `/`. Any time you perform an algebraic operation with a `Scalar` and a `float`, you will get a `Scalar` back. When perform an algebraic operation with a `Scalar` and a `Decision` you will get a `LinearExpression` back. The `LinearExpression` is the basic building block of Optimization Models. For more information on `LinearExpresion`, please refer to its section.
+
+### Decision
+
+A `Decision` represents a choice that the Solver needs to make. It is a DU with three cases: `Boolean`, `Integer`, and `Continuous`. The `Boolean` case is meant to model a True/False, Yes/No type of decision. Examples are whether to build a factory or not, whether to open a store or not, start a power plant or not, or any other type of decision where a state must be true or false and nothing in between. The `Integer` case represents a decision that can take on discrete values. When you create them, you must specify a Lower and Upper bound. The bounds are the limits for the Solver so that it knows what the legal range of values for the decision is. The `Continuous` case has Lower and Upper bounds like the `Integer` case except that any value within the bounds is allowed, not just the discrete values. `Continuous` decisions are the most common and should be the default for better performance from the Solver.
+
+### LinearExpression
+
+A `LinearExpression` is the addition of one or more `Scalar` or `Decision` values. It is meant to represent math expressions like [`2.3 + 3.4*x1 + 4.5*x2`] where `x1` and `x2` are `Decision`s. `LinearExpression`s are meant as the unit of compositions for Optimization Models. Constraints and Objectives are expressed in terms of `LinearExpression`s. The `LinearExpression` type forms a Monoid with the `+` operator.
+
+### Constraint
+
+A `Constraint` is composed of a Name and a comparison (`==`, `<==`, `>==`) of two `LinearExpression`s. The Name for a `Constraint` should be indicative of what it is controlling for. Best practice is to prefix a set of `Constraint` with an identifier followed by the indices that the individual `Constraint` correspond to. There is a `ConstraintBuilder` Computation Expression to streamline this.
+
+### Objective
+
+An `Objective` is composed of three parts: a `ObjectiveName`, a `ObjectiveSense`, and a `LinearExpression`. The `ObjectiveName` is meant to clarify what the goal of the Optimization Model is. For example, "MaximizeRevenue" or "MinimizeWaste" or "MaximizeSafety". The `ObjectiveName` has no bearing on what the Solver does. It is meant to document what the purpose of the Model was when it was written.
+
+The `ObjectiveSense` tells the Solver whether it is trying to Maximize or Minimize the `LinearExpression` in the `Objective`. The `LinearExpression` is the way the Solver will measure success. It will either try to make the expression be as large as possible for `Maximize` or as small as possible for `Minimize`.
+
+### Model
+
+The `Model` type contains the full description of the problem. It holds the `Decision`s that need to be made, the `Constraint`s that must be adhered to, and the `Objective` that is trying to be achieved. An `Objective` must be provided when creating a `Model`. From there `Constraint`s can be added to the `Model` using the `Model.addConstraint` or `Model.addConstraints` functions. 
+
+Once all the `Constraint`s have been added the `solve` function can be called. The `solve` function returns a `SolveResult` type. The `SolveResult` type is a DU with two cases: an `Optimal` case containing a `Solution` or the `Suboptimal` case containing an error message.
+
+### Solution
+
+In the case that the `Model` was solved succesfully, a `SolveResult` is returned containing a `Solution`. The `Solution` contains two things: DecisionResults and ObjectiveResult. The DecisionResults is a `Map<Decision,float>` which provides the value the Solver found for the given `Decision`. The ObjectiveResult is a `float` representing the final value of the `LinearExpression` for the `Objective`.
+
+### Decision Builder
+
+It is common to need to create a `Decision` which corresponds to a set of one or more indices. In order to streamline this work a Computatino Expression was created called `DecisionBuilder`. `DecisionBuilder` takes the prefix you would like to use for the names of the `Decision`s you are about to create. It then automatically adds meaningful suffixes which correspond to the index you are create the `Decision` for. Here is an example of how this works without the `DecisionBuilder` and then again with the `DecisionBuilder` to show the difference.
+
+```fsharp
+let indexes = [1..3]
+let locations = ["CityA"; "CityB"; "CityC"]
+
+// Creating a Map of decisions without the DecisionBuilder
+let withoutDecisionBuilder =
+    [for i in indexes do
+        for l in locations ->
+            let name = sprintf "Test|%i_%s" i l
+            let decisionType = DecisionType.Continuous (0.0, infinity)
+            (i, l), Decision.create name decisionType
+    ] |> Map.ofList
+
+// Creating a Map of decisions with the DecisionBuilder
+let withDecisionBuilder =
+    DecisionBuilder "Test" {
+        for i in indexes do
+            for l in locations ->
+                Continuous (0.0, infinity)
+    } |> Map.ofSeq
+```
+
+You will see that the `DecisionBuilder` removed some of the ceremony around naming and indexing the `Decision`s.
+
+### Constraint Builder
+
+Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression (CE) was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraints you are creating. Here is a side by side comparison of creating constraints without and with the `ConstraintBuilder` CE. The results of both methods are equivalent. The method with `ConstraintBuilder` CE is more succinct. Over time, the added brevity is appreciated. This is showing how to create constraints across two dimensions: Items and Locations.
+
+```fsharp
+// How you would write the MaxItem constraints without `ConstraintBuilder`
+let maxItemConstraints =
+    [for item in items do
+        for location in locations do
+            let name = sprintf "MaxItem|%s_%s" item location
+            Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
+
+// The equivalent statement using a `ConstraintBuilder`
+let maxItemConstraints = ConstraintBuilder "MaxItem" {
+    for item in items do
+        for location in locations -> 
+            numberOfItem.[item,location] <== maxIngredients.[item]
+}
+```
+
+#### The `sum` and `sumAll` Functions
+
+A couple of convenience functions were added for summing up the values held inside of collections. The `sum` functions calls the `Sum` method defined on the type. The `sumAll` functions is meant to sum a collection of summable types (Ex: `List<float>`). These are help a Domain Expert write code that more closely matches the math notation of optimization problems.
 
 ## SliceMaps
 
@@ -712,36 +835,4 @@ Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
 
 We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left-hand side of our Constraint Expression.
 
-## Constraint Builder
 
-Since the creation of constraints is such a common occurrence in modeling, a `ConstraintBuilder` Computation Expression was made to streamline the naming of constraints. The idea is that you give a prefix for the set of constraints you are going to create, and the Computation Expression takes care of naming the constraint you are creating. Here a side by side example is given of the Food Truck problem. This is showing how to create constraints across two dimensions: Items and Locations.
-
-```fsharp
-let items = ["Hamburger"; "HotDog"]
-let locations = ["Woodstock"; "Sellwood"; "Portland"]
-
-// Create Decision Variable which is keyed by the tuple of Item and Location.
-let numberOfItem =
-    [for item in items do
-        for location in locations do
-            let decName = sprintf "NumberOf_%s_At_%s" item location
-            let decision = Decision.createContinuous decName 0.0 infinity
-            (item, location), decision]
-    |> Map.ofList
-
-// How you would write the MaxItem constraints without `ConstraintBuilder`
-let maxItemConstraints =
-    [for item in items do
-        for location in locations do
-            let name = sprintf "MaxItem|%s_%s" item location
-            Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
-
-// The equivalent statement using a `ConstraintBuilder`
-let maxItemConstraints = ConstraintBuilder "MaxItem" {
-    for item in items do
-        for location in locations -> 
-            numberOfItem.[item,location] <== maxIngredients.[item]
-}
-```
-
-`ConstraintBuilder` simply removes the need to define how to name the constraints. It is not necessary to use the `ConstrantBuilder` but it is there to streamline your modeling.

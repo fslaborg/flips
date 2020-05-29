@@ -12,8 +12,27 @@ open Flips
 open Flips.Domain
 open Flips.SliceMap
 
-let x = [1..5]
-let y = ["a"; "b"; "c"]
+let indexes = [1..3]
+let locations = ["CityA"; "CityB"; "CityC"]
+
+// Creating a Map of decisions without the DecisionBuilder
+let withoutDecisionBuilder =
+    [for i in indexes do
+        for l in locations ->
+            let name = sprintf "Test|%i_%s" i l
+            let decisionType = DecisionType.Continuous (0.0, infinity)
+            (i, l), Decision.create name decisionType
+    ] |> Map.ofList
+
+// Creating a Map of decisions with the DecisionBuilder
+let withDecisionBuilder =
+    DecisionBuilder "Test" {
+        for i in indexes do
+            for l in locations ->
+                Continuous (0.0, infinity)
+    } |> Map.ofSeq
+
+
 
 let testDecisions = 
     DecisionBuilder "TestDecisions" {
