@@ -107,9 +107,22 @@ module Decision =
         Assert.Equal(e1, e2)
 
     [<Property>]
+    let ``Addition of Decisions and float is associative`` (d:Decision) (SmallFloat f) =
+        let e1 = d + f
+        let e2 = f + d
+        Assert.Equal(e1, e2)
+
+    [<Property>]
     let ``Addition of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
         let e1 = d + s
         let e2 = s + d
+        Assert.Equal(e1, e2)
+
+    [<Property>]
+    let ``Addition of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e1 = (d1 + f1) + (d2 + f2)
+        let e2 = d1 + (f1 + d2) + f2
         Assert.Equal(e1, e2)
 
     [<Property>]
@@ -128,9 +141,21 @@ module Decision =
         Assert.Equal(r1, r2)
 
     [<Property>]
+    let ``Addition then Subtraction of float returns Equivalent`` (d:Decision) (SmallFloat f) =
+        let e = LinearExpression.OfDecision d
+        let r = d + f - f
+        Assert.Equal(e, r)
+
+    [<Property>]
     let ``Addition then Subtraction of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
         let e = LinearExpression.OfDecision d
         let r = d + s - s
+        Assert.Equal(e, r)
+
+    [<Property>]
+    let ``Subtraction then Addition of float returns Equivalent`` (d:Decision) (SmallFloat f) =
+        let e = LinearExpression.OfDecision d
+        let r = d - f + f
         Assert.Equal(e, r)
 
     [<Property>]
@@ -154,9 +179,22 @@ module Decision =
         Assert.Equal(e, r)
 
     [<Property>]
+    let ``Multiplication of Decisions and float is associative`` (d:Decision) (SmallFloat f) =
+        let e1 = d * f
+        let e2 = f * d
+        Assert.Equal(e1, e2)
+
+    [<Property>]
     let ``Multiplication of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
         let e1 = d * s
         let e2 = s * d
+        Assert.Equal(e1, e2)
+
+    [<Property>]
+    let ``Multiplication of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
+        let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+        let e1 = (d1 * f1) + (d2 * f2)
+        let e2 = (d2 * f2) + (d1 * f1)
         Assert.Equal(e1, e2)
 
     [<Property>]
