@@ -129,7 +129,7 @@ let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
 
 We then must create the constraints which describe what is allowed. Whenever we create a `Constraint` we must provide a name and a `ConstraintExpression`. A `ConstraintExpression` is two `LinearExpression` with a comparison operator in between: `==`, `>==`, or `<==`.
 
-> **Note:** Due to .NET reserving the normal comparison operators of `=`, `>=`, and `<=` for use with `IComparable` it was necessary to use a different set of operatos. To keep it simple, it was decided to just add an additional equals sign so that there would not be conflict. This means when you want to create a `ConstraintExpression`, you use the following operators: `==`, `>==`, and `<==`.
+> **Note:** Due to .NET reserving the normal comparison operators of `=`, `>=`, and `<=` for use with `IComparable` it was necessary to use a different set of operators. To keep it simple, it was decided to just add an additional equals sign so that there would not be conflict. This means when you want to create a `ConstraintExpression`, you use the following operators: `==`, `>==`, and `<==`.
 
 ```fsharp  
 // Create a Constraint for the max number of Hamburger considering the number of buns
