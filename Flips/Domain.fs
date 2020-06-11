@@ -89,6 +89,12 @@ with
     static member (*) (scalar:Scalar, decision:Decision) =
         LinearExpression.OfDecision decision * scalar
 
+    static member (+) (decision:Decision, f:float) =
+        LinearExpression.OfDecision decision + f
+
+    static member (+) (f:float, decision:Decision) =
+        LinearExpression.OfDecision decision + f
+
     static member (+) (scalar:Scalar, decision:Decision) =
         LinearExpression.OfScalar scalar + decision
 
@@ -100,6 +106,12 @@ with
 
     static member (+) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision + expr
+
+    static member (-) (decision:Decision, f:float) =
+        LinearExpression.OfDecision decision - f
+
+    static member (-) (f:float, decision:Decision) =
+        LinearExpression.OfDecision decision - f
 
     static member (-) (scalar:Scalar, decision:Decision) =
         LinearExpression.OfScalar scalar + (-1.0 * decision)
