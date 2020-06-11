@@ -579,132 +579,68 @@ module Builders =
             source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
 
 
-    type D1<'a> = | D1 of seq<'a * DecisionType>
-    type D2<'a,'b> = | D2 of seq<('a * 'b) * DecisionType>
-    type D3<'a,'b,'c> = | D3 of seq<('a * ('b * 'c)) * DecisionType>
-    type D4<'a,'b,'c,'d> = | D4 of seq<('a * ('b * ('c * 'd))) * DecisionType>
-    type D5<'a,'b,'c,'d,'e> = | D5 of seq<('a * ('b * ('c * ('d * 'e)))) * DecisionType>
-    type D6<'a,'b,'c,'d,'e,'f> = | D6 of seq<('a * ('b * ('c * ('d * ('e * 'f))))) * DecisionType>
-    type D7<'a,'b,'c,'d,'e,'f,'g> = | D7 of seq<('a * ('b * ('c * ('d * ('e * ('f * 'g)))))) * DecisionType>
-    type D8<'a,'b,'c,'d,'e,'f,'g,'h> = | D8 of seq<('a * ('b * ('c * ('d * ('e * ('f * ('g * 'h))))))) * DecisionType>
-
     type DecisionBuilder (decisionSetPrefix:string) =
+
+        let createDecision indices decisionType =
+            let name = namer decisionSetPrefix indices
+            let decision = Decision.create name decisionType
+            indices, decision
 
         member this.Yield (decisionType:DecisionType) =
             decisionType
 
-        member this.For(source:seq<'a>, body:'a -> DecisionType) =
-            source |> Seq.map (fun a -> a, body a)
-            |> D1.D1
+        member this.For(source:seq<'a>, body:'a -> 'b) =
+            source |> Seq.map (fun x -> x, body x)
 
-         member this.For(source:seq<'a>, body:'a -> D1<'b>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D1.D1 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D2.D2
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.collect (fun (b, c) ->
+            c |> Seq.collect (fun (c, d) ->
+            d |> Seq.collect (fun (d, e) ->
+            e |> Seq.collect (fun (e, f) ->
+            f |> Seq.collect (fun (f, g) ->
+            g |> Seq.collect (fun (g, h) ->
+            h |> Seq.map (fun (h, i) -> createDecision (a,b,c,d,e,f,g,h) i))))))))
 
-        member this.For(source:seq<'a>, body:'a -> D2<'b,'c>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D2.D2 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D3.D3
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.collect (fun (b, c) ->
+            c |> Seq.collect (fun (c, d) ->
+            d |> Seq.collect (fun (d, e) ->
+            e |> Seq.collect (fun (e, f) ->
+            f |> Seq.collect (fun (f, g) ->
+            g |> Seq.map (fun (g, h) -> createDecision (a,b,c,d,e,f,g) h)))))))
 
-        member this.For(source:seq<'a>, body:'a -> D3<'b,'c,'d>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D3.D3 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D4.D4
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.collect (fun (b, c) ->
+            c |> Seq.collect (fun (c, d) ->
+            d |> Seq.collect (fun (d, e) ->
+            e |> Seq.collect (fun (r, f) ->
+            f |> Seq.map (fun (f, g) -> createDecision (a,b,c,d,e,f) g))))))
 
-        member this.For(source:seq<'a>, body:'a -> D4<'b,'c,'d,'e>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D4.D4 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D5.D5
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.collect (fun (b, c) ->
+            c |> Seq.collect (fun (c, d) ->
+            d |> Seq.collect (fun (d, e) ->
+            e |> Seq.map (fun (e, f) -> createDecision (a,b,c,d,e) f)))))
 
-        member this.For(source:seq<'a>, body:'a -> D5<'b,'c,'d,'e,'f>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D5.D5 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D6.D6
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*DecisionType>>>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.collect (fun (b, c) ->
+            c |> Seq.collect (fun (c, d) ->
+            d |> Seq.map (fun (d, e) -> createDecision (a,b,c,d) e))))
 
-        member this.For(source:seq<'a>, body:'a -> D6<'b,'c,'d,'e,'f,'g>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D6.D6 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D7.D7
+        member this.Run(a:seq<_*seq<_*seq<_*DecisionType>>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.collect (fun (b, c) ->
+            c |> Seq.map (fun (c, d) -> createDecision (a,b,c) d)))
 
-        member this.For(source:seq<'a>, body:'a -> D7<'b,'c,'d,'e,'f,'g,'h>) =
-            source
-            |> Seq.collect (fun a -> 
-                body a 
-                |> fun (D7.D7 x) -> x
-                |> Seq.map (fun (idx, decision) -> (a, idx), decision))
-            |> D8.D8
+        member this.Run(a:seq<_*seq<_*DecisionType>>) =
+            a |> Seq.collect (fun (a, b) ->
+            b |> Seq.map (fun (b, c) -> createDecision (a, b) c))
 
-        member this.Run(D1.D1 source) =
-            source 
-            |> Seq.map (fun (x, decisionType) -> 
-                        let name = namer decisionSetPrefix x
-                        let decision = Decision.create name decisionType
-                        x, decision)
+        member this.Run(a:seq<_*DecisionType>) = 
+            a |> Seq.map (fun (a, b) -> createDecision a b)
 
-        member this.Run(D2.D2 source) =
-            source 
-            |> Seq.map (fun ((x, y), decisionType) -> 
-                        let name = namer decisionSetPrefix (x, y)
-                        let decision = Decision.create name decisionType
-                        (x, y), decision)
-
-        member this.Run(D3.D3 source) =
-            source 
-            |> Seq.map (fun ((x, (y, z)), decisionType) -> 
-                        let name = namer decisionSetPrefix (x, (y, z))
-                        let decision = Decision.create name decisionType
-                        (x, y, z), decision)
-
-        member this.Run(D4.D4 source) =
-            source 
-            |> Seq.map (fun ((x, (y, (z, a))), decisionType) ->
-                        let name = namer decisionSetPrefix (x, (y, (z, a)))
-                        let decision = Decision.create name decisionType
-                        (x, y, z, a), decision)
-
-        member this.Run(D5.D5 source) =
-            source 
-            |> Seq.map (fun ((x, (y, (z, (a, b)))), decisionType) ->
-                        let name = namer decisionSetPrefix (x, (y, (z, (a, b))))
-                        let decision = Decision.create name decisionType
-                        (x, y, z, a, b), decision)
-
-        member this.Run(D6.D6 source) =
-            source 
-            |> Seq.map (fun ((x, (y, (z, (a, (b, c))))), decisionType) ->
-                        let name = namer decisionSetPrefix (x, (y, (z, (a, (b, c)))))
-                        let decision = Decision.create name decisionType
-                        (x, y, z, a, b, c), decision)
-
-        member this.Run(D7.D7 source) =
-            source 
-            |> Seq.map (fun ((x, (y, (z, (a, (b, (c, d)))))), decisionType) ->
-                        let name = namer decisionSetPrefix (x, (y, (z, (a, (b, (c, d))))))
-                        let decision = Decision.create name decisionType
-                        (x, y, z, a, b, c, d), decision)
-
-        member this.Run(D8.D8 source) =
-            source 
-            |> Seq.map (fun ((x, (y, (z, (a, (b, (c, (d, e))))))), decisionType) ->
-                        let name = namer decisionSetPrefix (x, (y, (z, (a, (b, (c, (d, e)))))))
-                        let decision = Decision.create name decisionType
-                        (x, y, z, a, b, c, d, e), decision)
