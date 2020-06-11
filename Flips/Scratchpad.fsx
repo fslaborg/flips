@@ -12,36 +12,153 @@ open Flips
 open Flips.Domain
 open Flips.SliceMap
 
-let indexes = [1..3]
-let locations = ["CityA"; "CityB"; "CityC"]
+let example1 () =
+    let products = ["Hamburger"; "Taco"; "Pizza"]
+    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"]
+    let revenue = 
+        [
+            ("Hamburger", "Woodstock"), 1.40
+            ("Hamburger", "Sellwood"),  1.50
+            ("Hamburger", "Hawthorne"), 1.70
+            ("Taco",      "Woodstock"), 2.40
+            ("Taco",      "Sellwood"),  2.10
+            ("Taco",      "Hawthorne"), 2.30
+            ("Pizza",     "Woodstock"), 3.70
+            ("Pizza",     "Sellwood"),  3.50
+            ("Pizza",     "Hawthorne"), 3.30
+        ] |> Map.ofList
 
-// Creating a Map of decisions without the DecisionBuilder
-let withoutDecisionBuilder =
-    [for i in indexes do
-        for l in locations ->
-            let name = sprintf "Test|%i_%s" i l
-            let decisionType = DecisionType.Continuous (0.0, infinity)
-            (i, l), Decision.create name decisionType
-    ] |> Map.ofList
-
-// Creating a Map of decisions with the DecisionBuilder
-let withDecisionBuilder =
-    DecisionBuilder "Test" {
-        for i in indexes do
+    let allocateDecision =
+        [ for p in products do
             for l in locations ->
-                Continuous (0.0, infinity)
-    } |> Map.ofSeq
+                let name = sprintf "Allocation|%s_%s" p l
+                (p, l), Decision.createContinuous name 0.0 infinity
+        ] |> Map.ofList
+
+    let totalRevenue =
+        [for p in products do
+            for l in locations ->
+                revenue.[l, p] * allocateDecision.[l, p]
+        ] |> List.sum
+
+    ()
 
 
 
-let testDecisions = 
-    DecisionBuilder "TestDecisions" {
-        for i in x do
-            for j in y ->
-                Boolean 
-    } |> SMap2.ofSeq
+type Product = Product of string
+type Location = Location of string
 
-testDecisions
+let example2 () =
+    let products = ["Hamburger"; "Taco"; "Pizza"] |> List.map Product
+    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"] |> List.map Location
+    let revenue = 
+        [
+            (Product "Hamburger", Location "Woodstock"), 1.40
+            (Product "Hamburger", Location "Sellwood"),  1.50
+            (Product "Hamburger", Location "Hawthorne"), 1.70
+            (Product "Taco",      Location "Woodstock"), 2.40
+            (Product "Taco",      Location "Sellwood"),  2.10
+            (Product "Taco",      Location "Hawthorne"), 2.30
+            (Product "Pizza",     Location "Woodstock"), 3.70
+            (Product "Pizza",     Location "Sellwood"),  3.50
+            (Product "Pizza",     Location "Hawthorne"), 3.30
+        ] |> Map.ofList
+
+    let allocateDecision =
+        [ for p in products do
+            for l in locations ->
+                let name = sprintf "Allocation|%A_%A" p l
+                (p, l), Decision.createContinuous name 0.0 infinity
+        ] |> Map.ofList
+
+
+    // Incorrect
+    let totalRevenue =
+        [for p in products do
+            for l in locations ->
+                revenue.[l, p] * allocateDecision.[l, p]
+        ] |> List.sum
+
+    // Correct
+    let totalRevenue =
+        [for p in products do
+            for l in locations ->
+                revenue.[p, l] * allocateDecision.[p, l]
+        ] |> List.sum
+
+    ()
+
+
+let sparseExample () =
+    let products = ["Hamburger"; "Taco"; "Pizza"]
+    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"; "Gresham"]
+    let revenue = 
+        [
+            ("Hamburger", "Woodstock"), 1.40
+            ("Hamburger", "Hawthorne"), 1.70
+            ("Hamburger", "Gresham"),   1.95
+            ("Taco",      "Sellwood"),  2.10
+            ("Taco",      "Hawthorne"), 2.30
+            ("Pizza",     "Woodstock"), 3.70
+            ("Pizza",     "Sellwood"),  3.50
+            ("Pizza",     "Gresham"),   3.30
+        ] |> Map.ofList
+
+    let allocateDecision =
+        [ for p in products do
+            for l in locations ->
+                let name = sprintf "Allocation|%A_%A" p l
+                (p, l), Decision.createContinuous name 0.0 infinity
+        ] |> Map.ofList
+
+    let inline tryMultiply (x, y) =
+        match x, y with
+        | Some a, Some b -> Some (a * b)
+        | _, _ -> None
+
+    // Sparse Revenue
+    let totalRevenue =
+        [for p in products do
+            for l in locations ->
+                (Map.tryFind (l, p) revenue), (Map.tryFind (l, p) allocateDecision)
+        ] 
+        |> List.choose tryMultiply
+        |> List.sum
+
+    ()
+
+sparseExample ()
+
+//let indexes = [1..3]
+//let locations = ["CityA"; "CityB"; "CityC"]
+
+//// Creating a Map of decisions without the DecisionBuilder
+//let withoutDecisionBuilder =
+//    [for i in indexes do
+//        for l in locations ->
+//            let name = sprintf "Test|%i_%s" i l
+//            let decisionType = DecisionType.Continuous (0.0, infinity)
+//            (i, l), Decision.create name decisionType
+//    ] |> Map.ofList
+
+//// Creating a Map of decisions with the DecisionBuilder
+//let withDecisionBuilder =
+//    DecisionBuilder "Test" {
+//        for i in indexes do
+//            for l in locations ->
+//                Continuous (0.0, infinity)
+//    } |> Map.ofSeq
+
+
+
+//let testDecisions = 
+//    DecisionBuilder "TestDecisions" {
+//        for i in x do
+//            for j in y ->
+//                Boolean 
+//    } |> SMap2.ofSeq
+
+//testDecisions
 
 //let profit = 
 //    [
@@ -226,3 +343,12 @@ testDecisions
 //x .* z
 
 //z .* x
+
+let x = 
+    DecisionBuilder "WaterSent" {
+        for i in ["a"; "b"] do
+            for j in 1..4 do
+                for k in 1..3 do
+                    for l in 1..3 -> 
+                        Continuous (0.0, infinity)
+    } |> Map.ofSeq
