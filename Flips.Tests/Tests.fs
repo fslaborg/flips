@@ -666,3 +666,29 @@ module SliceMap4Tests =
         let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap3.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
+
+
+[<Properties(Arbitrary = [| typeof<Domain> |] )>]
+module DecisionBuilderTests =
+    open Domain
+
+    type private Animal = 
+        | Chicken of decimal
+        | Donkey of string
+
+    [<Fact>]
+    let ``8D DecisionBuilder works`` () =
+        let x = 
+            DecisionBuilder "WaterSent" {
+                for i in ["a"; "b"] do
+                    for j in 1..4 do
+                        for k in [1M; 2M] do
+                            for l in 1..3 do
+                                for m in [Chicken 100M; Donkey "WinkyWonky"] do
+                                    for n in 1..2 do
+                                        for p in 1..2 do
+                                            for q in 1..2 -> 
+                                                Continuous (0.0, infinity)
+            } |> Map.ofSeq
+
+        Assert.True(true)
