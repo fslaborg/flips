@@ -641,56 +641,56 @@ module Builders =
                 |> Seq.map (fun (idx, decision) -> (a, idx), decision))
             |> D8.D8
 
-        member inline this.Run(D1.D1 source) =
+        member this.Run(D1.D1 source) =
             source 
             |> Seq.map (fun (x, decisionType) -> 
                         let name = namer decisionSetPrefix x
                         let decision = Decision.create name decisionType
                         x, decision)
 
-        member inline this.Run(D2.D2 source) =
+        member this.Run(D2.D2 source) =
             source 
             |> Seq.map (fun ((x, y), decisionType) -> 
                         let name = namer decisionSetPrefix (x, y)
                         let decision = Decision.create name decisionType
                         (x, y), decision)
 
-        member inline this.Run(D3.D3 source) =
+        member this.Run(D3.D3 source) =
             source 
             |> Seq.map (fun ((x, (y, z)), decisionType) -> 
                         let name = namer decisionSetPrefix (x, (y, z))
                         let decision = Decision.create name decisionType
                         (x, y, z), decision)
 
-        member inline this.Run(D4.D4 source) =
+        member this.Run(D4.D4 source) =
             source 
             |> Seq.map (fun ((x, (y, (z, a))), decisionType) ->
                         let name = namer decisionSetPrefix (x, (y, (z, a)))
                         let decision = Decision.create name decisionType
                         (x, y, z, a), decision)
 
-        member inline this.Run(D5.D5 source) =
+        member this.Run(D5.D5 source) =
             source 
             |> Seq.map (fun ((x, (y, (z, (a, b)))), decisionType) ->
                         let name = namer decisionSetPrefix (x, (y, (z, (a, b))))
                         let decision = Decision.create name decisionType
                         (x, y, z, a, b), decision)
 
-        member inline this.Run(D6.D6 source) =
+        member this.Run(D6.D6 source) =
             source 
             |> Seq.map (fun ((x, (y, (z, (a, (b, c))))), decisionType) ->
                         let name = namer decisionSetPrefix (x, (y, (z, (a, (b, c)))))
                         let decision = Decision.create name decisionType
                         (x, y, z, a, b, c), decision)
 
-        member inline this.Run(D7.D7 source) =
+        member this.Run(D7.D7 source) =
             source 
             |> Seq.map (fun ((x, (y, (z, (a, (b, (c, d)))))), decisionType) ->
                         let name = namer decisionSetPrefix (x, (y, (z, (a, (b, (c, d))))))
                         let decision = Decision.create name decisionType
                         (x, y, z, a, b, c, d), decision)
 
-        member inline this.Run(D8.D8 source) =
+        member this.Run(D8.D8 source) =
             source 
             |> Seq.map (fun ((x, (y, (z, (a, (b, (c, (d, e))))))), decisionType) ->
                         let name = namer decisionSetPrefix (x, (y, (z, (a, (b, (c, (d, e)))))))

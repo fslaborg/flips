@@ -12,122 +12,122 @@ open Flips
 open Flips.Domain
 open Flips.SliceMap
 
-let example1 () =
-    let products = ["Hamburger"; "Taco"; "Pizza"]
-    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"]
-    let revenue = 
-        [
-            ("Hamburger", "Woodstock"), 1.40
-            ("Hamburger", "Sellwood"),  1.50
-            ("Hamburger", "Hawthorne"), 1.70
-            ("Taco",      "Woodstock"), 2.40
-            ("Taco",      "Sellwood"),  2.10
-            ("Taco",      "Hawthorne"), 2.30
-            ("Pizza",     "Woodstock"), 3.70
-            ("Pizza",     "Sellwood"),  3.50
-            ("Pizza",     "Hawthorne"), 3.30
-        ] |> Map.ofList
+//let example1 () =
+//    let products = ["Hamburger"; "Taco"; "Pizza"]
+//    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"]
+//    let revenue = 
+//        [
+//            ("Hamburger", "Woodstock"), 1.40
+//            ("Hamburger", "Sellwood"),  1.50
+//            ("Hamburger", "Hawthorne"), 1.70
+//            ("Taco",      "Woodstock"), 2.40
+//            ("Taco",      "Sellwood"),  2.10
+//            ("Taco",      "Hawthorne"), 2.30
+//            ("Pizza",     "Woodstock"), 3.70
+//            ("Pizza",     "Sellwood"),  3.50
+//            ("Pizza",     "Hawthorne"), 3.30
+//        ] |> Map.ofList
 
-    let allocateDecision =
-        [ for p in products do
-            for l in locations ->
-                let name = sprintf "Allocation|%s_%s" p l
-                (p, l), Decision.createContinuous name 0.0 infinity
-        ] |> Map.ofList
+//    let allocateDecision =
+//        [ for p in products do
+//            for l in locations ->
+//                let name = sprintf "Allocation|%s_%s" p l
+//                (p, l), Decision.createContinuous name 0.0 infinity
+//        ] |> Map.ofList
 
-    let totalRevenue =
-        [for p in products do
-            for l in locations ->
-                revenue.[l, p] * allocateDecision.[l, p]
-        ] |> List.sum
+//    let totalRevenue =
+//        [for p in products do
+//            for l in locations ->
+//                revenue.[l, p] * allocateDecision.[l, p]
+//        ] |> List.sum
 
-    ()
-
-
-
-type Product = Product of string
-type Location = Location of string
-
-let example2 () =
-    let products = ["Hamburger"; "Taco"; "Pizza"] |> List.map Product
-    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"] |> List.map Location
-    let revenue = 
-        [
-            (Product "Hamburger", Location "Woodstock"), 1.40
-            (Product "Hamburger", Location "Sellwood"),  1.50
-            (Product "Hamburger", Location "Hawthorne"), 1.70
-            (Product "Taco",      Location "Woodstock"), 2.40
-            (Product "Taco",      Location "Sellwood"),  2.10
-            (Product "Taco",      Location "Hawthorne"), 2.30
-            (Product "Pizza",     Location "Woodstock"), 3.70
-            (Product "Pizza",     Location "Sellwood"),  3.50
-            (Product "Pizza",     Location "Hawthorne"), 3.30
-        ] |> Map.ofList
-
-    let allocateDecision =
-        [ for p in products do
-            for l in locations ->
-                let name = sprintf "Allocation|%A_%A" p l
-                (p, l), Decision.createContinuous name 0.0 infinity
-        ] |> Map.ofList
+//    ()
 
 
-    // Incorrect
-    let totalRevenue =
-        [for p in products do
-            for l in locations ->
-                revenue.[l, p] * allocateDecision.[l, p]
-        ] |> List.sum
 
-    // Correct
-    let totalRevenue =
-        [for p in products do
-            for l in locations ->
-                revenue.[p, l] * allocateDecision.[p, l]
-        ] |> List.sum
+//type Product = Product of string
+//type Location = Location of string
 
-    ()
+//let example2 () =
+//    let products = ["Hamburger"; "Taco"; "Pizza"] |> List.map Product
+//    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"] |> List.map Location
+//    let revenue = 
+//        [
+//            (Product "Hamburger", Location "Woodstock"), 1.40
+//            (Product "Hamburger", Location "Sellwood"),  1.50
+//            (Product "Hamburger", Location "Hawthorne"), 1.70
+//            (Product "Taco",      Location "Woodstock"), 2.40
+//            (Product "Taco",      Location "Sellwood"),  2.10
+//            (Product "Taco",      Location "Hawthorne"), 2.30
+//            (Product "Pizza",     Location "Woodstock"), 3.70
+//            (Product "Pizza",     Location "Sellwood"),  3.50
+//            (Product "Pizza",     Location "Hawthorne"), 3.30
+//        ] |> Map.ofList
+
+//    let allocateDecision =
+//        [ for p in products do
+//            for l in locations ->
+//                let name = sprintf "Allocation|%A_%A" p l
+//                (p, l), Decision.createContinuous name 0.0 infinity
+//        ] |> Map.ofList
 
 
-let sparseExample () =
-    let products = ["Hamburger"; "Taco"; "Pizza"]
-    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"; "Gresham"]
-    let revenue = 
-        [
-            ("Hamburger", "Woodstock"), 1.40
-            ("Hamburger", "Hawthorne"), 1.70
-            ("Hamburger", "Gresham"),   1.95
-            ("Taco",      "Sellwood"),  2.10
-            ("Taco",      "Hawthorne"), 2.30
-            ("Pizza",     "Woodstock"), 3.70
-            ("Pizza",     "Sellwood"),  3.50
-            ("Pizza",     "Gresham"),   3.30
-        ] |> Map.ofList
+//    // Incorrect
+//    let totalRevenue =
+//        [for p in products do
+//            for l in locations ->
+//                revenue.[l, p] * allocateDecision.[l, p]
+//        ] |> List.sum
 
-    let allocateDecision =
-        [ for p in products do
-            for l in locations ->
-                let name = sprintf "Allocation|%A_%A" p l
-                (p, l), Decision.createContinuous name 0.0 infinity
-        ] |> Map.ofList
+//    // Correct
+//    let totalRevenue =
+//        [for p in products do
+//            for l in locations ->
+//                revenue.[p, l] * allocateDecision.[p, l]
+//        ] |> List.sum
 
-    let inline tryMultiply (x, y) =
-        match x, y with
-        | Some a, Some b -> Some (a * b)
-        | _, _ -> None
+//    ()
 
-    // Sparse Revenue
-    let totalRevenue =
-        [for p in products do
-            for l in locations ->
-                (Map.tryFind (l, p) revenue), (Map.tryFind (l, p) allocateDecision)
-        ] 
-        |> List.choose tryMultiply
-        |> List.sum
 
-    ()
+//let sparseExample () =
+//    let products = ["Hamburger"; "Taco"; "Pizza"]
+//    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"; "Gresham"]
+//    let revenue = 
+//        [
+//            ("Hamburger", "Woodstock"), 1.40
+//            ("Hamburger", "Hawthorne"), 1.70
+//            ("Hamburger", "Gresham"),   1.95
+//            ("Taco",      "Sellwood"),  2.10
+//            ("Taco",      "Hawthorne"), 2.30
+//            ("Pizza",     "Woodstock"), 3.70
+//            ("Pizza",     "Sellwood"),  3.50
+//            ("Pizza",     "Gresham"),   3.30
+//        ] |> Map.ofList
 
-sparseExample ()
+//    let allocateDecision =
+//        [ for p in products do
+//            for l in locations ->
+//                let name = sprintf "Allocation|%A_%A" p l
+//                (p, l), Decision.createContinuous name 0.0 infinity
+//        ] |> Map.ofList
+
+//    let inline tryMultiply (x, y) =
+//        match x, y with
+//        | Some a, Some b -> Some (a * b)
+//        | _, _ -> None
+
+//    // Sparse Revenue
+//    let totalRevenue =
+//        [for p in products do
+//            for l in locations ->
+//                (Map.tryFind (l, p) revenue), (Map.tryFind (l, p) allocateDecision)
+//        ] 
+//        |> List.choose tryMultiply
+//        |> List.sum
+
+//    ()
+
+//sparseExample ()
 
 //let indexes = [1..3]
 //let locations = ["CityA"; "CityB"; "CityC"]
@@ -348,7 +348,11 @@ let x =
     DecisionBuilder "WaterSent" {
         for i in ["a"; "b"] do
             for j in 1..4 do
-                for k in 1..3 do
-                    for l in 1..3 -> 
-                        Continuous (0.0, infinity)
+                for k in [1M; 2M] do
+                    for l in 1..3 do
+                        for m in [100M; 250M] do
+                            for n in 1..2 do
+                                for p in 1..2 do
+                                    for q in 1..2 -> 
+                                        Continuous (0.0, infinity)
     } |> Map.ofSeq
