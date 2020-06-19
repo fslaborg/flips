@@ -10,8 +10,6 @@ Which shares should be taken into account and in which proportions in order to:
 - minimize the risk
 - achieve at least 2.5% of return?
 
-Step described in Program.cs.
-
 The result shows the percentage of the portfolio share values.
 
 Analysed data are uploaded directly from finance.yahoo.com using CSV type provider each time the program is executed.
