@@ -15,6 +15,7 @@ let main argv =
     SimpleExample.solve ()
     MapSlicingExample.solve ()
     BinaryProgrammingExample.solve ()
+    StocksExample.solve ()
 
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
