@@ -15,7 +15,15 @@
     <Compile Include="MultipleFoodTrackExample\MultipleFoodTruckExample.fs" />
     <Compile Include="MultipleFoodTruckSliceMapExample\MultipleFoodTruckSliceMapExample.fs" />
     <Compile Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
+    <Compile Include="StocksExample\StocksExample.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Data" Version="3.3.3" />
+    <PackageReference Include="MathNet.Numerics" Version="4.11.0" />
+    <PackageReference Include="MathNet.Numerics.FSharp" Version="4.11.0" />
+    <PackageReference Update="FSharp.Core" Version="4.7.2" />
   </ItemGroup>
 
   <ItemGroup>

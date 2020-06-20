@@ -1,12 +1,46 @@
-﻿open System
-open FlipsExampleStocks
-open FlipsExample
+﻿module Flips.Examples.StocksExample
+
+open System
+open FSharp.Data
+open MathNet.Numerics
+open MathNet.Numerics.Statistics 
 open Flips.Domain
+open Flips.Solve
 
-[<EntryPoint>]
-let main argv =
-    printfn "Hello Flips Example!"
+type YahooStocks = CsvProvider<"2020-01-01,1.11,1.22,1.33,1.44,1.55,5666777888", Schema = " Date (date), Open (float), High(float), Low(float), Close(float), Adj Close (float), Volume(int64)">
 
+let solve () =
+
+    // Raw data preparation (downloaded directly from yahoo using CSV data provider)
+    let getStockReturns (tickers : string list) startDate endDate = 
+        
+        let period1 = DateTimeOffset(startDate).ToUnixTimeSeconds().ToString();
+        let period2 = DateTimeOffset(endDate).ToUnixTimeSeconds().ToString();
+
+        let getUriString ticker = String.Format("https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1mo&events=history", ticker, period1, period2)
+            
+        let stockReturns = 
+            tickers
+            |> Seq.map(fun ticker -> 
+                let uriString = getUriString ticker 
+                let prices = YahooStocks.Load(uriString).Cache()
+                let returns = 
+                    prices.Rows 
+                    |> Seq.sortBy(fun r -> r.Date) 
+                    |> Seq.map(fun r -> r.``Adj Close``) 
+                    |> Seq.pairwise 
+                    |> Seq.map (fun (x1, x2) -> (x2 - x1) / x1)
+                ticker, returns, Statistics.Mean(returns), returns |> Seq.min )
+        
+        stockReturns
+
+    let getStockData  (tickers : string list) startDate endDate  = 
+        let stockReturns = getStockReturns tickers startDate endDate
+        stockReturns |> Seq.map (fun (ticker, returns, mean, min) -> ticker, mean, min)
+
+
+    // Flips job here...
+    
     // stocks
     let items =  ["AAPL"; "ADBE"; "CVX"; "GOOG"; "IBM"; "MDLZ"; "MSFT"; "NFLX"; "ORCL"; "SBUX" ]
 
@@ -68,7 +102,7 @@ let main argv =
     }
 
     // Solve
-    let results = Flips.Solve.solve settings model
+    let results = solve settings model
 
     // Printing results:
     printfn "-- Result --"
@@ -81,4 +115,3 @@ let main argv =
             let (DecisionName name) = decision.Name
             printfn "Decision: %s\tValue: %f %%" name (value * 100.0)
     
-    0  // return an integer exit code
