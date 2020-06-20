@@ -254,7 +254,7 @@ We now have a formulation of the problem that will scale to an arbitrary number 
 
 ### Scalar
 
-A `Scalar` is a single case DU which wraps a `float`. The reason for this was to ensure proper equality behavior. Equality is incredibly difficult with any floating-point type. In order to ensure that modeling works as intended it was necessary to take wrap the `float` value and specify the equality behavior.
+A `Scalar` is a single case DU which wraps a `float`. The reason for this was to ensure proper equality behavior. Equality is incredibly difficult with any floating-point type. In order to ensure that modeling works as intended it was necessary to wrap the `float` value and specify the equality behavior.
 
 The `Scalar` type supports the basic algebraic operations: `+`, `-`, `*`, and `/`. Any time you perform an algebraic operation with a `Scalar` and a `float`, you will get a `Scalar` back. When perform an algebraic operation with a `Scalar` and a `Decision` you will get a `LinearExpression` back. The `LinearExpression` is the basic building block of Optimization Models. For more information on `LinearExpresion`, please refer to its section.
 
