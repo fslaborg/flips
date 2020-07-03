@@ -6,39 +6,41 @@ let inline private stripUoM (x: '``T<'M>``) =
     retype x :'T
 
 type Scalar<[<Measure>] 'Measure> = 
-    | Scalar of UoM:float<'Measure> * Scalar:Domain.Scalar
+    | Value of UoM:float<'Measure> * Scalar:Domain.Scalar
 with
 
-    static member (+) (Scalar (lhsUoM, lhsS):Scalar<'Measure>, Scalar (rhsUoM, rhsS):Scalar<'Measure>) =
-        Scalar (lhsUoM, lhsS * rhsS)
+    static member (+) (Value (lhsUoM, lhsS):Scalar<'Measure>, Value (rhsUoM, rhsS):Scalar<'Measure>) =
+        Value (lhsUoM, lhsS * rhsS)
 
-    static member (+) (Scalar (uom, s):Scalar<'Measure>, f:float<'Measure>) =
+    static member (+) (Value (uom, s):Scalar<'Measure>, f:float<'Measure>) =
         let unitlessF = stripUoM f
-        Scalar (uom, s + unitlessF)
+        Value (uom, s + unitlessF)
 
     static member (+) (f:float<'Measure>, s:Scalar<'Measure>) =
         s + f
 
-    static member (*) (Scalar (uom, s):Scalar<_>, f) =
+    static member (*) (Value (uom, s):Scalar<_>, f) =
         let newUoM = uom * f
         let unitlessF = stripUoM f
-        Scalar (newUoM, s * unitlessF)
+        Value (newUoM, s * unitlessF)
 
     static member (*) (f:float<_>, s:Scalar<_>) =
         s * f
 
-    static member (*) (Scalar (lhsUoM, lhsS):Scalar<_>, Scalar (rhsUoM, rhsS):Scalar<_>) =
+    static member (*) (Value (lhsUoM, lhsS):Scalar<_>, Value (rhsUoM, rhsS):Scalar<_>) =
         let newUoM = lhsUoM * rhsUoM
-        Scalar (newUoM, lhsS * rhsS)
+        Value (newUoM, lhsS * rhsS)
 
-    //static member (-) (Scalar lhs:Scalar<'Measure>, Scalar rhs:Scalar<'Measure>) =
-    //    Scalar (lhs - rhs)
+    static member (-) (Value (lhsUoM, lhsS):Scalar<'Measure>, Value (rhsUoM, rhsS):Scalar<'Measure>) =
+        Value (lhsUoM, lhsS - rhsS)
 
-    //static member (-) (Scalar s:Scalar<'Measure>, f:float<'Measure>) =
-    //    Scalar (s - f)
+    static member (-) (Value (uom, s):Scalar<'Measure>, f:float<'Measure>) =
+        let unitlessF = stripUoM f
+        Value (uom, s - unitlessF)
 
-    //static member (-) (f:float<'Measure>, Scalar s:Scalar<'Measure>) =
-    //    Scalar (f - s)
+    static member (-) (f:float<'Measure>, Value (uom, s):Scalar<'Measure>) =
+        let unitlessF = stripUoM f
+        Value (uom, unitlessF - s)
 
     //static member (/) (f:float<_>, Scalar s:Scalar<_>) =
     //    Scalar (f / s)
@@ -49,7 +51,7 @@ with
     //static member (/) (Scalar lhs:Scalar<_>, Scalar rhs:Scalar<_>) =
     //    Scalar (lhs / rhs)
 
-    //static member inline Zero = Scalar (FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0)
+    static member inline Zero = Value (0.0<_>, Flips.Domain.Scalar.Zero)
 
     //override this.GetHashCode () =
     //    hash this.Value
@@ -66,16 +68,15 @@ with
     //        | :? Scalar<'Measure> as s -> compare this s
     //        | _ -> invalidArg "yObj" "Cannot compare values of different types"
 
-type DecisionType<[<Measure>] 'Measure> =
-    | DecisionType of UoM:float<'Measure> * DecisionType:Domain.DecisionType
+type Decision<[<Measure>] 'Measure> =
+    | Value of UoM:float<'Measure> * Domain.Decision
+with
 
-//type Decision<[<Measure>] 'Measure> (decisionName:Domain.DecisionName, decisionType:DecisionType<'Measure>) =
-//    member this.Name = decisionName
-//    member this.DecisionType = decisionType
-//with
-
-//    static member inline (*) (d:Decision<_>, f:float<_>) =
-//        (LinearExpression<_,_>.OfDecision d) * f
+    static member inline (*) (Value (dUoM, d):Decision<'M1>, f:float<'M2>) =
+        let unitlessF = stripUoM f
+        let expr = d * unitlessF
+        let exprUoM = dUoM * f
+        LinearExpression.Value (f, dUoM, exprUoM, expr)
 
 //    //static member (*) (f:float<'CoefMeasure>, decision:Decision<'DecisionMeasure>) =
 //    //    LinearExpression.OfDecision decision * f
@@ -158,17 +159,8 @@ type DecisionType<[<Measure>] 'Measure> =
 //    //static member (>==) (decision:Decision, expr:LinearExpression) =
 //    //    LinearExpression.OfDecision decision >== expr
 
-//and LinearExpression<[<Measure>] 'CoefMeasure, [<Measure>] 'DecisionMeasure>
-//    (
-//        names : Set<Domain.DecisionName>,
-//        coefficients : Map<Domain.DecisionName, Scalar<'CoefMeasure>>,
-//        decisions : Map<Domain.DecisionName, Decision<'DecisionMeasure>>,
-//        offset : Scalar<'CoefMeasure * 'DecisionMeasure>
-//    ) =
-//        member this.Names = names
-//        member this.Coefficients = coefficients
-//        member this.Decisions = decisions
-//        member this.Offset = offset
+and LinearExpression<[<Measure>] 'CoefMeasure, [<Measure>] 'DecisionMeasure, [<Measure>] 'OffsetMeasure> =
+    | Value of CoefUoM:float<'CoefMeasure> * DecisionUoM:float<'DecisionMeasure> * OffsetUoM:float<'OffsetMeasure> * Domain.LinearExpression
 
 //        //static member private Equivalent (lExpr:LinearExpression<'C,'D>) (rExpr:LinearExpression<'C,'D>) =
 //        //    let isEqualOffset = (lExpr.Offset = rExpr.Offset)
@@ -223,8 +215,10 @@ type DecisionType<[<Measure>] 'Measure> =
 //        //static member (+) (expr:LinearExpression<'C,'D>, f:float<'C * 'D>) =
 //        //    LinearExpression<'C,'D> (expr.Names, expr.Coefficients, expr.Decisions, expr.Offset + (Scalar f))
 
-//        //static member (+) (f:float, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-//        //    LinearExpression (names, coefs, decs, offset + (Scalar f))
+        static member (+) (f:float<'M>, LinearExpression.Value (cUoM, dUoM, oUoM, expr):LinearExpression<_, _, 'M>) =
+            let unitlessF = stripUoM f
+            let newExpr = unitlessF + expr
+            LinearExpression.Value (cUoM, dUoM, oUoM, newExpr)
 
 //        //static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
 //        //    LinearExpression (names, coefs, decs, offset + scalar)

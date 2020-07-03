@@ -84,7 +84,7 @@ module Scalar =
 
     [<Property>]
     let ``Multiplication of Identity Scalar yields same Scalar`` (a:Scalar) =
-        let r = a * (Scalar 1.0)
+        let r = a * (Value 1.0)
         Assert.StrictEqual(a, r)
 
 
@@ -468,7 +468,7 @@ module SliceMap2Tests =
         let s1 = Map.ofList v1 |> SMap2
         let v2 = v1 |> List.map (fun ((k1, k2), v) -> k2, v) |> List.distinctBy fst
         let s2 = v2 |> SMap.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
@@ -477,7 +477,7 @@ module SliceMap2Tests =
         let s1 = Map.ofList v1 |> SMap2
         let v2 = v1 |> List.map (fun ((k1, k2), v) -> k1, v) |> List.distinctBy fst
         let s2 = v2 |> SMap.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
 
@@ -553,7 +553,7 @@ module SliceMap3Tests =
         let s1 = Map.ofList v1 |> SMap3
         let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> k3, v) |> List.distinctBy fst
         let s2 = v2 |> SMap.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
@@ -562,7 +562,7 @@ module SliceMap3Tests =
         let s1 = Map.ofList v1 |> SMap3
         let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> (k2, k3), v) |> List.distinctBy fst
         let s2 = v2 |> SMap2.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap2.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
@@ -571,7 +571,7 @@ module SliceMap3Tests =
         let s1 = Map.ofList v1 |> SMap3
         let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> k1, v) |> List.distinctBy fst
         let s2 = v2 |> SMap.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
 
@@ -580,7 +580,7 @@ module SliceMap3Tests =
         let s1 = Map.ofList v1 |> SMap3
         let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> (k1, k2), v) |> List.distinctBy fst
         let s2 = v2 |> SMap2.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap2.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
 
@@ -656,7 +656,7 @@ module SliceMap4Tests =
         let s1 = Map.ofList v1 |> SMap4
         let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> k4, v) |> List.distinctBy fst
         let s2 = v2 |> SMap.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
@@ -665,7 +665,7 @@ module SliceMap4Tests =
         let s1 = Map.ofList v1 |> SMap4
         let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) |> List.distinctBy fst
         let s2 = v2 |> SMap2.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap2.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
@@ -674,7 +674,7 @@ module SliceMap4Tests =
         let s1 = Map.ofList v1 |> SMap4
         let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k2, k3, k4), v) |> List.distinctBy fst
         let s2 = v2 |> SMap3.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap3.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap3.ofList
         let r = s1 .* s2 .* s2Inverse
         Assert.StrictEqual(r, s1)
 
@@ -683,7 +683,7 @@ module SliceMap4Tests =
         let s1 = Map.ofList v1 |> SMap4
         let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> k1, v) |> List.distinctBy fst
         let s2 = v2 |> SMap.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
 
@@ -692,7 +692,7 @@ module SliceMap4Tests =
         let s1 = Map.ofList v1 |> SMap4
         let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) |> List.distinctBy fst
         let s2 = v2 |> SMap2.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap2.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
 
@@ -701,7 +701,7 @@ module SliceMap4Tests =
         let s1 = Map.ofList v1 |> SMap4
         let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) |> List.distinctBy fst
         let s2 = v2 |> SMap3.ofList
-        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Scalar 1.0) / x) |> SMap3.ofList
+        let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap3.ofList
         let r = s2 .* (s2Inverse .* s1)
         Assert.StrictEqual(r, s1)
 

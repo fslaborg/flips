@@ -15,10 +15,15 @@ open Flips.UnitsOfMeasure
 type [<Measure>] sec
 type [<Measure>] Item
 
-let s1 = Domain.Scalar 1.0
-let s2 = Scalar.Scalar ((1.0<Item>), s1)
+let s1 = Domain.Scalar.Value 1.0
+let s2 = Scalar.Value ((1.0<Item>), s1)
 let s3 = s2 * 1.0<sec>
 let s4 = s2 + 1.0<Item>
+
+let d = Domain.Decision.createContinuous "test" 0.0 infinity
+let d1 = Decision.Value (1.0<Item>, d)
+let e1 = d1 * 1.0<sec>
+let e2 = 1.0<Item * sec> + e1
 //let example1 () =
 //    let products = ["Hamburger"; "Taco"; "Pizza"]
 //    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"]

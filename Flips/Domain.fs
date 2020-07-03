@@ -1,9 +1,9 @@
 module Flips.Domain
 
 [<CustomEquality; CustomComparison>]
-type Scalar = Scalar of float with
+type Scalar = Value of float with
 
-    static member private NearlyEquals (Scalar a:Scalar) (Scalar b:Scalar) : bool =
+    static member private NearlyEquals (Value a:Scalar) (Value b:Scalar) : bool =
         let aValue = System.BitConverter.DoubleToInt64Bits a
         let bValue = System.BitConverter.DoubleToInt64Bits b
         if (aValue >>> 63) <> (bValue >>> 63) then
@@ -11,46 +11,46 @@ type Scalar = Scalar of float with
         else
             System.Math.Abs(aValue - bValue) <= 10_000L
 
-    static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs + rhs)
+    static member (+) (Value lhs:Scalar, Value rhs:Scalar) =
+        Value (lhs + rhs)
 
-    static member (+) (Scalar s:Scalar, f:float) =
-        Scalar (s + f)
+    static member (+) (Value s:Scalar, f:float) =
+        Value (s + f)
 
-    static member (+) (f:float, Scalar s:Scalar) =
-        Scalar (s + f)
+    static member (+) (f:float, Value s:Scalar) =
+        Value (s + f)
 
-    static member (*) (Scalar s:Scalar, f:float) =
-        Scalar (s * f)
+    static member (*) (Value s:Scalar, f:float) =
+        Value (s * f)
 
-    static member (*) (f:float, Scalar s:Scalar) =
-        Scalar (s * f)
+    static member (*) (f:float, Value s:Scalar) =
+        Value (s * f)
 
-    static member (*) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs * rhs)
+    static member (*) (Value lhs:Scalar, Value rhs:Scalar) =
+        Value (lhs * rhs)
 
-    static member (-) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs - rhs)
+    static member (-) (Value lhs:Scalar, Value rhs:Scalar) =
+        Value (lhs - rhs)
 
-    static member (-) (Scalar s:Scalar, f:float) =
-        Scalar (s - f)
+    static member (-) (Value s:Scalar, f:float) =
+        Value (s - f)
 
-    static member (-) (f:float, Scalar s:Scalar) =
-        Scalar (f - s)
+    static member (-) (f:float, Value s:Scalar) =
+        Value (f - s)
 
-    static member (/) (f:float, Scalar s:Scalar) =
-        Scalar (f / s)
+    static member (/) (f:float, Value s:Scalar) =
+        Value (f / s)
 
-    static member (/) (Scalar s:Scalar, f:float) =
-        Scalar (s / f)
+    static member (/) (Value s:Scalar, f:float) =
+        Value (s / f)
 
-    static member (/) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs / rhs)
+    static member (/) (Value lhs:Scalar, Value rhs:Scalar) =
+        Value (lhs / rhs)
 
-    static member Zero = Scalar 0.0
+    static member Zero = Value 0.0
 
     override this.GetHashCode () =
-        let (Scalar v) = this
+        let (Value v) = this
         hash v
 
     override this.Equals(obj) =
@@ -194,16 +194,16 @@ with
         | _ -> false
 
     static member OfFloat (f:float) =
-        LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
+        LinearExpression (Set.empty, Map.empty, Map.empty, Value f)
 
     static member OfScalar (s:Scalar) =
         LinearExpression (Set.empty, Map.empty, Map.empty, s)
 
     static member OfDecision (d:Decision) =
         let names = Set.ofList [d.Name]
-        let coefs = Map.ofList [d.Name, Scalar 1.0]
+        let coefs = Map.ofList [d.Name, Value 1.0]
         let decs = Map.ofList [d.Name, d]
-        LinearExpression (names, coefs, decs, Scalar 0.0)
+        LinearExpression (names, coefs, decs, Value 0.0)
 
     static member GetDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
         decs
@@ -215,10 +215,10 @@ with
         LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
 
     static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
-        LinearExpression (names, coefs, decs, offset + (Scalar f))
+        LinearExpression (names, coefs, decs, offset + (Value f))
 
     static member (+) (f:float, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        LinearExpression (names, coefs, decs, offset + (Scalar f))
+        LinearExpression (names, coefs, decs, offset + (Value f))
 
     static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
         LinearExpression (names, coefs, decs, offset + scalar)
@@ -232,11 +232,11 @@ with
                 let (DecisionName name) = decision.Name
                 invalidArg name "Mistmatched DecisionType"
 
-            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + (Scalar 1.0)) coefs
+            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + (Value 1.0)) coefs
             LinearExpression (names, newCoefs, decs, offset)
         else
             let newNames = Set.add decision.Name names
-            let newCoefs = Map.add decision.Name (Scalar 1.0) coefs
+            let newCoefs = Map.add decision.Name (Value 1.0) coefs
             let newDecs = Map.add decision.Name decision decs
             LinearExpression (newNames, newCoefs, newDecs, offset)
 
