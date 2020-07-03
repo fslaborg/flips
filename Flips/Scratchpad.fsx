@@ -4,14 +4,21 @@
 //#r @"C:\Users\matth\.nuget\packages\google.ortools.runtime.win-x64\7.5.7466\runtimes\win-x64\native\google-ortools-native.dll"
 
 #load "Domain.fs"
-//#load "Solve.fs"
-#load "SliceMap.fs"
+#load "UnitsOfMeasure.fs"
+//#load "SliceMap.fs"
 
-open System
+//open System
 open Flips
-open Flips.Domain
-open Flips.SliceMap
+////open Flips.Domain
+open Flips.UnitsOfMeasure
 
+type [<Measure>] sec
+type [<Measure>] Item
+
+let s1 = Domain.Scalar 1.0
+let s2 = Scalar.Scalar ((1.0<Item>), s1)
+let s3 = s2 * 1.0<sec>
+let s4 = s2 + 1.0<Item>
 //let example1 () =
 //    let products = ["Hamburger"; "Taco"; "Pizza"]
 //    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"]
@@ -344,15 +351,74 @@ open Flips.SliceMap
 
 //z .* x
 
-let x = 
-    DecisionBuilder "WaterSent" {
-        for i in ["a"; "b"] do
-            for j in 1..4 do
-                for k in [1M; 2M] do
-                    for l in 1..3 do
-                        for m in [100M; 250M] do
-                            for n in 1..2 do
-                                for p in 1..2 do
-                                    for q in 1..2 -> 
-                                        Continuous (0.0, infinity)
-    } |> Map.ofSeq
+//let x = 
+//    DecisionBuilder "WaterSent" {
+//        for i in ["a"; "b"] do
+//            for j in 1..4 do
+//                for k in [1M; 2M] do
+//                    for l in 1..3 do
+//                        for m in [100M; 250M] do
+//                            for n in 1..2 do
+//                                for p in 1..2 do
+//                                    for q in 1..2 -> 
+//                                        Continuous (0.0, infinity)
+//    } |> Map.ofSeq
+
+type DecisionName = DecisionName of string
+
+[<CustomEquality; CustomComparison>]
+type Scalar<[<Measure>] 'Measure> (f:float<'Measure>) =
+    member this.Value = f
+
+    static member (*) (s:Scalar<_>, f:float<_>) =
+        Scalar (s.Value * f)
+
+    static member (*) (f:float<_>, s:Scalar<_>) =
+        Scalar (s.Value * f)
+
+    static member (*) (lhs:Scalar<_>, rhs:Scalar<_>) =
+        Scalar (lhs.Value * rhs.Value)
+
+    static member inline Zero = Scalar (FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0)
+
+type DecisionType<[<Measure>] 'Measure> =
+    | Boolean
+    | Integer of LowerBound:float<'Measure> * UpperBound:float<'Measure>
+    | Continuous of LowerBound:float<'Measure> * UpperBound:float<'Measure>
+
+type Decision<[<Measure>] 'Measure> (decisionName:DecisionName, decisionType:DecisionType<'Measure>) =
+    member this.Name = decisionName
+    member this.DecisionType = decisionType
+
+    static member inline (*) (d:Decision<_>, f:float<_>) =
+        (LinearExpression<_,_>.OfDecision d) * f
+
+and LinearExpression<[<Measure>] 'CoefMeasure, [<Measure>] 'DecisionMeasure>
+    (
+        names : Set<DecisionName>,
+        coefficients : Map<DecisionName, Scalar<'CoefMeasure>>,
+        decisions : Map<DecisionName, Decision<'DecisionMeasure>>,
+        offset : Scalar<'CoefMeasure * 'DecisionMeasure>
+    ) =
+        member this.Names = names
+        member this.Coefficients = coefficients
+        member this.Decisions = decisions
+        member this.Offset = offset
+
+        static member OfFloat f =
+            LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
+
+        static member OfScalar s =
+            LinearExpression (Set.empty, Map.empty, Map.empty, s)
+
+        static member OfDecision<[<Measure>] 'DecisionMeasure> (d:Decision<'DecisionMeasure>) : LinearExpression<1, 'DecisionMeasure> =
+            let names = Set.ofList [d.Name]
+            let coefs = Map.ofList [d.Name, Scalar 1.0<1>]
+            let decs = Map.ofList [d.Name, d]
+            let offset = Scalar<_>.Zero
+            LinearExpression (names, coefs, decs, offset)
+
+        static member (*) (expr:LinearExpression<'a, 'b>, f:float<'c>) : LinearExpression<'a * 'c, 'b> =
+            let newCoefs = Map.map (fun k v -> v * f) expr.Coefficients
+            let newOffset = expr.Offset * f
+            LinearExpression (names, newCoefs, decs, newOffset)

@@ -21,6 +21,7 @@
   <ItemGroup>
     <None Include="Scratchpad.fsx" />
     <Compile Include="Domain.fs" />
+    <Compile Include="UnitsOfMeasure.fs" />
     <Compile Include="SliceMap.fs" />
     <Compile Include="Solve.fs" />
   </ItemGroup>
