@@ -24,6 +24,7 @@ let d = Domain.Decision.createContinuous "test" 0.0 infinity
 let d1 = Decision.Value (1.0<Item>, d)
 let e1 = d1 * 1.0<sec>
 let e2 = 1.0<Item * sec> + e1
+let e3 = e2 + 2.5<Item * sec>
 //let example1 () =
 //    let products = ["Hamburger"; "Taco"; "Pizza"]
 //    let locations = ["Woodstock"; "Sellwood"; "Hawthorne"]
