@@ -1,110 +1,122 @@
 ﻿module Flips.Solve
 
-
-open Google.OrTools.LinearSolver
 open Flips.Domain
 
+module OrTools =
+    open Google.OrTools.LinearSolver
 
-let private getScalarValue (Scalar s:Scalar) = s
+    let private getScalarValue (Scalar s:Scalar) = s
 
 
-let private buildExpression (vars:Map<DecisionName,Variable>) (LinearExpression (names, coefs, decs, Scalar offset):LinearExpression) =
-    let decisionExpr =
-        names
-        |> Seq.map (fun n -> getScalarValue coefs.[n] * vars.[n])
-        |> fun x -> 
-            match Seq.isEmpty x with 
-            | true -> LinearExpr() 
-            | false -> Seq.reduce (+) x
+    let private buildExpression (vars:Map<DecisionName,Variable>) (LinearExpression (names, coefs, decs, Scalar offset):LinearExpression) =
+        let decisionExpr =
+            names
+            |> Seq.map (fun n -> getScalarValue coefs.[n] * vars.[n])
+            |> fun x -> 
+                match Seq.isEmpty x with 
+                | true -> LinearExpr() 
+                | false -> Seq.reduce (+) x
         
-    offset + decisionExpr
+        offset + decisionExpr
 
 
-let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
-    match decisionType with
-    | Boolean -> solver.MakeBoolVar(name)
-    | Integer (lb, ub) -> solver.MakeIntVar(float lb, float ub, name)
-    | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, name)
+    let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
+        match decisionType with
+        | Boolean -> solver.MakeBoolVar(name)
+        | Integer (lb, ub) -> solver.MakeIntVar(float lb, float ub, name)
+        | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, name)
 
 
-let private createVariableMap (solver:Solver) (decisions:Map<DecisionName, Decision>) =
-    decisions
-    |> Map.map (fun n d -> createVariable solver n d.Type)
+    let private createVariableMap (solver:Solver) (decisions:Map<DecisionName, Decision>) =
+        decisions
+        |> Map.map (fun n d -> createVariable solver n d.Type)
 
 
-let private setObjective (vars:Map<DecisionName, Variable>) (objective:Flips.Domain.Objective) (solver:Solver) =
-    let expr = buildExpression vars objective.Expression
+    let private setObjective (vars:Map<DecisionName, Variable>) (objective:Flips.Domain.Objective) (solver:Solver) =
+        let expr = buildExpression vars objective.Expression
 
-    match objective.Sense with
-    | Minimize -> solver.Minimize(expr)
-    | Maximize -> solver.Maximize(expr)
+        match objective.Sense with
+        | Minimize -> solver.Minimize(expr)
+        | Maximize -> solver.Maximize(expr)
 
-let private addEqualityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
-    let lhsExpr = buildExpression vars lhs
-    let rhsExpr = buildExpression vars rhs
-    let c = Google.OrTools.LinearSolver.Equality(lhsExpr, rhsExpr, true)
-    solver.Add(c)
-
-let private addInequalityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
-    let lhsExpr = buildExpression vars lhs
-    let rhsExpr = buildExpression vars rhs
-    let constraintExpr = lhsExpr - rhsExpr
-
-    match inequality with
-    | LessOrEqual -> 
-        let c = RangeConstraint(constraintExpr, System.Double.NegativeInfinity, 0.0)
-        solver.Add(c)
-    | GreaterOrEqual -> 
-        let c = RangeConstraint(constraintExpr, 0.0, System.Double.PositiveInfinity)
+    let private addEqualityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
+        let lhsExpr = buildExpression vars lhs
+        let rhsExpr = buildExpression vars rhs
+        let c = Google.OrTools.LinearSolver.Equality(lhsExpr, rhsExpr, true)
         solver.Add(c)
 
+    let private addInequalityConstraint (vars:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
+        let lhsExpr = buildExpression vars lhs
+        let rhsExpr = buildExpression vars rhs
+        let constraintExpr = lhsExpr - rhsExpr
 
-let private addConstraint (vars:Map<DecisionName, Variable>) (c:Constraint) (solver:Solver) =
-    match c.Expression with
-    | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs solver
-    | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality solver
+        match inequality with
+        | LessOrEqual -> 
+            let c = RangeConstraint(constraintExpr, System.Double.NegativeInfinity, 0.0)
+            solver.Add(c)
+        | GreaterOrEqual -> 
+            let c = RangeConstraint(constraintExpr, 0.0, System.Double.PositiveInfinity)
+            solver.Add(c)
 
 
-let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Constraint>) (solver:Solver) =
-    for c in constraints do
-        addConstraint vars c solver |> ignore
+    let private addConstraint (vars:Map<DecisionName, Variable>) (c:Domain.Constraint) (solver:Solver) =
+        match c.Expression with
+        | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs solver
+        | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality solver
 
 
-let private buildSolution (decisions:Map<DecisionName,Decision>) (vars:Map<DecisionName, Variable>) (solver:Solver) (objective:Objective) =
-    let decisions =
-        vars
-        |> Map.toSeq
-        |> Seq.map (fun (n, v) -> decisions.[n], v.SolutionValue())
-        |> Map.ofSeq
+    let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Domain.Constraint>) (solver:Solver) =
+        for c in constraints do
+            addConstraint vars c solver |> ignore
 
-    {
-        DecisionResults = decisions
-        ObjectiveResult = solver.Objective().BestBound()
-    }
 
-let private writeLPFile (solver:Solver) (filePath:string) =
-    let lpFile = solver.ExportModelAsLpFormat(false)
-    System.IO.File.WriteAllText(filePath, lpFile)
+    let private buildSolution (decisions:Map<DecisionName,Decision>) (vars:Map<DecisionName, Variable>) (solver:Solver) (objective:Domain.Objective) =
+        let decisions =
+            vars
+            |> Map.toSeq
+            |> Seq.map (fun (n, v) -> decisions.[n], v.SolutionValue())
+            |> Map.ofSeq
+
+        {
+            DecisionResults = decisions
+            ObjectiveResult = solver.Objective().BestBound()
+        }
+
+    let private writeLPFile (solver:Solver) (filePath:string) =
+        let lpFile = solver.ExportModelAsLpFormat(false)
+        System.IO.File.WriteAllText(filePath, lpFile)
+
+    let solve (settings:SolverSettings) (model:Flips.Domain.Model.Model) =
+
+        let solver = 
+            match settings.SolverType with
+            | CBC -> Solver.CreateSolver("MIP Solver", "CBC_MIXED_INTEGER_PROGRAMMING")
+            | GLOP -> Solver.CreateSolver("LP Solver", "GLOP_LINEAR_PROGRAMMING")
+
+        solver.SetTimeLimit(settings.MaxDuration)
+        solver.EnableOutput()
+    
+        let vars = createVariableMap solver model.Decisions
+        addConstraints vars model.Constraints solver
+        setObjective vars model.Objective solver
+    
+        // Write LP Formulation to file if requested
+        settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
+    
+        let resultStatus = solver.Solve()
+    
+        match resultStatus with
+        | Solver.ResultStatus.OPTIMAL -> 
+            buildSolution model.Decisions vars solver model.Objective
+            |> SolveResult.Optimal
+        | _ ->
+            "Unable to find optimal solution"
+            |> SolveResult.Suboptimal
+
 
 let solve (settings:SolverSettings) (model:Flips.Domain.Model.Model) =
-    let solver = Solver.CreateSolver("MIP Solver", "CBC_MIXED_INTEGER_PROGRAMMING")
-    solver.SetTimeLimit(settings.MaxDuration)
-    solver.EnableOutput()
 
-    let vars = createVariableMap solver model.Decisions
-    addConstraints vars model.Constraints solver
-    setObjective vars model.Objective solver
+    match settings.SolverType with
+    | CBC | GLOP -> OrTools.solve settings model
 
-    // Write LP Formulation to file if requested
-    settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
-
-    let resultStatus = solver.Solve()
-
-    match resultStatus with
-    | Solver.ResultStatus.OPTIMAL -> 
-        buildSolution model.Decisions vars solver model.Objective
-        |> SolveResult.Optimal
-    | _ ->
-        "Unable to find optimal solution"
-        |> SolveResult.Suboptimal
     
