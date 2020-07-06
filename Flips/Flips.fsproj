@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
-    <Version>1.2.3</Version>
+    <Version>1.3.0</Version>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
@@ -13,8 +13,8 @@
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyVersion>1.2.3.0</AssemblyVersion>
-    <FileVersion>1.2.3.0</FileVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <PackageReleaseNotes>Added a Computation Expression for creating Decisions. Made the creation of Decision function return a Decision instead of a Linear Expression. Made extracting values from the solution more streamlined. Added docs for the Domain types.</PackageReleaseNotes>
   </PropertyGroup>
 
