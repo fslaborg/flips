@@ -517,7 +517,11 @@ type Solution = {
     ObjectiveResult : float
 }
 
-type SolverType = | CBC
+type SolverType = 
+    | CBC
+    | GLOP
+    | Cplex128
+    | Gurobi900
 
 
 type SolverSettings = {
