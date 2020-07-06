@@ -28,6 +28,7 @@
   <ItemGroup>
     <PackageReference Include="Google.OrTools" Version="7.5.7466" />
     <PackageReference Include="Google.OrTools.runtime.win-x64" Version="7.5.7466" />
+    <PackageReference Include="OPTANO.Modeling" Version="3.3.0.474" />
   </ItemGroup>
 
 </Project>

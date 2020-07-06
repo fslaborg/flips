@@ -520,6 +520,7 @@ type Solution = {
 type SolverType = 
     | CBC
     | GLOP
+    | Cplex128
 
 
 type SolverSettings = {
