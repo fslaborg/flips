@@ -185,7 +185,6 @@ module internal Optano =
     let private addInequalityConstraint (varMap:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (optanoModel:Model) =
         let lhsExpr = buildExpression varMap lhs
         let rhsExpr = buildExpression varMap rhs
-        let constraintExpr = lhsExpr - rhsExpr
 
         let c = 
             match inequality with
@@ -253,6 +252,7 @@ module internal Optano =
         let optanoSolution = 
             match solverType with
             | Cplex128 -> cplex128Solve settings optanoModel
+            | Gurobi900 -> gurobi900Solve settings optanoModel
 
         match optanoSolution.ModelStatus, optanoSolution.Status with
         | Solver.ModelStatus.Infeasible, _ -> Suboptimal "Model is infeasible"
