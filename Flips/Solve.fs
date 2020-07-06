@@ -223,9 +223,13 @@ module internal Optano =
         }
 
 
-    //let private writeLPFile (solver:Solver) (filePath:string) =
-    //    let lpFile = solver.ExportModelAsLpFormat(false)
-    //    System.IO.File.WriteAllText(filePath, lpFile)
+    let private writeLPFile (optanoModel:Model) (filePath:string) =
+        if System.IO.File.Exists(filePath) then
+            System.IO.File.Delete(filePath)
+        use outputStream = new System.IO.FileStream(filePath, System.IO.FileMode.CreateNew)
+        let lpExporter = Exporter.LPExporter(outputStream)
+        lpExporter.Write(optanoModel)
+
 
     let private cplex128Solve (settings:Domain.SolverSettings) (optanoModel:Model) =
         use solver = new Solver.Cplex128.CplexSolver()
