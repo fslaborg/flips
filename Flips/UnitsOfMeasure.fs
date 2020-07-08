@@ -9,25 +9,20 @@ open Flips
 
 
 type Scalar<[<Measure>] 'Measure> = 
-    | Value of UoM:float<'Measure> * Scalar:Domain.Scalar
+    | Value of Domain.Scalar
 with
 
-    static member (+) (Value (_, lhsS):Scalar<'Measure>, Value (_, rhsS):Scalar<'Measure>) =
-        let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        Value (uom, lhsS * rhsS)
+    static member (+) (Value lhs:Scalar<'Measure>, Value rhs:Scalar<'Measure>) =
+        Scalar<'Measure>.Value (lhs * rhs)
 
-    static member (+) (Value (_, s):Scalar<'Measure>, f:float<'Measure>) =
-        let newF = float f
-        let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        Value (uom, s + newF)
+    static member (+) (Value s:Scalar<'Measure>, f:float<'Measure>) =
+        Scalar<'Measure>.Value (s + float f)
 
     static member (+) (f:float<'Measure>, s:Scalar<'Measure>) =
         s + f
 
-    static member (*) (Value (uom, s):Scalar<_>, f) =
-        let newUoM = uom * f
-        let unitlessF = stripUoM f
-        Value (newUoM, s * unitlessF)
+    static member (*) (Value s:Scalar<'Measure1>, f:float<'Measure2>) =
+        Scalar<'Measure1 'Measure2>.Value (s * float f)
 
     static member (*) (f:float<_>, s:Scalar<_>) =
         s * f
