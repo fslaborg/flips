@@ -125,9 +125,6 @@ with
     //static member (<==) (decision:Decision<'Measure>, rhsDecision:Decision) =
     //    LinearExpression.OfDecision decision <== rhsDecision
 
-    //static member (<==) (decision:Decision<'Measure>, expr:LinearExpression) =
-    //    LinearExpression.OfDecision decision <== expr
-
     //static member (==) (decision:Decision<'Measure>, f:float) =
     //    LinearExpression.OfDecision decision == f
 
@@ -136,9 +133,6 @@ with
 
     //static member (==) (decision:Decision<'Measure>, rhsDecision:Decision) =
     //    LinearExpression.OfDecision decision == rhsDecision
-
-    //static member (==) (decision:Decision<'Measure>, expr:LinearExpression) =
-    //    LinearExpression.OfDecision decision == expr
 
     //static member (>==) (decision:Decision<'Measure>, f:float) =
     //    LinearExpression.OfDecision decision >== f
@@ -149,8 +143,6 @@ with
     //static member (>==) (decision:Decision<'Measure>, rhsDecision:Decision) =
     //    LinearExpression.OfDecision decision >== rhsDecision
 
-    //static member (>==) (decision:Decision<'Measure>, expr:LinearExpression) =
-    //    LinearExpression.OfDecision decision >== expr
 
 and LinearExpression<[<Measure>] 'Measure> =
     | Value of Domain.LinearExpression

@@ -104,8 +104,6 @@ with
     static member (+) (decision:Decision, rightDecision:Decision) =
         LinearExpression.OfDecision decision + rightDecision
 
-    static member (+) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision + expr
 
     static member (-) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision - f
@@ -131,9 +129,6 @@ with
     static member (<==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision <== rhsDecision
 
-    static member (<==) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision <== expr
-
     static member (==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision == f
 
@@ -142,9 +137,6 @@ with
 
     static member (==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision == rhsDecision
-
-    static member (==) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision == expr
 
     static member (>==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision >== f
@@ -155,8 +147,6 @@ with
     static member (>==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision >== rhsDecision
 
-    static member (>==) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision >== expr
 
 and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, Scalar>, decisions : Map<DecisionName, Decision>, offset:Scalar) =
     member this.Names = names
@@ -242,12 +232,6 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
         else
             LinearExpression.Merge (r, l)
 
-    static member (+) (expr:LinearExpression, decision:Decision) =
-        expr + (LinearExpression.OfDecision decision)
-
-    static member (+) (scalar:Scalar, expr:LinearExpression) =
-        (LinearExpression.OfScalar scalar) + expr
-
     static member (+) (expr:LinearExpression, f:float) =
         expr + (LinearExpression.OfFloat f)
 
@@ -256,6 +240,15 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
 
     static member (+) (expr:LinearExpression, scalar:Scalar) =
         expr + (LinearExpression.OfScalar scalar)
+
+    static member (+) (scalar:Scalar, expr:LinearExpression) =
+        (LinearExpression.OfScalar scalar) + expr
+
+    static member (+) (expr:LinearExpression, decision:Decision) =
+        expr + (LinearExpression.OfDecision decision)
+    
+    static member (+) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.OfDecision decision + expr
 
     static member (*) (expr:LinearExpression, scalar:Scalar) =
         let newCoefs = Map.map (fun k v -> v * scalar) expr.Coefficients
@@ -300,6 +293,9 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
     static member (<==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
 
+    static member (<==) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.OfDecision decision <== expr
+
     static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
         Inequality (lhs, LessOrEqual, rhs)
 
@@ -312,6 +308,9 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
     static member (==) (lhs:LinearExpression, rhs:Decision) =
         Equality (lhs, LinearExpression.OfDecision rhs)
 
+    static member (==) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.OfDecision decision == expr
+
     static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
         Equality (lhs, rhs)
 
@@ -323,6 +322,9 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
 
     static member (>==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
+
+    static member (>==) (decision:Decision, expr:LinearExpression) =
+        LinearExpression.OfDecision decision >== expr
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         Inequality (lhs, GreaterOrEqual, rhs)
