@@ -1,31 +1,25 @@
-﻿module Flips.UnitsOfMeasure
+﻿module Flips.Domain.UnitsOfMeasure
 
-let inline private retype (x: 'T) : 'U = (# "" x: 'U #) 
-let inline private stripUoM (x: '``T<'M>``) =
-    let _ = x * (LanguagePrimitives.GenericOne : 'T)
-    retype x :'T
+open Flips
 
-[<CustomEquality; CustomComparison>]
+//let inline private retype (x: 'T) : 'U = (# "" x: 'U #) 
+//let inline private stripUoM (x: '``T<'M>``) =
+//    let _ = x * (LanguagePrimitives.GenericOne : 'T)
+//    retype x :'T
+
+
 type Scalar<[<Measure>] 'Measure> = 
     | Value of UoM:float<'Measure> * Scalar:Domain.Scalar
 with
 
-    static member private NearlyEquals<'Measure> (Value (lhsUoM, lhsS):Scalar<'Measure>, Value (rhsUoM, rhsS):Scalar<'Measure>) : bool =
-        let (Domain.Scalar.Value lhsFloat) = lhsS
-        let (Domain.Scalar.Value rhsFloat) = rhsS
-        let lhsValue = System.BitConverter.DoubleToInt64Bits lhsFloat
-        let rhsValue = System.BitConverter.DoubleToInt64Bits rhsFloat
-        if (lhsValue >>> 63) <> (rhsValue >>> 63) then
-            lhsValue = rhsValue
-        else
-            System.Math.Abs(lhsValue - rhsValue) <= 10_000L
+    static member (+) (Value (_, lhsS):Scalar<'Measure>, Value (_, rhsS):Scalar<'Measure>) =
+        let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+        Value (uom, lhsS * rhsS)
 
-    static member (+) (Value (lhsUoM, lhsS):Scalar<'Measure>, Value (rhsUoM, rhsS):Scalar<'Measure>) =
-        Value (lhsUoM, lhsS * rhsS)
-
-    static member (+) (Value (uom, s):Scalar<'Measure>, f:float<'Measure>) =
-        let unitlessF = stripUoM f
-        Value (uom, s + unitlessF)
+    static member (+) (Value (_, s):Scalar<'Measure>, f:float<'Measure>) =
+        let newF = float f
+        let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+        Value (uom, s + newF)
 
     static member (+) (f:float<'Measure>, s:Scalar<'Measure>) =
         s + f
@@ -66,33 +60,19 @@ with
 
     static member inline Zero = Value (0.0<_>, Flips.Domain.Scalar.Zero)
 
-    override this.GetHashCode () =
-        hash this
-
-    override this.Equals(obj) =
-        match obj with
-        | :? Scalar<'Measure> as s ->
-            Scalar.NearlyEquals (this, s)
-        | _ -> false
-
-    interface System.IComparable with
-        member this.CompareTo yObj =
-            match yObj with
-            | :? Scalar<'Measure> as s -> compare this s
-            | _ -> invalidArg "yObj" "Cannot compare values of different types"
 
 type Decision<[<Measure>] 'Measure> =
     | Value of UoM:float<'Measure> * Domain.Decision
 with
 
-    static member inline (*) (Value (dUoM, d):Decision<'M1>, f:float<'M2>) =
-        let unitlessF = stripUoM f
-        let expr = d * unitlessF
-        let exprUoM = dUoM * f
-        LinearExpression.Value (f, dUoM, exprUoM, expr)
+    static member inline (*) (Value (uom, d):Decision<'M1>, f:float<'M2>) =
+        let newF = flaot f
+        let expr = d * newF
+        let exprUoM = uom * f
+        LinearExpression.Value (exprUoM, expr)
 
-    //static member (*) (f:float<'CoefMeasure>, decision:Decision<'DecisionMeasure>) =
-    //    LinearExpression.OfDecision decision * f
+    static member inline (*) (f:float<'Measure>, d:Decision<'Measure>) =
+        d * f
 
     //static member (*) (decision:Decision<_>, scalar:Scalar<_>) =
     //    LinearExpression.OfDecision decision * scalar
@@ -172,146 +152,91 @@ with
     //static member (>==) (decision:Decision, expr:LinearExpression) =
     //    LinearExpression.OfDecision decision >== expr
 
-and LinearExpression<[<Measure>] 'CoefMeasure, [<Measure>] 'DecisionMeasure, [<Measure>] 'OffsetMeasure> =
-    | Value of CoefUoM:float<'CoefMeasure> * DecisionUoM:float<'DecisionMeasure> * OffsetUoM:float<'OffsetMeasure> * Domain.LinearExpression
+and LinearExpression<[<Measure>] 'Measure> =
+    | Value of UoM:float<'Measure> * Domain.LinearExpression
+    with
 
-        //static member private Equivalent (lExpr:LinearExpression<'C,'D>) (rExpr:LinearExpression<'C,'D>) =
-        //    let isEqualOffset = (lExpr.Offset = rExpr.Offset)
-        //    let leftOnlyNames = lExpr.Names - rExpr.Names
-        //    let rightOnlyNames = rExpr.Names - lExpr.Names
-        //    let overlapNames = Set.intersect lExpr.Names rExpr.Names
+        //static member OfFloat<'Measure> (f:float<'Measure>) =
+        //    let planF = float f
+        //    let expr = Domain.LinearExpression (Set.empty, Map.empty, Map.empty, Domain.Scalar.Value planF)
+        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+        //    Value (uom, expr)
 
-        //    let leftOnlyNamesAreZero = 
-        //        leftOnlyNames
-        //        |> Set.forall (fun n -> lExpr.Coefficients.[n] = Scalar.Zero)
+        //static member OfScalar<'Measure> (Scalar.Value (_, s):Scalar<'Measure>) =
+        //    let expr = LinearExpression.OfScalar s
+        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+        //    Value (uom, expr)
 
-        //    let rightOnlyNamesAreZero =
-        //        rightOnlyNames
-        //        |> Set.forall (fun n -> rExpr.Coefficients.[n] = Scalar.Zero)
+        //static member inline OfDecision (Decision.Value (_, d):Decision<'Measure>) : LinearExpression<'Measure> =
+        //    let expr = LinearExpression.OfDecision d
+        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+        //    Value (uom, expr)
 
-        //    let overlapNamesMatch =
-        //        overlapNames
-        //        |> Set.forall (fun n -> lExpr.Coefficients.[n] = rExpr.Coefficients.[n])
-
-        //    isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero && overlapNamesMatch
-
-        //override this.GetHashCode () =
-        //    hash this
-
-        //override this.Equals(obj) =
-        //    match obj with
-        //    | :? LinearExpression<'C,'D> as expr -> LinearExpression.Equivalent<'C,'D> this expr
-        //    | _ -> false
-
-        //static member OfFloat f =
-        //    LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
-
-        //static member OfScalar s =
-        //    LinearExpression (Set.empty, Map.empty, Map.empty, s)
-
-        //static member OfDecision<[<Measure>] 'DecisionMeasure> (d:Decision<'DecisionMeasure>) : LinearExpression<1, 'DecisionMeasure> =
-        //    let names = Set.ofList [d.Name]
-        //    let coefs = Map.ofList [d.Name, Scalar 1.0<1>]
-        //    let decs = Map.ofList [d.Name, d]
-        //    let offset = Scalar.Zero
-        //    LinearExpression (names, coefs, decs, offset)
-
-        //static member GetDecisions (expr:LinearExpression<_,_>) =
+        //static member GetDecisions (LinearExpression.Value (_, expr):LinearExpression<_>) =
         //    expr.Decisions
         //    |> Map.toList
         //    |> List.map snd
         //    |> Set.ofList
 
-        //static member inline Zero =
-        //    LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
+        static member inline Zero =
+            let expr = LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
+            LinearExpression.Value (0.0<_>, expr)
 
-        static member (+) (LinearExpression.Value (cUoM, dUoM, oUoM, expr):LinearExpression<_, _, 'M>, f:float<'M>) =
-            let unitlessF = stripUoM f
-            let newExpr = unitlessF + expr
-            LinearExpression.Value (cUoM, dUoM, oUoM, newExpr)
+        static member (+) (LinearExpression.Value (_, lExpr):LinearExpression<'Measure>, LinearExpression.Value (_, rExpr):LinearExpression<'Measure>) =
+            let newExpr = lExpr + rExpr
+            let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+            LinearExpression.Value (uom, newExpr)
 
-        static member (+) (f:float<'M>, expr:LinearExpression<_, _, 'M>) =
+        static member (+) (Value (_, expr):LinearExpression<'Measure>, f:float<'Measure>) =
+            let newF = float f
+            let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+            Value (uom, expr + newF)
+
+        static member (+) (f:float<'Measure>, expr:LinearExpression<'Measure>) =
             expr + f
 
-        //static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
-        //    LinearExpression (names, coefs, decs, offset + scalar)
+        static member (+) (Value (_, expr):LinearExpression<'Measure>, Scalar.Value (_, s):Scalar<'Measure>) =
+            let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+            Value (uom, expr + s)
 
-        //static member (+) (scalar:Scalar, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        //    LinearExpression (names, coefs, decs, offset + scalar)
+        static member (+) (s:Scalar<'Measure>, expr:LinearExpression<'Measure>) =
+            expr + s
 
-        //static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, decision:Decision) =
-        //    if Set.contains decision.Name names then
-        //        if decs.[decision.Name].Type <> decision.Type then
-        //            let (DecisionName name) = decision.Name
-        //            invalidArg name "Mistmatched DecisionType"
+        static member (+) (Value (_, expr):LinearExpression<'Measure>, Decision.Value (_,d):Decision<'Measure>) =
+            let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
+            Value (uom, expr + d)
 
-        //        let newCoefs = Map.add decision.Name (coefs.[decision.Name] + (Scalar 1.0)) coefs
-        //        LinearExpression (names, newCoefs, decs, offset)
-        //    else
-        //        let newNames = Set.add decision.Name names
-        //        let newCoefs = Map.add decision.Name (Scalar 1.0) coefs
-        //        let newDecs = Map.add decision.Name decision decs
-        //        LinearExpression (newNames, newCoefs, newDecs, offset)
+        static member (+) (d:Decision<'Measure>, expr:LinearExpression<'Measure>) =
+            expr + d
 
-        //static member private Merge (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression, LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
-        //    // Assume the Left LinearExpression is larget than the right
-        //    let nameOverlap = Set.intersect lNames rNames
-    
-        //    for n in nameOverlap do
-        //        if lDecs.[n].Type <> rDecs.[n].Type then
-        //            let (DecisionName name) = n
-        //            invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
+        static member (*) (Value (_, expr):LinearExpression<'Measure1>, f:float<'Measure2>) =
+            let newF = float f
+            let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure1 'Measure2> 1.0
+            Value (uom, expr * newF)
 
-        //    let newNames = lNames + rNames
+        static member (*) (f:float<'Measure1>, expr:LinearExpression<'Measure2>) =
+            expr * f
 
-        //    let newDecs = (lDecs, (rNames - lNames)) ||> Set.fold (fun m k -> Map.add k rDecs.[k] m)
+        static member inline (*) (Value (_,expr):LinearExpression<'Measure1>, Scalar.Value (_, s):Scalar<'Measure2>) =
+            let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'M1 'M2> 1.0
+            Value (uom, expr * s)
 
-        //    let newCoefs =
-        //        (lCoefs, nameOverlap)
-        //        ||> Set.fold (fun m k -> Map.add k (lCoefs.[k] + rCoefs.[k]) m)
-        //        |> fun updatedCoefs -> Set.fold (fun m n -> Map.add n rCoefs.[n] m) updatedCoefs (rNames - lNames)
+        static member (*) (scalar:Scalar<'Measure1>, expr:LinearExpression<'Measure2>) =
+            expr * scalar
 
-        //    LinearExpression (newNames, newCoefs, newDecs, lOffset + rOffset)
+        static member (-) (expr:LinearExpression<'Measure>, f:float<'Measure>) =
+            expr + (-1.0 * f)
 
-        //static member (+) (lExpr:LinearExpression, rExpr:LinearExpression) =
-        //    let (LinearExpression (lNames, _, _, _)) = lExpr
-        //    let (LinearExpression (rNames, _, _, _)) = rExpr
-        //    let lSize = Set.count lNames
-        //    let rSize = Set.count rNames
+        static member (-) (f:float<'Measure>, expr:LinearExpression<'Measure>) =
+            f + (-1.0 * expr)
 
-        //    if lSize > rSize then
-        //        LinearExpression.Merge (lExpr, rExpr)
-        //    else
-        //        LinearExpression.Merge (rExpr, lExpr)
+        static member (-) (expr:LinearExpression<'Measure>, s:Scalar<'Measure>) =
+            expr + (-1.0 * s)
 
-        //static member (*) (expr:LinearExpression<'a, 'b>, f:float<'c>) : LinearExpression<'a * 'c, 'b> =
-        //    let newCoefs = Map.map (fun k v -> v * f) expr.Coefficients
-        //    let newOffset = expr.Offset * f
-        //    LinearExpression (names, newCoefs, decs, newOffset)
+        static member (-) (s:Scalar<'Measure>, expr:LinearExpression<'Measure>) =
+            s + (-1.0 * expr)
 
-        //static member (*) (f:float, expr:LinearExpression) =
-        //    expr * f
-
-        //static member inline (*) (expr:LinearExpression<'A,'B>, scalar:Scalar<'C>) =
-        //    let newCoefs = Map.map (fun _ (v:Scalar<'A>) -> v * scalar) expr.Coefficients
-        //    LinearExpression (expr.Names, newCoefs, expr.Decisions, expr.Offset * scalar)
-
-        //static member (*) (scalar:Scalar, expr:LinearExpression) =
-        //    expr * scalar
-
-        //static member (-) (expr:LinearExpression, f:float) =
-        //    expr + (-1.0 * f)
-
-        //static member (-) (f:float, expr:LinearExpression) =
-        //    f + (-1.0 * expr)
-
-        //static member (-) (expr:LinearExpression, s:Scalar) =
-        //    expr + (-1.0 * s)
-
-        //static member (-) (s:Scalar, expr:LinearExpression) =
-        //    s + (-1.0 * expr)
-
-        //static member (-) (expr:LinearExpression, d:Decision) =
+        //static member (-) (expr:LinearExpression<'Measure>, d:Decision<'Measure>) =
         //    expr + (-1.0 * d)
 
         //static member (-) (d:Decision, expr:LinearExpression) =
@@ -355,12 +280,3 @@ and LinearExpression<[<Measure>] 'CoefMeasure, [<Measure>] 'DecisionMeasure, [<M
 
         //static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         //    Inequality (lhs, GreaterOrEqual, rhs)
-
-
-//and Inequality =
-//| LessOrEqual
-//| GreaterOrEqual
-
-//and ConstraintExpression = 
-//| Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
-//| Equality of LHS:LinearExpression * RHS:LinearExpression

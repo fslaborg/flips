@@ -161,27 +161,29 @@ with
     static member (>==) (decision:Decision, expr:LinearExpression) =
         LinearExpression.OfDecision decision >== expr
 
-and [<CustomEquality; NoComparison>] LinearExpression = 
-    | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
-with
+and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, Scalar>, decisions : Map<DecisionName, Decision>, offset:Scalar) =
+    member this.Names = names
+    member this.Coefficients = coefficients
+    member this.Decisions = decisions
+    member this.Offset = offset
 
-    static member private Equivalent (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression) (LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
-        let isEqualOffset = (lOffset = rOffset)
-        let leftOnlyNames = lNames - rNames
-        let rightOnlyNames = rNames - lNames
-        let overlapNames = Set.intersect lNames rNames
+    static member private Equivalent (lExpr:LinearExpression) (rExpr:LinearExpression) =
+        let isEqualOffset = (lExpr.Offset = rExpr.Offset)
+        let leftOnlyNames = lExpr.Names - rExpr.Names
+        let rightOnlyNames = rExpr.Names - lExpr.Names
+        let overlapNames = Set.intersect lExpr.Names rExpr.Names
 
         let leftOnlyNamesAreZero = 
             leftOnlyNames
-            |> Set.forall (fun n -> lCoefs.[n] = Scalar.Zero)
+            |> Set.forall (fun n -> lExpr.Coefficients.[n] = Scalar.Zero)
 
         let rightOnlyNamesAreZero =
             rightOnlyNames
-            |> Set.forall (fun n -> rCoefs.[n] = Scalar.Zero)
+            |> Set.forall (fun n -> rExpr.Coefficients.[n] = Scalar.Zero)
 
         let overlapNamesMatch =
             overlapNames
-            |> Set.forall (fun n -> lCoefs.[n] = rCoefs.[n])
+            |> Set.forall (fun n -> lExpr.Coefficients.[n] = rExpr.Coefficients.[n])
 
         isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero && overlapNamesMatch
 
@@ -205,8 +207,8 @@ with
         let decs = Map.ofList [d.Name, d]
         LinearExpression (names, coefs, decs, Value 0.0)
 
-    static member GetDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        decs
+    static member GetDecisions (expr:LinearExpression) =
+        expr.Decisions
         |> Map.toList
         |> List.map snd
         |> Set.ofList
@@ -214,76 +216,62 @@ with
     static member Zero =
         LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
 
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
-        LinearExpression (names, coefs, decs, offset + (Value f))
-
-    static member (+) (f:float, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        LinearExpression (names, coefs, decs, offset + (Value f))
-
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
-        LinearExpression (names, coefs, decs, offset + scalar)
-
-    static member (+) (scalar:Scalar, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        LinearExpression (names, coefs, decs, offset + scalar)
-
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, decision:Decision) =
-        if Set.contains decision.Name names then
-            if decs.[decision.Name].Type <> decision.Type then
-                let (DecisionName name) = decision.Name
-                invalidArg name "Mistmatched DecisionType"
-
-            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + (Value 1.0)) coefs
-            LinearExpression (names, newCoefs, decs, offset)
-        else
-            let newNames = Set.add decision.Name names
-            let newCoefs = Map.add decision.Name (Value 1.0) coefs
-            let newDecs = Map.add decision.Name decision decs
-            LinearExpression (newNames, newCoefs, newDecs, offset)
-
-    static member private Merge (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression, LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
+    static member private Merge (l:LinearExpression, r:LinearExpression) =
         // Assume the Left LinearExpression is larget than the right
-        let nameOverlap = Set.intersect lNames rNames
+        let nameOverlap = Set.intersect l.Names r.Names
         
         for n in nameOverlap do
-            if lDecs.[n].Type <> rDecs.[n].Type then
+            if l.Decisions.[n].Type <> r.Decisions.[n].Type then
                 let (DecisionName name) = n
                 invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
 
-        let newNames = lNames + rNames
+        let newNames = l.Names + r.Names
 
-        let newDecs = (lDecs, (rNames - lNames)) ||> Set.fold (fun m k -> Map.add k rDecs.[k] m)
+        let newDecs = (l.Decisions, (r.Names - l.Names)) ||> Set.fold (fun m k -> Map.add k r.Decisions.[k] m)
 
         let newCoefs =
-            (lCoefs, nameOverlap)
-            ||> Set.fold (fun m k -> Map.add k (lCoefs.[k] + rCoefs.[k]) m)
-            |> fun updatedCoefs -> Set.fold (fun m n -> Map.add n rCoefs.[n] m) updatedCoefs (rNames - lNames)
+            (l.Coefficients, nameOverlap)
+            ||> Set.fold (fun m k -> Map.add k (l.Coefficients.[k] + r.Coefficients.[k]) m)
+            |> fun updatedCoefs -> Set.fold (fun m n -> Map.add n r.Coefficients.[n] m) updatedCoefs (r.Names - l.Names)
 
-        LinearExpression (newNames, newCoefs, newDecs, lOffset + rOffset)
+        LinearExpression (newNames, newCoefs, newDecs, l.Offset + r.Offset)
 
-    static member (+) (lExpr:LinearExpression, rExpr:LinearExpression) =
-        let (LinearExpression (lNames, _, _, _)) = lExpr
-        let (LinearExpression (rNames, _, _, _)) = rExpr
-        let lSize = Set.count lNames
-        let rSize = Set.count rNames
+    static member (+) (l:LinearExpression, r:LinearExpression) =
+        let lSize = Set.count l.Names
+        let rSize = Set.count r.Names
 
         if lSize > rSize then
-            LinearExpression.Merge (lExpr, rExpr)
+            LinearExpression.Merge (l, r)
         else
-            LinearExpression.Merge (rExpr, lExpr)
+            LinearExpression.Merge (r, l)
 
-    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
-        let newCoefs = Map.map (fun k v -> v * f) coefs
-        LinearExpression (names, newCoefs, decs, offset * f)
+    static member (+) (expr:LinearExpression, decision:Decision) =
+        expr + (LinearExpression.OfDecision decision)
 
-    static member (*) (f:float, expr:LinearExpression) =
-        expr * f
+    static member (+) (scalar:Scalar, expr:LinearExpression) =
+        (LinearExpression.OfScalar scalar) + expr
 
-    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
-        let newCoefs = Map.map (fun k v -> v * scalar) coefs
-        LinearExpression (names, newCoefs, decs, offset * scalar)
+    static member (+) (expr:LinearExpression, f:float) =
+        expr + (LinearExpression.OfFloat f)
+
+    static member (+) (f:float, expr:LinearExpression) =
+        (LinearExpression.OfFloat f) + expr
+
+    static member (+) (expr:LinearExpression, scalar:Scalar) =
+        expr + (LinearExpression.OfScalar scalar)
+
+    static member (*) (expr:LinearExpression, scalar:Scalar) =
+        let newCoefs = Map.map (fun k v -> v * scalar) expr.Coefficients
+        LinearExpression (expr.Names, newCoefs, expr.Decisions, expr.Offset * scalar)
 
     static member (*) (scalar:Scalar, expr:LinearExpression) =
         expr * scalar
+
+    static member (*) (expr:LinearExpression, f:float) =
+        expr * (Scalar.Value f)
+
+    static member (*) (f:float, expr:LinearExpression) =
+        expr * f
 
     static member (-) (expr:LinearExpression, f:float) =
         expr + (-1.0 * f)
