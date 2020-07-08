@@ -122,9 +122,6 @@ with
     static member (-) (decision:Decision, rightDecision:Decision) =
         LinearExpression.OfDecision decision + (-1.0 * rightDecision)
 
-    static member (-) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision + (-1.0 * expr)
-
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
 

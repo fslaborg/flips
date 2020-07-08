@@ -2,11 +2,6 @@
 
 open Flips
 
-//let inline private retype (x: 'T) : 'U = (# "" x: 'U #) 
-//let inline private stripUoM (x: '``T<'M>``) =
-//    let _ = x * (LanguagePrimitives.GenericOne : 'T)
-//    retype x :'T
-
 
 type Scalar<[<Measure>] 'Measure> = 
     | Value of Domain.Scalar
@@ -27,14 +22,14 @@ with
     static member (+) (f:float<'Measure>, s:Scalar<'Measure>) =
         s + f
 
-    static member (*) (Value s:Scalar<'Measure1>, f:float<'Measure2>) =
-        Scalar<'Measure1 'Measure2>.Value (s * float f)
+    static member (*) (Value s:Scalar<'LMeasure>, f:float<'RMeasure>) =
+        Scalar<'LMeasure 'RMeasure>.Value (s * float f)
 
     static member (*) (f:float<_>, s:Scalar<_>) =
         s * f
 
-    static member (*) (Value lhs:Scalar<'Measure1>, Value rhs:Scalar<'Measure2>) =
-        Scalar<'Measure1 'Measure2>.Value (lhs * rhs)
+    static member (*) (Value lhs:Scalar<'LMeasure>, Value rhs:Scalar<'RMeasure>) =
+        Scalar<'LMeasure 'RMeasure>.Value (lhs * rhs)
 
     static member (*) (Value lhs:Scalar<'Measure>, Domain.Scalar.Value rhs:Domain.Scalar) =
         Scalar<'Measure>.Value (lhs * rhs)
@@ -42,8 +37,8 @@ with
     static member (*) (lhs:Domain.Scalar, rhs:Scalar<'Measure>) =
         rhs * lhs
 
-    static member (-) (Value lhs:Scalar<'Measure1>, Value rhs:Scalar<'Measure2>) =
-        Scalar<'Measure1 'Measure2>.Value (lhs - rhs)
+    static member (-) (Value lhs:Scalar<'LMeasure>, Value rhs:Scalar<'RMeasure>) =
+        Scalar<'LMeasure 'RMeasure>.Value (lhs - rhs)
 
     static member (-) (Value lhs:Scalar<1>, rhs:Domain.Scalar) =
         lhs - rhs
@@ -57,14 +52,14 @@ with
     static member (-) (f:float<'Measure>, Value s:Scalar<'Measure>) =
         Scalar<'Measure>.Value (float f - s)
 
-    static member (/) (f:float<'Measure1>, Value s:Scalar<'Measure2>) =
-        Scalar<'Measure1 / 'Measure2>.Value (float f / s)
+    static member (/) (f:float<'LMeasure>, Value s:Scalar<'RMeasure>) =
+        Scalar<'LMeasure / 'RMeasure>.Value (float f / s)
 
-    static member (/) (Value s:Scalar<'Measure1>, f:float<'Measure2>) =
-        Scalar<'Measure1 / 'Measure2>.Value (s / float f)
+    static member (/) (Value s:Scalar<'LMeasure>, f:float<'RMeasure>) =
+        Scalar<'LMeasure / 'RMeasure>.Value (s / float f)
 
-    static member (/) (Value lhs:Scalar<'Measure1>, Value rhs:Scalar<'Measure2>) =
-        Scalar<'Measure1 / 'Measure2>.Value (lhs / rhs)
+    static member (/) (Value lhs:Scalar<'LMeasure>, Value rhs:Scalar<'RMeasure>) =
+        Scalar<'LMeasure / 'RMeasure>.Value (lhs / rhs)
 
     static member (/) (Value lhs:Scalar<'Measure>, rhs:Domain.Scalar) =
         Scalar<'Measure>.Value (lhs / rhs)
@@ -75,189 +70,149 @@ with
     static member inline Zero = Scalar<_>.Value (Scalar.Zero)
 
 
-//type Decision<[<Measure>] 'Measure> =
-//    | Value of UoM:float<'Measure> * Domain.Decision
-//with
+type Decision<[<Measure>] 'Measure> =
+    | Value of Domain.Decision
+with
 
-//    static member inline (*) (Value (uom, d):Decision<'M1>, f:float<'M2>) =
-//        let newF = flaot f
-//        let expr = d * newF
-//        let exprUoM = uom * f
-//        LinearExpression.Value (exprUoM, expr)
+    static member (+) (Value lD:Decision<'Measure>, Value rD:Decision<'Measure>) =
+        LinearExpression<'Measure>.Value (lD + rD)
 
-//    static member inline (*) (f:float<'Measure>, d:Decision<'Measure>) =
-//        d * f
+    static member (+) (Value d:Decision<'Measure>, f:float<'Measure>) =
+        LinearExpression<'Measure>.Value (d + float f)
 
-    //static member (*) (decision:Decision<_>, scalar:Scalar<_>) =
-    //    LinearExpression.OfDecision decision * scalar
+    static member (+) (f:float<'Measure>, d:Decision<'Measure>) =
+        d + f
 
-    //static member (*) (scalar:Scalar, decision:Decision) =
-    //    LinearExpression.OfDecision decision * scalar
+    static member (+) (Value d:Decision<'Measure>, Scalar.Value s:Scalar<'Measure>) =
+        LinearExpression<'Measure>.Value (d + s)
 
-    //static member (+) (decision:Decision, f:float) =
-    //    LinearExpression.OfDecision decision + f
+    static member (+) (s:Scalar, d:Decision) =
+        d + s
 
-    //static member (+) (f:float, decision:Decision) =
-    //    LinearExpression.OfDecision decision + f
+    static member (*) (Value d:Decision<'LMeasure>, f:float<'RMeasure>) =
+        LinearExpression<'LMeasure 'RMeasure>.Value (d * float f)
 
-    //static member (+) (scalar:Scalar, decision:Decision) =
-    //    LinearExpression.OfScalar scalar + decision
+    static member (*) (f:float<'LMeasure>, d:Decision<'RMeasure>) =
+        d * f
 
-    //static member (+) (decision:Decision, scalar:Scalar) =
-    //    LinearExpression.OfDecision decision + scalar
+    static member (*) (Value d:Decision<'LMeasure>, Scalar.Value s:Scalar<'RMeasure>) =
+        LinearExpression<'LMeasure 'RMeasure>.Value (d * s)
 
-    //static member (+) (decision:Decision, rightDecision:Decision) =
-    //    LinearExpression.OfDecision decision + rightDecision
+    static member (*) (s:Scalar<'LMeasure>, d:Decision<'RMeasure>) =
+        d * s
 
-    //static member (+) (decision:Decision, expr:LinearExpression) =
-    //    LinearExpression.OfDecision decision + expr
+    static member (-) (Value lD:Decision<'Measure>, Value rD:Decision<'Measure>) =
+        LinearExpression<'Measure>.Value (lD - rD)
 
-    //static member (-) (decision:Decision, f:float) =
-    //    LinearExpression.OfDecision decision - f
+    static member (-) (Value d:Decision<'Measure>, f:float<'Measure>) =
+        LinearExpression<'Measure>.Value (d - float f)
 
-    //static member (-) (f:float, decision:Decision) =
-    //    LinearExpression.OfDecision decision - f
+    static member (-) (f:float<'Measure>, Value d:Decision<'Measure>) =
+        LinearExpression<'Measure>.Value (float f - d)
 
-    //static member (-) (scalar:Scalar, decision:Decision) =
-    //    LinearExpression.OfScalar scalar + (-1.0 * decision)
+    static member (-) (Scalar.Value s:Scalar<'Measure>, Value d:Decision<'Measure>) =
+        LinearExpression<'Measure>.Value (s - d)
 
-    //static member (-) (decision:Decision, scalar:Scalar) =
-    //    LinearExpression.OfDecision decision + (-1.0 * scalar)
+    static member (-) (Value d:Decision<'Measure>, Scalar.Value s:Scalar<'Measure>) =
+        LinearExpression<'Measure>.Value (d - s)
 
-    //static member (-) (decision:Decision, rightDecision:Decision) =
-    //    LinearExpression.OfDecision decision + (-1.0 * rightDecision)
-
-    //static member (-) (decision:Decision, expr:LinearExpression) =
-    //    LinearExpression.OfDecision decision + (-1.0 * expr)
-
-    //static member (<==) (decision:Decision, f:float) =
+    //static member (<==) (decision:Decision<'Measure>, f:float) =
     //    LinearExpression.OfDecision decision <== f
 
-    //static member (<==) (decision:Decision, scalar:Scalar) =
+    //static member (<==) (decision:Decision<'Measure>, scalar:Scalar) =
     //    LinearExpression.OfDecision decision <== scalar
 
-    //static member (<==) (decision:Decision, rhsDecision:Decision) =
+    //static member (<==) (decision:Decision<'Measure>, rhsDecision:Decision) =
     //    LinearExpression.OfDecision decision <== rhsDecision
 
-    //static member (<==) (decision:Decision, expr:LinearExpression) =
+    //static member (<==) (decision:Decision<'Measure>, expr:LinearExpression) =
     //    LinearExpression.OfDecision decision <== expr
 
-    //static member (==) (decision:Decision, f:float) =
+    //static member (==) (decision:Decision<'Measure>, f:float) =
     //    LinearExpression.OfDecision decision == f
 
-    //static member (==) (decision:Decision, scalar:Scalar) =
+    //static member (==) (decision:Decision<'Measure>, scalar:Scalar) =
     //    LinearExpression.OfDecision decision == scalar
 
-    //static member (==) (decision:Decision, rhsDecision:Decision) =
+    //static member (==) (decision:Decision<'Measure>, rhsDecision:Decision) =
     //    LinearExpression.OfDecision decision == rhsDecision
 
-    //static member (==) (decision:Decision, expr:LinearExpression) =
+    //static member (==) (decision:Decision<'Measure>, expr:LinearExpression) =
     //    LinearExpression.OfDecision decision == expr
 
-    //static member (>==) (decision:Decision, f:float) =
+    //static member (>==) (decision:Decision<'Measure>, f:float) =
     //    LinearExpression.OfDecision decision >== f
 
-    //static member (>==) (decision:Decision, scalar:Scalar) =
+    //static member (>==) (decision:Decision<'Measure>, scalar:Scalar) =
     //    LinearExpression.OfDecision decision >== scalar
 
-    //static member (>==) (decision:Decision, rhsDecision:Decision) =
+    //static member (>==) (decision:Decision<'Measure>, rhsDecision:Decision) =
     //    LinearExpression.OfDecision decision >== rhsDecision
 
-    //static member (>==) (decision:Decision, expr:LinearExpression) =
+    //static member (>==) (decision:Decision<'Measure>, expr:LinearExpression) =
     //    LinearExpression.OfDecision decision >== expr
 
-//and LinearExpression<[<Measure>] 'Measure> =
-//    | Value of UoM:float<'Measure> * Domain.LinearExpression
-//    with
+and LinearExpression<[<Measure>] 'Measure> =
+    | Value of Domain.LinearExpression
+    with
 
-        //static member OfFloat<'Measure> (f:float<'Measure>) =
-        //    let planF = float f
-        //    let expr = Domain.LinearExpression (Set.empty, Map.empty, Map.empty, Domain.Scalar.Value planF)
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    Value (uom, expr)
+        static member inline Zero =
+            let expr = LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
+            LinearExpression.Value expr
 
-        //static member OfScalar<'Measure> (Scalar.Value (_, s):Scalar<'Measure>) =
-        //    let expr = LinearExpression.OfScalar s
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    Value (uom, expr)
+        static member (+) (Value lExpr:LinearExpression<'Measure>, Value rExpr:LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (lExpr + rExpr)
 
-        //static member inline OfDecision (Decision.Value (_, d):Decision<'Measure>) : LinearExpression<'Measure> =
-        //    let expr = LinearExpression.OfDecision d
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    Value (uom, expr)
+        static member (+) (Value expr:LinearExpression<'Measure>, f:float<'Measure>) =
+            LinearExpression<'Measure>.Value (expr + float f)
 
-        //static member GetDecisions (LinearExpression.Value (_, expr):LinearExpression<_>) =
-        //    expr.Decisions
-        //    |> Map.toList
-        //    |> List.map snd
-        //    |> Set.ofList
+        static member (+) (f:float<'Measure>, expr:LinearExpression<'Measure>) =
+            expr + f
 
-        //static member inline Zero =
-        //    let expr = LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
-        //    LinearExpression.Value (0.0<_>, expr)
+        static member (+) (Value expr:LinearExpression<'Measure>, Scalar.Value s:Scalar<'Measure>) =
+            LinearExpression<'Measure>.Value (expr + s)
 
-        //static member (+) (LinearExpression.Value (_, lExpr):LinearExpression<'Measure>, LinearExpression.Value (_, rExpr):LinearExpression<'Measure>) =
-        //    let newExpr = lExpr + rExpr
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    LinearExpression.Value (uom, newExpr)
+        static member (+) (s:Scalar<'Measure>, expr:LinearExpression<'Measure>) =
+            expr + s
 
-        //static member (+) (Value (_, expr):LinearExpression<'Measure>, f:float<'Measure>) =
-        //    let newF = float f
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    Value (uom, expr + newF)
+        static member (+) (Value expr:LinearExpression<'Measure>, Decision.Value d:Decision<'Measure>) =
+            LinearExpression<'Measure>.Value (expr + d)
 
-        //static member (+) (f:float<'Measure>, expr:LinearExpression<'Measure>) =
-        //    expr + f
+        static member (+) (d:Decision<'Measure>, expr:LinearExpression<'Measure>) =
+            expr + d
 
-        //static member (+) (Value (_, expr):LinearExpression<'Measure>, Scalar.Value (_, s):Scalar<'Measure>) =
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    Value (uom, expr + s)
+        static member (*) (Value expr:LinearExpression<'LMeasure>, f:float<'RMeasure>) =
+            LinearExpression<'Measure>.Value (expr + float f)
 
-        //static member (+) (s:Scalar<'Measure>, expr:LinearExpression<'Measure>) =
-        //    expr + s
+        static member (*) (f:float<'LMeasure>, expr:LinearExpression<'RMeasure>) =
+            expr * f
 
-        //static member (+) (Value (_, expr):LinearExpression<'Measure>, Decision.Value (_,d):Decision<'Measure>) =
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 1.0
-        //    Value (uom, expr + d)
+        static member (*) (Value expr:LinearExpression<'LMeasure>, Scalar.Value s:Scalar<'RMeasure>) =
+            LinearExpression<'LMeasure 'RMeasure>.Value (expr + s)
 
-        //static member (+) (d:Decision<'Measure>, expr:LinearExpression<'Measure>) =
-        //    expr + d
+        static member (*) (scalar:Scalar<'LMeasure>, expr:LinearExpression<'RMeasure>) =
+            expr * scalar
 
-        //static member (*) (Value (_, expr):LinearExpression<'Measure1>, f:float<'Measure2>) =
-        //    let newF = float f
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure1 'Measure2> 1.0
-        //    Value (uom, expr * newF)
+        static member (-) (Value expr:LinearExpression<'Measure>, f:float<'Measure>) =
+            LinearExpression<'Measure>.Value (expr - float f)
 
-        //static member (*) (f:float<'Measure1>, expr:LinearExpression<'Measure2>) =
-        //    expr * f
+        static member (-) (f:float<'Measure>, Value expr:LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (float f - expr)
 
-        //static member inline (*) (Value (_,expr):LinearExpression<'Measure1>, Scalar.Value (_, s):Scalar<'Measure2>) =
-        //    let uom = FSharp.Core.LanguagePrimitives.FloatWithMeasure<'M1 'M2> 1.0
-        //    Value (uom, expr * s)
+        static member (-) (Value expr:LinearExpression<'Measure>, Scalar.Value s:Scalar<'Measure>) =
+            LinearExpression<'Measure>.Value (expr - s)
 
-        //static member (*) (scalar:Scalar<'Measure1>, expr:LinearExpression<'Measure2>) =
-        //    expr * scalar
+        static member (-) (Scalar.Value s:Scalar<'Measure>, Value expr:LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (s - expr)
 
-        //static member (-) (expr:LinearExpression<'Measure>, f:float<'Measure>) =
-        //    expr + (-1.0 * f)
+        static member (-) (Value expr:LinearExpression<'Measure>, Decision.Value d:Decision<'Measure>) =
+            LinearExpression<'Measure>.Value (expr - d)
 
-        //static member (-) (f:float<'Measure>, expr:LinearExpression<'Measure>) =
-        //    f + (-1.0 * expr)
+        static member (-) (Decision.Value d:Decision<'Measure>, Value expr:LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (d - expr)
 
-        //static member (-) (expr:LinearExpression<'Measure>, s:Scalar<'Measure>) =
-        //    expr + (-1.0 * s)
-
-        //static member (-) (s:Scalar<'Measure>, expr:LinearExpression<'Measure>) =
-        //    s + (-1.0 * expr)
-
-        //static member (-) (expr:LinearExpression<'Measure>, d:Decision<'Measure>) =
-        //    expr + (-1.0 * d)
-
-        //static member (-) (d:Decision, expr:LinearExpression) =
-        //    d + (-1.0 * expr)
-
-        //static member (-) (lExpr:LinearExpression, rExpr:LinearExpression) =
-        //    lExpr + (-1.0 * rExpr)
+        static member (-) (Value lExpr:LinearExpression<'Measure>, Value rExpr:LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (lExpr - rExpr)
 
         //static member (<==) (lhs:LinearExpression, rhs:float) =
         //    Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
