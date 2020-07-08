@@ -116,35 +116,50 @@ with
     static member (-) (Value d:Decision<'Measure>, Scalar.Value s:Scalar<'Measure>) =
         LinearExpression<'Measure>.Value (d - s)
 
-    static member (<==) (Value d:Decision<'Measure>, f:float) =
-        d <== f
+    static member (<==) (Value l:Decision<'Measure>, r:float<'Measure>) =
+        l <== float r
 
-    static member (<==) (f:float, Value d:Decision<'Measure>) =
-        f <== d
+    static member (<==) (l:float<'Measure>, Value r:Decision<'Measure>) =
+        float l <== r
 
-    //static member (<==) (decision:Decision<'Measure>, scalar:Scalar) =
-    //    LinearExpression.OfDecision decision <== scalar
+    static member (<==) (Value l:Decision<'Measure>, Scalar.Value r:Scalar<'Measure>) =
+        l <== r
 
-    //static member (<==) (decision:Decision<'Measure>, rhsDecision:Decision) =
-    //    LinearExpression.OfDecision decision <== rhsDecision
+    static member (<==) (Scalar.Value l:Scalar<'Measure>, Value r:Decision<'Measure>) =
+        l <== r
 
-    //static member (==) (decision:Decision<'Measure>, f:float) =
-    //    LinearExpression.OfDecision decision == f
+    static member (<==) (Value l:Decision<'Measure>, Value r:Decision<'Measure>) =
+        l <== r
 
-    //static member (==) (decision:Decision<'Measure>, scalar:Scalar) =
-    //    LinearExpression.OfDecision decision == scalar
+    static member (==) (Value l:Decision<'Measure>, r:float<'Measure>) =
+        l == float r
 
-    //static member (==) (decision:Decision<'Measure>, rhsDecision:Decision) =
-    //    LinearExpression.OfDecision decision == rhsDecision
+    static member (==) (l:float<'Measure>, Value r:Decision<'Measure>) =
+        float l == r
 
-    //static member (>==) (decision:Decision<'Measure>, f:float) =
-    //    LinearExpression.OfDecision decision >== f
+    static member (==) (Value l:Decision<'Measure>, r:Scalar) =
+        l == r
 
-    //static member (>==) (decision:Decision<'Measure>, scalar:Scalar) =
-    //    LinearExpression.OfDecision decision >== scalar
+    static member (==) (l:Scalar, Value r:Decision<'Measure>) =
+        l == r
 
-    //static member (>==) (decision:Decision<'Measure>, rhsDecision:Decision) =
-    //    LinearExpression.OfDecision decision >== rhsDecision
+    static member (==) (Value l:Decision<'Measure>, Value r:Decision<'Measure>) =
+        l == r
+
+    static member (>==) (Value l:Decision<'Measure>, r:float<'Measure>) =
+        l >== float r
+
+    static member (>==) (l:float<'Measure>, Value r:Decision<'Measure>) =
+        float l >== r
+
+    static member (>==) (Value l:Decision<'Measure>, Scalar.Value r:Scalar<'Measure>) =
+        l >== r
+
+    static member (>==) (Scalar.Value l:Scalar<'Measure>, Value r:Decision<'Measure>) =
+        l >== r
+
+    static member (>==) (Value l:Decision<'Measure>, Value r:Decision<'Measure>) =
+        l >== r
 
 
 and LinearExpression<[<Measure>] 'Measure> =
