@@ -123,8 +123,14 @@ with
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
 
+    static member (<==) (f:float, decision:Decision) =
+        LinearExpression.OfFloat f <== decision
+
     static member (<==) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision <== scalar
+
+    static member (<==) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar <== decision
 
     static member (<==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision <== rhsDecision
@@ -132,8 +138,14 @@ with
     static member (==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision == f
 
+    static member (==) (f:float, decision:Decision) =
+        LinearExpression.OfFloat f  == decision
+
     static member (==) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision == scalar
+
+    static member (==) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar == decision
 
     static member (==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision == rhsDecision
@@ -141,8 +153,14 @@ with
     static member (>==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision >== f
 
+    static member (>==) (f:float, decision:Decision) =
+        LinearExpression.OfFloat f >== decision
+
     static member (>==) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision >== scalar
+
+    static member (>==) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar >== decision
 
     static member (>==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision >== rhsDecision
@@ -287,8 +305,14 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
 
+    static member (<==) (lhs:float, rhs:LinearExpression) =
+        Inequality (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
+
     static member (<==) (lhs:LinearExpression, rhs:Scalar) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfScalar rhs)
+
+    static member (<==) (lhs:Scalar, rhs:LinearExpression) =
+        Inequality (LinearExpression.OfScalar lhs, LessOrEqual, rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
@@ -302,8 +326,14 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
     static member (==) (lhs:LinearExpression, rhs:float) =
         Equality (lhs, LinearExpression.OfFloat rhs)
 
+    static member (==) (lhs:float, rhs:LinearExpression) =
+        Equality (LinearExpression.OfFloat lhs, rhs)
+
     static member (==) (lhs:LinearExpression, rhs:Scalar) =
         Equality (lhs, LinearExpression.OfScalar rhs)
+
+    static member (==) (lhs:Scalar, rhs:LinearExpression) =
+        Equality (LinearExpression.OfScalar lhs, rhs)
 
     static member (==) (lhs:LinearExpression, rhs:Decision) =
         Equality (lhs, LinearExpression.OfDecision rhs)
@@ -317,8 +347,14 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
     static member (>==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
 
+    static member (>==) (lhs:float, rhs:LinearExpression) =
+        Inequality (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
+
     static member (>==) (lhs:LinearExpression, rhs:Scalar) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfScalar rhs)
+
+    static member (>==) (lhs:Scalar, rhs:LinearExpression) =
+        Inequality (LinearExpression.OfScalar lhs, GreaterOrEqual, rhs)
 
     static member (>==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)

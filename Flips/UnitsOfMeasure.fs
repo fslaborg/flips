@@ -116,8 +116,11 @@ with
     static member (-) (Value d:Decision<'Measure>, Scalar.Value s:Scalar<'Measure>) =
         LinearExpression<'Measure>.Value (d - s)
 
-    //static member (<==) (decision:Decision<'Measure>, f:float) =
-    //    LinearExpression.OfDecision decision <== f
+    static member (<==) (Value d:Decision<'Measure>, f:float) =
+        d <== f
+
+    static member (<==) (f:float, Value d:Decision<'Measure>) =
+        f <== d
 
     //static member (<==) (decision:Decision<'Measure>, scalar:Scalar) =
     //    LinearExpression.OfDecision decision <== scalar
