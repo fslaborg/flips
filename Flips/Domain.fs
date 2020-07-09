@@ -104,7 +104,6 @@ with
     static member (+) (decision:Decision, rightDecision:Decision) =
         LinearExpression.OfDecision decision + rightDecision
 
-
     static member (-) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision - f
 

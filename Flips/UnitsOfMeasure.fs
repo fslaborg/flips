@@ -101,8 +101,8 @@ with
     static member (*) (s:Scalar<'LMeasure>, d:Decision<'RMeasure>) =
         d * s
 
-    static member (-) (Value lD:Decision<'Measure>, Value rD:Decision<'Measure>) =
-        LinearExpression<'Measure>.Value (lD - rD)
+    static member (-) (Value l:Decision<'Measure>, Value r:Decision<'Measure>) =
+        LinearExpression<'Measure>.Value (l - r)
 
     static member (-) (Value d:Decision<'Measure>, f:float<'Measure>) =
         LinearExpression<'Measure>.Value (d - float f)
@@ -224,38 +224,66 @@ and LinearExpression<[<Measure>] 'Measure> =
         static member (-) (Value lExpr:LinearExpression<'Measure>, Value rExpr:LinearExpression<'Measure>) =
             LinearExpression<'Measure>.Value (lExpr - rExpr)
 
-        //static member (<==) (lhs:LinearExpression, rhs:float) =
-        //    Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
+        static member (<==) (Value l:LinearExpression<'Measure>, r:float<'Measure>) =
+            l <== float r
 
-        //static member (<==) (lhs:LinearExpression, rhs:Scalar) =
-        //    Inequality (lhs, LessOrEqual, LinearExpression.OfScalar rhs)
+        static member (<==) (l:float<'Measure>, Value r:LinearExpression<'Measure>) =
+            float l <== r
 
-        //static member (<==) (lhs:LinearExpression, rhs:Decision) =
-        //    Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
+        static member (<==) (Value l:LinearExpression<'Measure>, Scalar.Value r:Scalar<'Measure>) =
+            l <== r
 
-        //static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
-        //    Inequality (lhs, LessOrEqual, rhs)
+        static member (<==) (Scalar.Value l:Scalar<'Measure>, Value r:LinearExpression<'Measure>) =
+            l <== r
 
-        //static member (==) (lhs:LinearExpression, rhs:float) =
-        //    Equality (lhs, LinearExpression.OfFloat rhs)
+        static member (<==) (Value l:LinearExpression<'Measure>, Decision.Value r:Decision<'Measure>) =
+            l <== r
 
-        //static member (==) (lhs:LinearExpression, rhs:Scalar) =
-        //    Equality (lhs, LinearExpression.OfScalar rhs)
+        static member (<==) (Decision.Value l:Decision<'Measure>, Value r:LinearExpression<'Measure>) =
+            l <== r
 
-        //static member (==) (lhs:LinearExpression, rhs:Decision) =
-        //    Equality (lhs, LinearExpression.OfDecision rhs)
+        static member (<==) (Value l:LinearExpression<'Measure>, Value r:LinearExpression<'Measure>) =
+            l <== r
 
-        //static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
-        //    Equality (lhs, rhs)
+        static member (==) (Value l:LinearExpression<'Measure>, r:float<'Measure>) =
+            l == float r
 
-        //static member (>==) (lhs:LinearExpression, rhs:float) =
-        //    Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
+        static member (==) (l:float<'Measure>, Value r:LinearExpression<'Measure>) =
+            float l == r
 
-        //static member (>==) (lhs:LinearExpression, rhs:Scalar) =
-        //    Inequality (lhs, GreaterOrEqual, LinearExpression.OfScalar rhs)
+        static member (==) (Value l:LinearExpression<'Measure>, Scalar.Value r:Scalar<'Measure>) =
+            l == r
 
-        //static member (>==) (lhs:LinearExpression, rhs:Decision) =
-        //    Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
+        static member (==) (Scalar.Value l:Scalar<'Measure>, Value r:LinearExpression<'Measure>) =
+            l == r
 
-        //static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
-        //    Inequality (lhs, GreaterOrEqual, rhs)
+        static member (==) (Value l:LinearExpression<'Measure>, Decision.Value r:Decision<'Measure>) =
+            l == r
+
+        static member (==) (Decision.Value l:Decision<'Measure>, Value r:LinearExpression<'Measure>) =
+            l == r
+
+        static member (==) (Value l:LinearExpression<'Measure>, Value r:LinearExpression<'Measure>) =
+            l == r
+
+        static member (>==) (Value l:LinearExpression<'Measure>, r:float<'Measure>) =
+            l >== float r
+
+        static member (>==) (l:float<'Measure>, Value r:LinearExpression<'Measure>) =
+            float l >== r
+
+        static member (>==) (Value l:LinearExpression<'Measure>, Scalar.Value r:Scalar<'Measure>) =
+            l >== r
+
+        static member (>==) (Scalar.Value l:Scalar<'Measure>, Value r:LinearExpression<'Measure>) =
+            l >== r
+
+        static member (>==) (Value l:LinearExpression<'Measure>, Decision.Value r:Decision<'Measure>) =
+            l >== r
+
+        static member (>==) (Decision.Value l:Decision<'Measure>, Value r:LinearExpression<'Measure>) =
+            l >== r
+
+        static member (>==) (Value l:LinearExpression<'Measure>, Value r:LinearExpression<'Measure>) =
+            l >== r
+
