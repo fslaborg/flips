@@ -20,14 +20,14 @@ type Scalar = Value of float with
     static member (+) (f:float, Value s:Scalar) =
         Value (s + f)
 
+    static member (*) (Value lhs:Scalar, Value rhs:Scalar) =
+        Value (lhs * rhs)
+
     static member (*) (Value s:Scalar, f:float) =
         Value (s * f)
 
     static member (*) (f:float, Value s:Scalar) =
         Value (s * f)
-
-    static member (*) (Value lhs:Scalar, Value rhs:Scalar) =
-        Value (lhs * rhs)
 
     static member (-) (Value lhs:Scalar, Value rhs:Scalar) =
         Value (lhs - rhs)
@@ -38,14 +38,14 @@ type Scalar = Value of float with
     static member (-) (f:float, Value s:Scalar) =
         Value (f - s)
 
+    static member (/) (Value lhs:Scalar, Value rhs:Scalar) =
+        Value (lhs / rhs)
+
     static member (/) (f:float, Value s:Scalar) =
         Value (f / s)
 
     static member (/) (Value s:Scalar, f:float) =
         Value (s / f)
-
-    static member (/) (Value lhs:Scalar, Value rhs:Scalar) =
-        Value (lhs / rhs)
 
     static member Zero = Value 0.0
 
@@ -95,14 +95,17 @@ with
     static member (+) (f:float, decision:Decision) =
         LinearExpression.OfDecision decision + f
 
-    static member (+) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar + decision
-
     static member (+) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision + scalar
 
-    static member (+) (decision:Decision, rightDecision:Decision) =
-        LinearExpression.OfDecision decision + rightDecision
+    static member (+) (scalar:Scalar, decision:Decision) =
+        LinearExpression.OfScalar scalar + decision
+
+    static member (+) (decision:Decision, rhsDecision:Decision) =
+        LinearExpression.OfDecision decision + rhsDecision
+
+    static member (-) (decision:Decision, rhsDecision:Decision) =
+        LinearExpression.OfDecision decision + (-1.0 * rhsDecision)
 
     static member (-) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision - f
@@ -115,9 +118,6 @@ with
 
     static member (-) (decision:Decision, scalar:Scalar) =
         LinearExpression.OfDecision decision + (-1.0 * scalar)
-
-    static member (-) (decision:Decision, rightDecision:Decision) =
-        LinearExpression.OfDecision decision + (-1.0 * rightDecision)
 
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
