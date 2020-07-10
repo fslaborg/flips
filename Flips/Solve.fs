@@ -14,16 +14,16 @@ module internal ORTools =
         | GLOP
 
 
-    let private buildExpression (varMap:Map<DecisionName,Variable>) (LinearExpression (names, coefs, decs, Scalar offset):LinearExpression) =
+    let private buildExpression (varMap:Map<DecisionName,Variable>) (expr:LinearExpression) =
         let decisionExpr =
-            names
-            |> Seq.map (fun n -> getScalarValue coefs.[n] * varMap.[n])
+            expr.Names
+            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
             |> fun x -> 
                 match Seq.isEmpty x with 
                 | true -> LinearExpr() 
                 | false -> Seq.reduce (+) x
         
-        offset + decisionExpr
+        getScalarValue expr.Offset + decisionExpr
 
 
     let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
@@ -38,7 +38,7 @@ module internal ORTools =
         |> Map.map (fun n d -> createVariable solver n d.Type)
 
 
-    let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Domain.Objective) (solver:Solver) =
+    let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Domain.Types.Objective) (solver:Solver) =
         let expr = buildExpression varMap objective.Expression
 
         match objective.Sense with
@@ -67,18 +67,18 @@ module internal ORTools =
             solver.Add(c)
 
 
-    let private addConstraint (varMap:Map<DecisionName, Variable>) (c:Domain.Constraint) (solver:Solver) =
+    let private addConstraint (varMap:Map<DecisionName, Variable>) (c:Domain.Types.Constraint) (solver:Solver) =
         match c.Expression with
         | Equality (lhs, rhs) -> addEqualityConstraint varMap c.Name lhs rhs solver
         | Inequality (lhs, inequality, rhs) -> addInequalityConstraint varMap c.Name lhs rhs inequality solver
 
 
-    let private addConstraints (varMap:Map<DecisionName, Variable>) (constraints:List<Domain.Constraint>) (solver:Solver) =
+    let private addConstraints (varMap:Map<DecisionName, Variable>) (constraints:List<Domain.Types.Constraint>) (solver:Solver) =
         for c in constraints do
             addConstraint varMap c solver |> ignore
 
 
-    let private buildSolution (decisionMap:Map<DecisionName,Decision>) (varMap:Map<DecisionName, Variable>) (solver:Solver) (objective:Domain.Objective) =
+    let private buildSolution (decisionMap:Map<DecisionName,Decision>) (varMap:Map<DecisionName, Variable>) (solver:Solver) (objective:Domain.Types.Objective) =
         let decisions =
             decisionMap
             |> Map.toSeq
@@ -136,14 +136,14 @@ module internal Optano =
         | Gurobi900
 
 
-    let private buildExpression (varMap:Map<DecisionName, Variable>) (LinearExpression (names, coefs, decs, offset):LinearExpression) =
+    let private buildExpression (varMap:Map<DecisionName, Variable>) (expr:LinearExpression) =
 
-        let v = getScalarValue offset
+        let v = getScalarValue expr.Offset
         let constant = Expression.Sum([v])
         let variables =
-            names
+            expr.Names
             |> Set.toSeq
-            |> Seq.map (fun n -> getScalarValue coefs.[n] * varMap.[n])
+            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
             |> (fun terms -> Expression.Sum(terms))
 
         constant + variables
@@ -162,7 +162,7 @@ module internal Optano =
         |> Map.map (fun n d -> createVariable d)
 
 
-    let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Domain.Objective) (optanoModel:Model) =
+    let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Domain.Types.Objective) (optanoModel:Model) =
         let (ObjectiveName name) = objective.Name
         let expr = buildExpression varMap objective.Expression
 
@@ -196,13 +196,13 @@ module internal Optano =
         optanoModel.AddConstraint(c, n)
 
 
-    let private addConstraint (varMap:Map<DecisionName, Variable>) (c:Domain.Constraint) (optanoModel:Model) =
+    let private addConstraint (varMap:Map<DecisionName, Variable>) (c:Domain.Types.Constraint) (optanoModel:Model) =
         match c.Expression with
         | Equality (lhs, rhs) -> addEqualityConstraint varMap c.Name lhs rhs optanoModel
         | Inequality (lhs, inequality, rhs) -> addInequalityConstraint varMap c.Name lhs rhs inequality optanoModel
 
 
-    let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Domain.Constraint>) (optanoModel:Model) =
+    let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Domain.Types.Constraint>) (optanoModel:Model) =
         for c in constraints do
             addConstraint vars c optanoModel |> ignore
 
