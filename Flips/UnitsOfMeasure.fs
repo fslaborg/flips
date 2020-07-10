@@ -10,12 +10,6 @@ with
     static member (+) (Value lhs:Scalar<'Measure>, Value rhs:Scalar<'Measure>) =
         Scalar<'Measure>.Value (lhs + rhs)
 
-    static member (+) (Value lhs:Scalar<1>, rhs:Domain.Scalar) =
-        lhs + rhs
-
-    static member (+) (lhs:Domain.Scalar, Value rhs:Scalar<1>) =
-        lhs + rhs
-
     static member (+) (Value s:Scalar<'Measure>, f:float<'Measure>) =
         Scalar<'Measure>.Value (s + float f)
 
@@ -39,12 +33,6 @@ with
 
     static member (-) (Value lhs:Scalar<'LMeasure>, Value rhs:Scalar<'RMeasure>) =
         Scalar<'LMeasure 'RMeasure>.Value (lhs - rhs)
-
-    static member (-) (Value lhs:Scalar<1>, rhs:Domain.Scalar) =
-        lhs - rhs
-
-    static member (-) (lhs:Domain.Scalar, Value rhs:Scalar<1>) =
-        lhs - rhs
 
     static member (-) (Value s:Scalar<'Measure>, f:float<'Measure>) =
         Scalar<'Measure>.Value (s - float f)
