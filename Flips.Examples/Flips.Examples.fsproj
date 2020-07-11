@@ -15,6 +15,7 @@
     <Compile Include="MapSlicingExample\MapSlicingExample.fs" />
     <Compile Include="MultipleFoodTrackExample\MultipleFoodTruckExample.fs" />
     <Compile Include="MultipleFoodTruckSliceMapExample\MultipleFoodTruckSliceMapExample.fs" />
+    <Compile Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
     <Compile Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
     <None Include="StocksExample\README.md" />
     <Compile Include="StocksExample\StocksExample.fs" />
