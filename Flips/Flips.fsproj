@@ -19,7 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Types.fs" />
     <None Include="Scratchpad.fsx" />
     <Compile Include="Types.fs" />
     <Compile Include="Domain.fs" />
