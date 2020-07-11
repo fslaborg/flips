@@ -21,3 +21,9 @@ module Decision =
     let createContinuous<[<Measure>] 'Measure> decisionName (lowerBound:float<'Measure>) (upperBound:float<'Measure>) =
         let d = Decision.createContinuous decisionName (float lowerBound) (float upperBound)
         Decision<'Measure>.Value d
+
+[<RequireQualifiedAccess>]
+module Objective =
+    
+    let create objectiveName sense (Value expr:LinearExpression<'Measure>) =
+        Objective.create objectiveName sense expr
