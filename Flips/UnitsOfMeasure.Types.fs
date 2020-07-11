@@ -2,6 +2,7 @@
 
 open Flips.Types
 
+
 type Scalar<[<Measure>] 'Measure> = 
     | Value of Scalar
 with

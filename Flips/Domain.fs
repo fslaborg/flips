@@ -41,6 +41,7 @@ module Decision =
             Type = DecisionType.Continuous (lowerBound, upperBound)
         }
 
+
 [<RequireQualifiedAccess>]
 module Constraint =
 
@@ -145,9 +146,6 @@ module Model =
 
     let addConstraints constraints model =
         (constraints |> Seq.map addConstraint |> Seq.reduce (>>)) model
-
-
-
 
 
 [<AutoOpen>]

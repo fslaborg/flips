@@ -1,35 +1,4 @@
-﻿module Flips.SliceMap
-
-
-// Declared here so it can be used by any of the MapXD types
-let inline private getKeyCheck lb ub =
-    match lb, ub with
-    | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
-    | Some lb, None -> fun k1 -> k1 >= lb
-    | None, Some ub -> fun k1 -> k1 <= ub
-    | None, None -> fun _ -> true
-
-
-let inline private mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
-    /// The assumption is that the LHS Map has more entries than the RHS Map
-    let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
-
-    lhs
-    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
-                              | Some rhsV -> lhsV + rhsV 
-                              | None -> lhsV)
-    |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
-
-
-let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
-    ((^a) : (static member Sum: ^a -> ^b) k1)
-
-
-let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
-                          and ^a: (static member (+): ^a * ^a -> ^a)
-                          and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
-    let r = Seq.sum k1
-    ((^a) : (static member Sum: ^a -> ^b) r)
+﻿namespace Flips.SliceMap
 
 
 type SliceType<'a when 'a : comparison> =
@@ -45,19 +14,53 @@ type SliceType<'a when 'a : comparison> =
     | Where of ('a -> bool)
 
 
-let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
-    match f with
-    | All -> fun _ -> true
-    | Equals k1 -> fun k2 -> k2 = k1
-    | GreaterThan k1 -> fun k2 -> k2 > k1
-    | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
-    | LessThan k1 -> fun k2 -> k2 < k1
-    | LessOrEqual k1 -> fun k2 -> k2 <= k1
-    | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
-    | In set -> fun k2 -> Set.contains k2 set
-    | NotIn set -> fun k2 -> not (Set.contains k2 set)
-    | Where f -> f
+module private Utilities =
 
+    // Declared here so it can be used by any of the MapXD types
+    let inline getKeyCheck lb ub =
+        match lb, ub with
+        | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
+        | Some lb, None -> fun k1 -> k1 >= lb
+        | None, Some ub -> fun k1 -> k1 <= ub
+        | None, None -> fun _ -> true
+
+
+    let inline mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
+        /// The assumption is that the LHS Map has more entries than the RHS Map
+        let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
+
+        lhs
+        |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
+                                  | Some rhsV -> lhsV + rhsV 
+                                  | None -> lhsV)
+        |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
+
+
+    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
+        ((^a) : (static member Sum: ^a -> ^b) k1)
+
+
+    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
+                              and ^a: (static member (+): ^a * ^a -> ^a)
+                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
+        let r = Seq.sum k1
+        ((^a) : (static member Sum: ^a -> ^b) r)
+
+    let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
+        match f with
+        | All -> fun _ -> true
+        | Equals k1 -> fun k2 -> k2 = k1
+        | GreaterThan k1 -> fun k2 -> k2 > k1
+        | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
+        | LessThan k1 -> fun k2 -> k2 < k1
+        | LessOrEqual k1 -> fun k2 -> k2 <= k1
+        | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
+        | In set -> fun k2 -> Set.contains k2 set
+        | NotIn set -> fun k2 -> not (Set.contains k2 set)
+        | Where f -> f
+
+
+open Utilities
 
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key,'Value>) =
 
