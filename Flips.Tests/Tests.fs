@@ -269,7 +269,7 @@ module ModelTests =
             WriteLPFile = Some "Test.lp"
         }
         
-        let result = Solve.solve settings model
+        let result = Solver.solve settings model
 
         match result with
         | Optimal _ -> Assert.True(true)
@@ -277,7 +277,7 @@ module ModelTests =
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module SliceMapTests =
-    open SliceMap
+    open Flips.SliceMap
 
     [<Property>]
     let ``SliceMap addition is commutative`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) =
@@ -343,7 +343,7 @@ module SliceMapTests =
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module SliceMap2Tests =
-    open SliceMap
+    open Flips.SliceMap
 
     [<Property>]
     let ``SMap2 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
@@ -428,7 +428,7 @@ module SliceMap2Tests =
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module SliceMap3Tests =
-    open SliceMap
+    open Flips.SliceMap
 
     [<Property>]
     let ``SMap3 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
@@ -531,7 +531,7 @@ module SliceMap3Tests =
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module SliceMap4Tests =
-    open SliceMap
+    open Flips.SliceMap
 
     [<Property>]
     let ``SMap4 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
@@ -652,7 +652,7 @@ module SliceMap4Tests =
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
 module DecisionBuilderTests =
-    open Domain
+    open Flips
 
     type private Animal = 
         | Chicken of decimal

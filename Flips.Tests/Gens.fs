@@ -1,6 +1,6 @@
 ﻿module Flips.Gens
 
-open Flips.Domain
+open Flips.Types
 open FsCheck
 
 type SmallFloat = SmallFloat of float
