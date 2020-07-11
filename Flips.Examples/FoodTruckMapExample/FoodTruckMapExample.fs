@@ -1,7 +1,7 @@
 ﻿module Flips.Examples.FoodTruckMapExample
 
-open Flips.Domain
-open Flips.Solve
+open Flips
+open Flips.Types
 
 let solve () =
 
@@ -50,7 +50,7 @@ let solve () =
     }
 
     // Call the `solve` function in the Solve module to evaluate the model
-    let result = solve settings model
+    let result = Solver.solve settings model
 
     printfn "-- Result --"
 

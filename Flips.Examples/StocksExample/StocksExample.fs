@@ -4,8 +4,8 @@ open System
 open FSharp.Data
 open MathNet.Numerics
 open MathNet.Numerics.Statistics 
-open Flips.Domain
-open Flips.Solve
+open Flips
+open Flips.Types
 
 type YahooStocks = CsvProvider<"2020-01-01,1.11,1.22,1.33,1.44,1.55,5666777888", Schema = " Date (date), Open (float), High(float), Low(float), Close(float), Adj Close (float), Volume(int64)">
 
@@ -102,7 +102,7 @@ let solve () =
     }
 
     // Solve
-    let results = solve settings model
+    let results = Solver.solve settings model
 
     // Printing results:
     printfn "-- Result --"

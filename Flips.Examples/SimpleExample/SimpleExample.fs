@@ -1,7 +1,7 @@
 ﻿module Flips.Examples.SimpleExample
 
-open Flips.Domain
-open Flips.Solve
+open Flips
+open Flips.Types
 
 let solve () =
     let x1 = Decision.createContinuous "x1" 0.0 infinity
@@ -21,6 +21,6 @@ let solve () =
         WriteLPFile = Some "Test.lp"
     }
     
-    let result = solve settings model
+    let result = Solver.solve settings model
     printfn "%A" result
 

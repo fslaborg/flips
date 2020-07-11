@@ -13,11 +13,11 @@ type SliceType<'a when 'a : comparison> =
     | NotIn of Set<'a>
     | Where of ('a -> bool)
 
-
-module private Utilities =
+[<AutoOpen>]
+module Utilities =
 
     // Declared here so it can be used by any of the MapXD types
-    let inline getKeyCheck lb ub =
+    let inline internal getKeyCheck lb ub =
         match lb, ub with
         | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
         | Some lb, None -> fun k1 -> k1 >= lb
@@ -25,7 +25,7 @@ module private Utilities =
         | None, None -> fun _ -> true
 
 
-    let inline mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
+    let inline internal mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
         /// The assumption is that the LHS Map has more entries than the RHS Map
         let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
 
@@ -36,17 +36,7 @@ module private Utilities =
         |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
 
-    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
-        ((^a) : (static member Sum: ^a -> ^b) k1)
-
-
-    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
-                              and ^a: (static member (+): ^a * ^a -> ^a)
-                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
-        let r = Seq.sum k1
-        ((^a) : (static member Sum: ^a -> ^b) r)
-
-    let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
+    let internal SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
         match f with
         | All -> fun _ -> true
         | Equals k1 -> fun k2 -> k2 = k1
@@ -59,8 +49,16 @@ module private Utilities =
         | NotIn set -> fun k2 -> not (Set.contains k2 set)
         | Where f -> f
 
+    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
+        ((^a) : (static member Sum: ^a -> ^b) k1)
 
-open Utilities
+
+    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
+                              and ^a: (static member (+): ^a * ^a -> ^a)
+                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
+        let r = Seq.sum k1
+        ((^a) : (static member Sum: ^a -> ^b) r)
+
 
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key,'Value>) =
 
