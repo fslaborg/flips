@@ -3,10 +3,9 @@ module Flips.Tests
 open Xunit
 open FsCheck
 open FsCheck.Xunit
-open Flips.Domain
-open Flips.Gens
-open System
 open Flips
+open Flips.Types
+open Flips.Gens
 
 let rng = System.Random()
 let MIN_COEFFICIENT = -1_000_000_000_000.0
@@ -30,62 +29,7 @@ let randomExpressionFromDecisions rng (decisions:seq<Decision>) =
     expr
 
 
-[<Properties(Arbitrary = [| typeof<Domain> |] )>]
-module Scalar =
 
-    [<Property>]
-    let ``Addition of Scalar is associative`` (a:Scalar) (b:Scalar) =
-        let r1 = a + b
-        let r2 = b + a
-        Assert.StrictEqual(r1, r2)
-
-    [<Property>]
-    let ``Addition of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
-        let r1 = (a + b) + c
-        let r2 = a + (b + c)
-        Assert.StrictEqual(r1, r2)
-
-    [<Property>]
-    let ``Addition of negated Scalar yields Zero Scalar`` (a:Scalar) =
-        let r = a + (-1.0 * a)
-        Assert.StrictEqual(Scalar.Zero, r)
-
-    [<Property>]
-    let ``Addition of Zero Scalar yields same Scalar`` (a:Scalar) =
-        let r = a + Scalar.Zero
-        Assert.StrictEqual(a, r)
-
-    [<Property>]
-    let ``Addition then Subtraction of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
-        let r = a + b - b
-        Assert.StrictEqual(a, r)
-
-    [<Property>]
-    let ``Subtraction then Addition of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
-        let r = a - b + b
-        Assert.StrictEqual(a, r)
-
-    [<Property>]
-    let ``Multiplication of Scalar is associative`` (a:Scalar) (b:Scalar) =
-        let r1 = a * b
-        let r2 = b * a
-        Assert.StrictEqual(r1, r2)
-
-    [<Property>]
-    let ``Multiplication of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
-        let r1 = (a * b) * c
-        let r2 = a * (b * c)
-        Assert.StrictEqual(r1, r2)
-
-    [<Property>]
-    let ``Multiplication of Zero Scalar yields Zero Scalar`` (a:Scalar) =
-        let r = a * Scalar.Zero
-        Assert.StrictEqual(Scalar.Zero, r)
-
-    [<Property>]
-    let ``Multiplication of Identity Scalar yields same Scalar`` (a:Scalar) =
-        let r = a * (Value 1.0)
-        Assert.StrictEqual(a, r)
 
 
 [<Properties(Arbitrary = [| typeof<Domain> |] )>]
