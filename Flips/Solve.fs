@@ -2,8 +2,13 @@
 
 open Flips.Types
 
-module internal ORTools =
+module private Utilities =
 
+    let internal getScalarValue (Value s:Scalar) = s
+
+
+module internal ORTools =
+    open Utilities
     open Google.OrTools.LinearSolver
 
     type internal OrToolsSolverType =
@@ -14,13 +19,13 @@ module internal ORTools =
     let private buildExpression (varMap:Map<DecisionName,Variable>) (expr:LinearExpression) =
         let decisionExpr =
             expr.Names
-            |> Seq.map (fun n -> expr.Coefficients.[n] * varMap.[n])
+            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
             |> fun x -> 
                 match Seq.isEmpty x with 
                 | true -> LinearExpr() 
                 | false -> Seq.reduce (+) x
         
-        expr.Offset + decisionExpr
+        getScalarValue expr.Offset + decisionExpr
 
 
     let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
@@ -125,7 +130,7 @@ module internal ORTools =
 
 
 module internal Optano =
-    
+    open Utilities
     open OPTANO.Modeling.Optimization
 
     type internal OptanoSolverType =
@@ -135,12 +140,12 @@ module internal Optano =
 
     let private buildExpression (varMap:Map<DecisionName, Variable>) (expr:LinearExpression) =
 
-        let v = expr.Offset
+        let v = getScalarValue expr.Offset
         let constant = Expression.Sum([v])
         let variables =
             expr.Names
             |> Set.toSeq
-            |> Seq.map (fun n -> expr.Coefficients.[n] * varMap.[n])
+            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
             |> (fun terms -> Expression.Sum(terms))
 
         constant + variables
@@ -228,12 +233,12 @@ module internal Optano =
         lpExporter.Write(optanoModel)
 
 
-    let private gurobi900Solve (settings:SolverSettings) (optanoModel:Model) =
+    let private gurobi900Solve (settings:Types.SolverSettings) (optanoModel:Model) =
         use solver = new Solver.Gurobi900.GurobiSolver()
         solver.Configuration.TimeLimit <- float settings.MaxDuration / 1000.0
         solver.Solve(optanoModel)
 
-    let private cplex128Solve (settings:SolverSettings) (optanoModel:Model) =
+    let private cplex128Solve (settings:Types.SolverSettings) (optanoModel:Model) =
         use solver = new Solver.Cplex128.CplexSolver()
         solver.Configuration.TimeLimit <- float settings.MaxDuration / 1000.0
         solver.Solve(optanoModel)
@@ -260,6 +265,7 @@ module internal Optano =
             let solution = buildSolution model.Decisions varMap optanoSolution
             Optimal solution
         | _ -> Suboptimal "Model state is undetermined"
+
 
 [<RequireQualifiedAccess>]
 module Solver =
