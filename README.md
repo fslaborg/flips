@@ -41,7 +41,7 @@
 
 ## Introduction
 
-Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding Google OR-Tools library. In the future I hope to support more solver backends.
+Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding Google OR-Tools and OPTANO libraries. The currently available Solvers are Gurobi, CPLEX, GLOP, and CBC.
 
 F# is a great language to work with but many of the existing APIs for modeling Optimization problems are heavily influenced by Object-Oriented concepts. While there is nothing wrong with OO, this is an attempt to take a functional-first approach to the problem.
 
