@@ -1,0 +1,35 @@
+<!DOCTYPE>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Docute Starter</title>
+    <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css">
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/docute@4/dist/docute.js"></script>
+    <script>
+      new Docute({
+        target: '#root',
+        sidebar: [
+            {
+                title: 'Docute',
+                links: [
+                    { title: 'Introduction', link: '/' }
+                ]
+            },
+
+            {
+                title: 'Gettings started',
+                links: [
+                    { title: 'Introduction', link: '/getting-started/index' },
+                    { title: 'Hello World', link: '/getting-started/hello-world' }
+                ]
+            }
+        ]
+      })
+    </script>
+  </body>
+</html>
