@@ -1,6 +1,6 @@
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
-Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding Google OR-Tools library. In the future I hope to support more solver backends.
+Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding [Google OR-Tools library](https://github.com/google/or-tools) and the [OPTANO library](https://optano.com/en/modeling/).
 
 F# is a great language to work with but many of the existing APIs for modeling Optimization problems are heavily influenced by Object-Oriented concepts. While there is nothing wrong with OO, this is an attempt to take a functional-first approach to the problem.
 
@@ -8,27 +8,11 @@ This library tries to make the modeling of Optimization Models (LP/MIP) clean an
 
 F# developers should also find it comfortable to use this library. Over time I will be adding tutorials and training material on how to model Optimization Problems using this library. With a little training any F# developer will be able to add the powerful tool of Optimization to their repertoire.
 
-## Optimization, What art thou?
+## Installation
 
-The word "Optimization" is an overloaded term and is used in many domains. It can mean something as simple as, "We looked at the process and made some minor tweaks," all the way to more formal definitions found in [Mathematical Optimization](https://en.wikipedia.org/wiki/Mathematical_optimization). Linear Programming (LP) and Mixed-Integer Programming (MIP) are sub-fields of Mathematical Optimization. It is important to note that LP/MIP emerged as fields of study before Software Programming. The word "Programming" used to mean "Planning". Therefore, it is best to think of LP/MIP as tools for Mathematical Planning. These fields focus on answering the question: Given a set of decisions to be made, what is the best possible plan, while obeying a set of constraints?
+To use Flips, simply add the [nuget package](https://www.nuget.org/packages/Flips/) to whatever project you are working on. The library comes with the [CBC solver](https://github.com/coin-or/Cbc) for Mixed-Integer Programming and the [Google GLOPS solver](https://github.com/google/or-tools) for Linear Programming which are both free and open source.
 
-The tools of Linear/Mixed-Integer Programming are underutilized. Businesses frequently have problems that would be trivially solved using these tools but instead use complex heuristics involving copy/paste in Excel files instead. There have been many instances where I have observed a domain-expert slaving away for hours at a time with a giant Excel file to answer the question, "What should we do?" After sitting down and talking with these domain-experts it becomes clear they have a planning problem which could be reduced to a 5-minute problem for a computer. There are at least two major reasons for the lack of adoption: lack of awareness and lack of tools.
-
-### Lack of Awareness
-
-LP/MIP is typically found in Operations Research curriculum. In some cases, people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldly as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relegated to expert users who likely studied it more seriously in university.
-
-### Lack of Tools
-
-When LP/MIP emerged, they were severely limited by the computational power of computers at the time. Eventually, computers become far more powerful and enormous advances in the underlying algorithms were made. We are now able to solve huge LP/MIP problems. Until recently though, to utilize that power you had to learn a specialized language to formulate your problems. This relegated the use of LP/MIP to those who had studied these domain-specific languages.
-
-In the last few years Python has done an incredible service to the software development community by providing a gentle onramp to writing code. Combine Python with Jupyter notebooks and you have a powerful tool for experimenting without all the formalism of "professional" software development. There are some in the LP/MIP community who have recognized this trend and have created libraries for using LP/MIP from Python. I recommend looking at the work of [PuLP](https://github.com/coin-or/pulp) and the excellent [Gurobi Python library](https://www.gurobi.com/documentation/9.0/quickstart_mac/py_python_interface.html).
-
-## Why do we need Flips?
-
-Many of the existing libraries for using LP/MIP are either array-based or heavily Object-Oriented. There is nothing wrong with these approaches, but they run counter to idiomatic F#. F# provides a rich set of tools for expressing problems and algorithms in a functional-first style. After spending several years working in F# and Mathematical Planning, it appeared that there was a gap in the market. A library was needed that allowed an F# developer to express their LP/MIP in a functional way.
-
-Flips is intended to make building and solving LP/MIP problems in F# simple. The hope is that by filling in the gap between current LP/MIP libraries and F# developers the adoption of the awesome tool of LP/MIP will be accelerated.
+Flips also supports the [Gurobi](https://www.gurobi.com/) and [IBM CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio/details) commercial solvers through the use of the excellent [OPTANO library](https://optano.com/en/modeling/). You will need to get a separate license to use these libraries. The installation of these commercial libraries is not covered in this documentation since installation can depend on deployment and use case. Please refer to these vendors for commercial support in using their product. Flips currently only supports the latest version of each of these libraries.
 
 ## Intro Problem
 
@@ -210,3 +194,24 @@ let model =
 We now have a formulation of the problem that will scale to an arbitrary number of items. This is a more maintainable formulation and will not require updating as the variety of items changes over time. Only the input data to the model formulation code need change.
 
 
+## Why Optimization?
+
+The word "Optimization" is an overloaded term and is used in many domains. It can mean something as simple as, "We looked at the process and made some minor tweaks," all the way to more formal definitions found in [Mathematical Optimization](https://en.wikipedia.org/wiki/Mathematical_optimization). Linear Programming (LP) and Mixed-Integer Programming (MIP) are sub-fields of Mathematical Optimization. It is important to note that LP/MIP emerged as fields of study before Software Programming. The word "Programming" used to mean "Planning". Therefore, it is best to think of LP/MIP as tools for Mathematical Planning. These fields focus on answering the question: Given a set of decisions to be made, what is the best possible plan, while obeying a set of constraints?
+
+The tools of Linear/Mixed-Integer Programming are underutilized. Businesses frequently have problems that would be trivially solved using these tools but instead use complex heuristics involving copy/paste in Excel files instead. There have been many instances where I have observed a domain-expert slaving away for hours at a time with a giant Excel file to answer the question, "What should we do?" After sitting down and talking with these domain-experts it becomes clear they have a planning problem which could be reduced to a 5-minute problem for a computer. There are at least two major reasons for the lack of adoption: lack of awareness and lack of tools.
+
+### Lack of Awareness
+
+LP/MIP is typically found in Operations Research curriculum. In some cases, people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldly as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relegated to expert users who likely studied it more seriously in university.
+
+### Lack of Tools
+
+When LP/MIP emerged, they were severely limited by the computational power of computers at the time. Eventually, computers become far more powerful and enormous advances in the underlying algorithms were made. We are now able to solve huge LP/MIP problems. Until recently though, to utilize that power you had to learn a specialized language to formulate your problems. This relegated the use of LP/MIP to those who had studied these domain-specific languages.
+
+In the last few years Python has done an incredible service to the software development community by providing a gentle onramp to writing code. Combine Python with Jupyter notebooks and you have a powerful tool for experimenting without all the formalism of "professional" software development. There are some in the LP/MIP community who have recognized this trend and have created libraries for using LP/MIP from Python. I recommend looking at the work of [PuLP](https://github.com/coin-or/pulp) and the excellent [Gurobi Python library](https://www.gurobi.com/documentation/9.0/quickstart_mac/py_python_interface.html).
+
+## Why do we need Flips?
+
+Many of the existing libraries for using LP/MIP are either array-based or heavily Object-Oriented. There is nothing wrong with these approaches, but they run counter to idiomatic F#. F# provides a rich set of tools for expressing problems and algorithms in a functional-first style. After spending several years working in F# and Mathematical Planning, it appeared that there was a gap in the market. A library was needed that allowed an F# developer to express their LP/MIP in a functional way.
+
+Flips is intended to make building and solving LP/MIP problems in F# simple. The hope is that by filling in the gap between current LP/MIP libraries and F# developers the adoption of the awesome tool of LP/MIP will be accelerated.
