@@ -126,6 +126,12 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
 
 module SMap =
 
+    let ofMap m =
+        m |> SMap
+
+    let toMap (m:SMap<_,_>) =
+        m.Values
+
     let ofList m =
         m |> Map.ofList |> SMap
 
@@ -244,6 +250,12 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
 
 module SMap2 =
+
+    let ofMap m =
+        m |> SMap2
+
+    let toMap (m:SMap2<_,_,_>) =
+        m.Values
 
     let ofList m =
         m |> Map.ofList |> SMap2
@@ -405,6 +417,12 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
 
 module SMap3 =
+
+    let ofMap m =
+        m |> SMap3
+
+    let toMap (m:SMap3<_,_,_,_>) =
+        m.Values
 
     let ofList m =
         m |> Map.ofList |> SMap3
@@ -629,6 +647,12 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
 
 module SMap4 =
+
+    let ofMap m =
+        m |> SMap4
+
+    let toMap (m:SMap4<_,_,_,_,_>) =
+        m.Values
 
     let ofList m =
         m |> Map.ofList |> SMap4

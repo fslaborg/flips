@@ -149,6 +149,16 @@ module Model =
         (constraints |> Seq.map addConstraint |> Seq.reduce (>>)) model
 
 
+[<RequireQualifiedAccess>]
+module Solution =
+
+    let getValues (s:Solution) (m:Map<_,Decision>) =
+        let getWithDefault _ d =
+            match Map.tryFind d s.DecisionResults with
+            | Some v -> v
+            | None -> 0.0
+        m |> Map.map getWithDefault
+
 
 [<AutoOpen>]
 module Builders =

@@ -22,8 +22,21 @@ module Decision =
         let d = Decision.createContinuous decisionName (float lowerBound) (float upperBound)
         Decision<'Measure>.Value d
 
+
 [<RequireQualifiedAccess>]
 module Objective =
     
     let create objectiveName sense (Value expr:LinearExpression<'Measure>) =
         Objective.create objectiveName sense expr
+
+
+[<RequireQualifiedAccess>]
+module Solution =
+
+    let getValues (s:Types.Solution) (m:Map<_,Decision<'Measure>>) =
+        let getWithDefault _ (Decision.Value d:Decision<'Measure>) =
+            match Map.tryFind d s.DecisionResults with
+            | Some v -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> v
+            | None -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0
+
+        m |> Map.map getWithDefault

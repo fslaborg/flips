@@ -393,7 +393,6 @@ type Objective = {
     Expression : LinearExpression
 }
 
-
 type Solution = {
     DecisionResults : Map<Decision,float>
     ObjectiveResult : float
