@@ -78,6 +78,9 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
     member this.ContainsKey k =
         Map.containsKey k this.Values
 
+    member this.AsMap =
+        this.Values
+
     // Filter Values
     member private this.FilterValues k1f =
         let k1Filter = SliceFilterBuilder k1f
@@ -171,6 +174,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f k2f =
@@ -299,6 +305,9 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f k2f k3f =
@@ -466,6 +475,9 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f k2f k3f k4f =
