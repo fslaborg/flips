@@ -1,6 +1,6 @@
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
-> Full Documenation can be found [here](https://matthewcrews.github.io/Flips/#/)
+> Full Documenation can be found [here](http://matthewcrews.com/flips/#/)
 
 Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the work of the outstanding [Google OR-Tools library](https://github.com/google/or-tools) and the [OPTANO library](https://optano.com/en/modeling/).
 
