@@ -29,8 +29,8 @@ Let us go through an example problem to see how this works. We are managing a Fo
 
 ```fsharp
 open System
-open Flips.Domain
-open Flips.Solve
+open Flips
+open Flips.Types
 
 // Declare the parameters for our model
 let hamburgerProfit = 1.50
