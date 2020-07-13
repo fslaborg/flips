@@ -163,11 +163,11 @@ module Solution =
 [<AutoOpen>]
 module Builders =
 
-    let private isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
+    let internal isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
 
-    let private getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
+    let internal getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
 
-    let rec private flattenFields f =
+    let rec internal flattenFields f =
         f
         |> List.collect(
             fun t ->
@@ -177,13 +177,13 @@ module Builders =
                     [t]
         )
 
-    let private tupleToObjectList (t:obj) : List<obj> =
+    let internal tupleToObjectList (t:obj) : List<obj> =
         if isTuple t then
             t |> getFields |> flattenFields
         else
             [t]
 
-    let private namer (prefix:string) (indices:obj) : string =
+    let internal namer (prefix:string) (indices:obj) : string =
         tupleToObjectList indices
         |> List.map (sprintf "%O")
         |> String.concat "_"
