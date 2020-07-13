@@ -150,3 +150,9 @@ and LinearExpression<[<Measure>] 'Measure> =
 
         static member (>==) (Value l:LinearExpression<'Measure>, Value r:LinearExpression<'Measure>) =
             l >== r
+
+
+type DecisionType<[<Measure>] 'Measure> =
+    | Boolean
+    | Integer of LowerBound:float<'Measure> * UpperBound:float<'Measure>
+    | Continuous of LowerBound:float<'Measure> * UpperBound:float<'Measure>

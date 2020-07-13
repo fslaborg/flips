@@ -3,6 +3,7 @@
 open Flips
 open Flips.Types
 open Flips.UnitsOfMeasure
+open Flips.UnitsOfMeasure.Types
 open Flips.SliceMap
 
 type [<Measure>] USD
@@ -33,7 +34,7 @@ let solve () =
         DecisionBuilder<Item> "NumberOf" {
             for location in locations do
             for item in items ->
-                Continuous (0.0, infinity)
+                Continuous (0.0<Item>, 1_000_000.0<Item>)
         } |> SMap2.ofSeq
 
     // Create the Linear Expression for the objective

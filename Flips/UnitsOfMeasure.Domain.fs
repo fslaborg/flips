@@ -45,6 +45,7 @@ module Solution =
 module Builders =
     
     open Flips.Types
+    open Flips.UnitsOfMeasure.Types
 
     type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix:string) =
 
@@ -53,8 +54,11 @@ module Builders =
             let decision = Decision.create<'Measure> name decisionType
             indices, decision
 
-        member this.Yield (decisionType:DecisionType) =
-            decisionType
+        member this.Yield (decisionType:DecisionType<'Measure>) =
+            match decisionType with
+            | DecisionType.Boolean -> Flips.Types.DecisionType.Boolean
+            | DecisionType.Integer (lb, ub) -> Flips.Types.DecisionType.Integer (float lb, float ub)
+            | DecisionType.Continuous (lb, ub) -> Flips.Types.DecisionType.Continuous (float lb, float ub)
 
         member this.For(source:seq<'a>, body:'a -> 'b) =
             source |> Seq.map (fun x -> x, body x)
