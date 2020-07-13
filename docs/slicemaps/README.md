@@ -506,3 +506,7 @@ Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
 ```
 
 We are using the slicing capability of SliceMaps. For this constraint we are wanting to sum how much of a given Item we are sending across all the Locations. Before this was done using a List comprehension. Here we are slicing and then summing the resulting SliceMap. Remember that the first dimension to the `numberOfItem` SliceMap is the Location. This expression, `numberOfItem.[All, item]`, is saying to select items in the SliceMap for `All` the locations but only where the `item` key matches. This slicing then returns a new SliceMap. The returned SliceMap is summed to form the left-hand side of our Constraint Expression.
+
+## The `sum` and `sumAll` Functions
+
+A couple of convenience functions were added for summing up the values held inside of collections. The `sum` functions calls the `Sum` method defined on the type. The `sumAll` functions is meant to sum a collection of summable types (Ex: `List<float>`). These are to help a Domain Expert write code that more closely matches the math notation of optimization problems.

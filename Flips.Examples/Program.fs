@@ -10,13 +10,16 @@ let main argv =
     FoodTruckExample.solve ()
     FoodTruckMapExample.solve ()
     FoodTruckConstraintBuilderExample.solve ()
+    FoodTruckDecisionBuilder.solve ()
+    FoodTruckUnitsOfMeasureExample.solve ()
     MultipleFoodTruckExample.solve ()
     MultipleFoodTruckWithSliceMapExample.solve ()
+    MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.solve ()
     SimpleExample.solve ()
     MapSlicingExample.solve ()
     BinaryProgrammingExample.solve ()
     StocksExample.solve ()
-
+    CoffeeRoastingExample.solve ()
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
     0 // return an integer exit code

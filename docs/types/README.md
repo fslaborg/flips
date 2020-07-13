@@ -4,7 +4,7 @@
 
 A `Scalar` is a single case DU which wraps a `float`. The reason for this was to ensure proper equality behavior. Equality is incredibly difficult with any floating-point type. In order to ensure that modeling works as intended it was necessary to wrap the `float` value and specify the equality behavior.
 
-The `Scalar` type supports the basic algebraic operations: `+`, `-`, `*`, and `/`. Any time you perform an algebraic operation with a `Scalar` and a `float`, you will get a `Scalar` back. When perform an algebraic operation with a `Scalar` and a `Decision` you will get a `LinearExpression` back. The `LinearExpression` is the basic building block of Optimization Models. For more information on `LinearExpresion`, please refer to its section.
+You should not be constructing the `Scalar` type yourself. Just work with `float`, `Decision`, and `LinearExpression` and the library will take care of wrapping these values.
 
 ## Decision
 
@@ -82,6 +82,3 @@ let maxItemConstraints = ConstraintBuilder "MaxItem" {
 }
 ```
 
-## The `sum` and `sumAll` Functions
-
-A couple of convenience functions were added for summing up the values held inside of collections. The `sum` functions calls the `Sum` method defined on the type. The `sumAll` functions is meant to sum a collection of summable types (Ex: `List<float>`). These are to help a Domain Expert write code that more closely matches the math notation of optimization problems.

@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
+    <Compile Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />
     <Compile Include="SimpleExample\SimpleExample.fs" />
     <Compile Include="FoodTruckExample\FoodTruckExample.fs" />
     <Compile Include="FoodTruckMapExample\FoodTruckMapExample.fs" />
@@ -14,7 +16,10 @@
     <Compile Include="MapSlicingExample\MapSlicingExample.fs" />
     <Compile Include="MultipleFoodTrackExample\MultipleFoodTruckExample.fs" />
     <Compile Include="MultipleFoodTruckSliceMapExample\MultipleFoodTruckSliceMapExample.fs" />
+    <Compile Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
+    <Compile Include="CoffeeRoastingExample\CoffeeRoastingExample.fs" />
     <Compile Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
+    <None Include="StocksExample\README.md" />
     <Compile Include="StocksExample\StocksExample.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

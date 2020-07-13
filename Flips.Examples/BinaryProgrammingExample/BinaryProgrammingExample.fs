@@ -1,7 +1,7 @@
 ﻿module Flips.Examples.BinaryProgrammingExample
 
-open Flips.Domain
-open Flips.Solve
+open Flips
+open Flips.Types
 open Flips.SliceMap
 
 
@@ -30,7 +30,7 @@ let solve () =
         WriteLPFile = Some "ConstraintBuilderExample.lp"
     }
     
-    let result = solve settings model
+    let result = Solver.solve settings model
 
     printfn "--Result--"
     // Match the result of the call to solve

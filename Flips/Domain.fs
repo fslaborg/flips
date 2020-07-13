@@ -1,376 +1,9 @@
-module Flips.Domain
+namespace Flips
 
-[<CustomEquality; CustomComparison>]
-type Scalar = Scalar of float with
+open Flips.Types
 
-    static member private NearlyEquals (Scalar a:Scalar) (Scalar b:Scalar) : bool =
-        let aValue = System.BitConverter.DoubleToInt64Bits a
-        let bValue = System.BitConverter.DoubleToInt64Bits b
-        if (aValue >>> 63) <> (bValue >>> 63) then
-            a = b
-        else
-            System.Math.Abs(aValue - bValue) <= 10_000L
 
-    static member (+) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs + rhs)
-
-    static member (+) (Scalar s:Scalar, f:float) =
-        Scalar (s + f)
-
-    static member (+) (f:float, Scalar s:Scalar) =
-        Scalar (s + f)
-
-    static member (*) (Scalar s:Scalar, f:float) =
-        Scalar (s * f)
-
-    static member (*) (f:float, Scalar s:Scalar) =
-        Scalar (s * f)
-
-    static member (*) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs * rhs)
-
-    static member (-) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs - rhs)
-
-    static member (-) (Scalar s:Scalar, f:float) =
-        Scalar (s - f)
-
-    static member (-) (f:float, Scalar s:Scalar) =
-        Scalar (f - s)
-
-    static member (/) (f:float, Scalar s:Scalar) =
-        Scalar (f / s)
-
-    static member (/) (Scalar s:Scalar, f:float) =
-        Scalar (s / f)
-
-    static member (/) (Scalar lhs:Scalar, Scalar rhs:Scalar) =
-        Scalar (lhs / rhs)
-
-    static member Zero = Scalar 0.0
-
-    override this.GetHashCode () =
-        let (Scalar v) = this
-        hash v
-
-    override this.Equals(obj) =
-        match obj with
-        | :? Scalar as s -> Scalar.NearlyEquals this s 
-        | _ -> false
-
-    interface System.IComparable with
-        member this.CompareTo yObj =
-            match yObj with
-            | :? Scalar as s -> compare this s
-            | _ -> invalidArg "yObj" "Cannot compare values of different types"
-
-type DecisionType =
-    | Boolean
-    | Integer of LowerBound:float * UpperBound:float
-    | Continuous of LowerBound:float * UpperBound:float
-
-type DecisionName = DecisionName of string
-
-type Decision = {
-    Name : DecisionName
-    Type : DecisionType
-}
-with
-
-    static member (*) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision * f
-
-    static member (*) (f:float, decision:Decision) =
-        LinearExpression.OfDecision decision * f
-
-    static member (*) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision * scalar
-    
-    static member (*) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfDecision decision * scalar
-
-    static member (+) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision + f
-
-    static member (+) (f:float, decision:Decision) =
-        LinearExpression.OfDecision decision + f
-
-    static member (+) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar + decision
-
-    static member (+) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision + scalar
-
-    static member (+) (decision:Decision, rightDecision:Decision) =
-        LinearExpression.OfDecision decision + rightDecision
-
-    static member (+) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision + expr
-
-    static member (-) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision - f
-
-    static member (-) (f:float, decision:Decision) =
-        LinearExpression.OfDecision decision - f
-
-    static member (-) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar + (-1.0 * decision)
-
-    static member (-) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision + (-1.0 * scalar)
-
-    static member (-) (decision:Decision, rightDecision:Decision) =
-        LinearExpression.OfDecision decision + (-1.0 * rightDecision)
-
-    static member (-) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision + (-1.0 * expr)
-
-    static member (<==) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision <== f
-
-    static member (<==) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision <== scalar
-
-    static member (<==) (decision:Decision, rhsDecision:Decision) =
-        LinearExpression.OfDecision decision <== rhsDecision
-
-    static member (<==) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision <== expr
-
-    static member (==) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision == f
-
-    static member (==) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision == scalar
-
-    static member (==) (decision:Decision, rhsDecision:Decision) =
-        LinearExpression.OfDecision decision == rhsDecision
-
-    static member (==) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision == expr
-
-    static member (>==) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision >== f
-
-    static member (>==) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision >== scalar
-
-    static member (>==) (decision:Decision, rhsDecision:Decision) =
-        LinearExpression.OfDecision decision >== rhsDecision
-
-    static member (>==) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision >== expr
-
-and [<CustomEquality; NoComparison>] LinearExpression = 
-    | LinearExpression of names:Set<DecisionName> * coefs:Map<DecisionName, Scalar> * decs:Map<DecisionName, Decision> * offset:Scalar
-with
-
-    static member private Equivalent (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression) (LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
-        let isEqualOffset = (lOffset = rOffset)
-        let leftOnlyNames = lNames - rNames
-        let rightOnlyNames = rNames - lNames
-        let overlapNames = Set.intersect lNames rNames
-
-        let leftOnlyNamesAreZero = 
-            leftOnlyNames
-            |> Set.forall (fun n -> lCoefs.[n] = Scalar.Zero)
-
-        let rightOnlyNamesAreZero =
-            rightOnlyNames
-            |> Set.forall (fun n -> rCoefs.[n] = Scalar.Zero)
-
-        let overlapNamesMatch =
-            overlapNames
-            |> Set.forall (fun n -> lCoefs.[n] = rCoefs.[n])
-
-        isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero && overlapNamesMatch
-
-    override this.GetHashCode () =
-        hash this
-
-    override this.Equals(obj) =
-        match obj with
-        | :? LinearExpression as expr -> LinearExpression.Equivalent this expr
-        | _ -> false
-
-    static member OfFloat (f:float) =
-        LinearExpression (Set.empty, Map.empty, Map.empty, Scalar f)
-
-    static member OfScalar (s:Scalar) =
-        LinearExpression (Set.empty, Map.empty, Map.empty, s)
-
-    static member OfDecision (d:Decision) =
-        let names = Set.ofList [d.Name]
-        let coefs = Map.ofList [d.Name, Scalar 1.0]
-        let decs = Map.ofList [d.Name, d]
-        LinearExpression (names, coefs, decs, Scalar 0.0)
-
-    static member GetDecisions (LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        decs
-        |> Map.toList
-        |> List.map snd
-        |> Set.ofList
-
-    static member Zero =
-        LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
-
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
-        LinearExpression (names, coefs, decs, offset + (Scalar f))
-
-    static member (+) (f:float, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        LinearExpression (names, coefs, decs, offset + (Scalar f))
-
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
-        LinearExpression (names, coefs, decs, offset + scalar)
-
-    static member (+) (scalar:Scalar, LinearExpression (names, coefs, decs, offset):LinearExpression) =
-        LinearExpression (names, coefs, decs, offset + scalar)
-
-    static member (+) (LinearExpression (names, coefs, decs, offset):LinearExpression, decision:Decision) =
-        if Set.contains decision.Name names then
-            if decs.[decision.Name].Type <> decision.Type then
-                let (DecisionName name) = decision.Name
-                invalidArg name "Mistmatched DecisionType"
-
-            let newCoefs = Map.add decision.Name (coefs.[decision.Name] + (Scalar 1.0)) coefs
-            LinearExpression (names, newCoefs, decs, offset)
-        else
-            let newNames = Set.add decision.Name names
-            let newCoefs = Map.add decision.Name (Scalar 1.0) coefs
-            let newDecs = Map.add decision.Name decision decs
-            LinearExpression (newNames, newCoefs, newDecs, offset)
-
-    static member private Merge (LinearExpression (lNames, lCoefs, lDecs, lOffset):LinearExpression, LinearExpression (rNames, rCoefs, rDecs, rOffset):LinearExpression) =
-        // Assume the Left LinearExpression is larget than the right
-        let nameOverlap = Set.intersect lNames rNames
-        
-        for n in nameOverlap do
-            if lDecs.[n].Type <> rDecs.[n].Type then
-                let (DecisionName name) = n
-                invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
-
-        let newNames = lNames + rNames
-
-        let newDecs = (lDecs, (rNames - lNames)) ||> Set.fold (fun m k -> Map.add k rDecs.[k] m)
-
-        let newCoefs =
-            (lCoefs, nameOverlap)
-            ||> Set.fold (fun m k -> Map.add k (lCoefs.[k] + rCoefs.[k]) m)
-            |> fun updatedCoefs -> Set.fold (fun m n -> Map.add n rCoefs.[n] m) updatedCoefs (rNames - lNames)
-
-        LinearExpression (newNames, newCoefs, newDecs, lOffset + rOffset)
-
-    static member (+) (lExpr:LinearExpression, rExpr:LinearExpression) =
-        let (LinearExpression (lNames, _, _, _)) = lExpr
-        let (LinearExpression (rNames, _, _, _)) = rExpr
-        let lSize = Set.count lNames
-        let rSize = Set.count rNames
-
-        if lSize > rSize then
-            LinearExpression.Merge (lExpr, rExpr)
-        else
-            LinearExpression.Merge (rExpr, lExpr)
-
-    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, f:float) =
-        let newCoefs = Map.map (fun k v -> v * f) coefs
-        LinearExpression (names, newCoefs, decs, offset * f)
-
-    static member (*) (f:float, expr:LinearExpression) =
-        expr * f
-
-    static member (*) (LinearExpression (names, coefs, decs, offset):LinearExpression, scalar:Scalar) =
-        let newCoefs = Map.map (fun k v -> v * scalar) coefs
-        LinearExpression (names, newCoefs, decs, offset * scalar)
-
-    static member (*) (scalar:Scalar, expr:LinearExpression) =
-        expr * scalar
-
-    static member (-) (expr:LinearExpression, f:float) =
-        expr + (-1.0 * f)
-
-    static member (-) (f:float, expr:LinearExpression) =
-        f + (-1.0 * expr)
-
-    static member (-) (expr:LinearExpression, s:Scalar) =
-        expr + (-1.0 * s)
-
-    static member (-) (s:Scalar, expr:LinearExpression) =
-        s + (-1.0 * expr)
-
-    static member (-) (expr:LinearExpression, d:Decision) =
-        expr + (-1.0 * d)
-
-    static member (-) (d:Decision, expr:LinearExpression) =
-        d + (-1.0 * expr)
-
-    static member (-) (lExpr:LinearExpression, rExpr:LinearExpression) =
-        lExpr + (-1.0 * rExpr)
-
-    static member (<==) (lhs:LinearExpression, rhs:float) =
-        Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
-
-    static member (<==) (lhs:LinearExpression, rhs:Scalar) =
-        Inequality (lhs, LessOrEqual, LinearExpression.OfScalar rhs)
-
-    static member (<==) (lhs:LinearExpression, rhs:Decision) =
-        Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
-
-    static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Inequality (lhs, LessOrEqual, rhs)
-
-    static member (==) (lhs:LinearExpression, rhs:float) =
-        Equality (lhs, LinearExpression.OfFloat rhs)
-
-    static member (==) (lhs:LinearExpression, rhs:Scalar) =
-        Equality (lhs, LinearExpression.OfScalar rhs)
-
-    static member (==) (lhs:LinearExpression, rhs:Decision) =
-        Equality (lhs, LinearExpression.OfDecision rhs)
-
-    static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Equality (lhs, rhs)
-
-    static member (>==) (lhs:LinearExpression, rhs:float) =
-        Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
-
-    static member (>==) (lhs:LinearExpression, rhs:Scalar) =
-        Inequality (lhs, GreaterOrEqual, LinearExpression.OfScalar rhs)
-
-    static member (>==) (lhs:LinearExpression, rhs:Decision) =
-        Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
-
-    static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
-        Inequality (lhs, GreaterOrEqual, rhs)
-
-
-and Inequality =
-    | LessOrEqual
-    | GreaterOrEqual
-
-and ConstraintExpression = 
-    | Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
-    | Equality of LHS:LinearExpression * RHS:LinearExpression
-
-type ConstraintName = ConstraintName of string
-
-type Constraint = {
-    Name : ConstraintName
-    Expression : ConstraintExpression
-}
-
-type ObjectiveSense =
-    | Minimize
-    | Maximize
-
-type ObjectiveName = ObjectiveName of string
-
-type Objective = {
-    Name : ObjectiveName
-    Sense : ObjectiveSense
-    Expression : LinearExpression
-}
-
-
+[<RequireQualifiedAccess>]
 module Decision =
 
     let create decisionName decisionType =
@@ -409,9 +42,11 @@ module Decision =
             Type = DecisionType.Continuous (lowerBound, upperBound)
         }
 
+
+[<RequireQualifiedAccess>]
 module Constraint =
 
-    let getDecisions (c:Constraint) =
+    let internal getDecisions (c:Constraint) =
         let (lhs, rhs) =
             match c.Expression with
             | Inequality (lhs, c, rhs) -> lhs, rhs
@@ -429,6 +64,7 @@ module Constraint =
         }
 
 
+[<RequireQualifiedAccess>]
 module Objective =
 
     let create objectiveName sense expression =
@@ -441,6 +77,7 @@ module Objective =
         }
 
 
+[<RequireQualifiedAccess>]
 module Model =
 
     type Model = private {
@@ -512,38 +149,25 @@ module Model =
         (constraints |> Seq.map addConstraint |> Seq.reduce (>>)) model
 
 
-type Solution = {
-    DecisionResults : Map<Decision,float>
-    ObjectiveResult : float
-}
+[<RequireQualifiedAccess>]
+module Solution =
 
-type SolverType = 
-    | CBC
-    | GLOP
-    | Cplex128
-    | Gurobi900
-
-
-type SolverSettings = {
-    SolverType : SolverType
-    MaxDuration : int64
-    WriteLPFile : Option<string>
-}
-
-type SolveResult =
-    | Optimal of Solution
-    | Suboptimal of string
-
+    let getValues (s:Solution) (m:Map<_,Decision>) =
+        let getWithDefault _ d =
+            match Map.tryFind d s.DecisionResults with
+            | Some v -> v
+            | None -> 0.0
+        m |> Map.map getWithDefault
 
 
 [<AutoOpen>]
 module Builders =
 
-    let private isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
+    let internal isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
 
-    let private getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
+    let internal getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
 
-    let rec private flattenFields f =
+    let rec internal flattenFields f =
         f
         |> List.collect(
             fun t ->
@@ -553,14 +177,13 @@ module Builders =
                     [t]
         )
 
-    let private tupleToObjectList (t:obj) : List<obj> =
+    let internal tupleToObjectList (t:obj) : List<obj> =
         if isTuple t then
             t |> getFields |> flattenFields
         else
             [t]
 
-
-    let private namer (prefix:string) (indices:obj) : string =
+    let internal namer (prefix:string) (indices:obj) : string =
         tupleToObjectList indices
         |> List.map (sprintf "%O")
         |> String.concat "_"

@@ -1,35 +1,4 @@
-﻿module Flips.SliceMap
-
-
-// Declared here so it can be used by any of the MapXD types
-let inline private getKeyCheck lb ub =
-    match lb, ub with
-    | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
-    | Some lb, None -> fun k1 -> k1 >= lb
-    | None, Some ub -> fun k1 -> k1 <= ub
-    | None, None -> fun _ -> true
-
-
-let inline private mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
-    /// The assumption is that the LHS Map has more entries than the RHS Map
-    let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
-
-    lhs
-    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
-                              | Some rhsV -> lhsV + rhsV 
-                              | None -> lhsV)
-    |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
-
-
-let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
-    ((^a) : (static member Sum: ^a -> ^b) k1)
-
-
-let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
-                          and ^a: (static member (+): ^a * ^a -> ^a)
-                          and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
-    let r = Seq.sum k1
-    ((^a) : (static member Sum: ^a -> ^b) r)
+﻿namespace Flips.SliceMap
 
 
 type SliceType<'a when 'a : comparison> =
@@ -44,19 +13,51 @@ type SliceType<'a when 'a : comparison> =
     | NotIn of Set<'a>
     | Where of ('a -> bool)
 
+[<AutoOpen>]
+module Utilities =
 
-let SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
-    match f with
-    | All -> fun _ -> true
-    | Equals k1 -> fun k2 -> k2 = k1
-    | GreaterThan k1 -> fun k2 -> k2 > k1
-    | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
-    | LessThan k1 -> fun k2 -> k2 < k1
-    | LessOrEqual k1 -> fun k2 -> k2 <= k1
-    | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
-    | In set -> fun k2 -> Set.contains k2 set
-    | NotIn set -> fun k2 -> not (Set.contains k2 set)
-    | Where f -> f
+    // Declared here so it can be used by any of the MapXD types
+    let inline internal getKeyCheck lb ub =
+        match lb, ub with
+        | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
+        | Some lb, None -> fun k1 -> k1 >= lb
+        | None, Some ub -> fun k1 -> k1 <= ub
+        | None, None -> fun _ -> true
+
+
+    let inline internal mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
+        /// The assumption is that the LHS Map has more entries than the RHS Map
+        let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
+
+        lhs
+        |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
+                                  | Some rhsV -> lhsV + rhsV 
+                                  | None -> lhsV)
+        |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
+
+
+    let internal SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
+        match f with
+        | All -> fun _ -> true
+        | Equals k1 -> fun k2 -> k2 = k1
+        | GreaterThan k1 -> fun k2 -> k2 > k1
+        | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
+        | LessThan k1 -> fun k2 -> k2 < k1
+        | LessOrEqual k1 -> fun k2 -> k2 <= k1
+        | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
+        | In set -> fun k2 -> Set.contains k2 set
+        | NotIn set -> fun k2 -> not (Set.contains k2 set)
+        | Where f -> f
+
+    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
+        ((^a) : (static member Sum: ^a -> ^b) k1)
+
+
+    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
+                              and ^a: (static member (+): ^a * ^a -> ^a)
+                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
+        let r = Seq.sum k1
+        ((^a) : (static member Sum: ^a -> ^b) r)
 
 
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key,'Value>) =
@@ -76,6 +77,9 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f =
@@ -125,6 +129,12 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
 
 module SMap =
 
+    let ofMap m =
+        m |> SMap
+
+    let toMap (m:SMap<_,_>) =
+        m.Values
+
     let ofList m =
         m |> Map.ofList |> SMap
 
@@ -164,6 +174,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f k2f =
@@ -244,6 +257,12 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
 module SMap2 =
 
+    let ofMap m =
+        m |> SMap2
+
+    let toMap (m:SMap2<_,_,_>) =
+        m.Values
+
     let ofList m =
         m |> Map.ofList |> SMap2
 
@@ -286,6 +305,9 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f k2f k3f =
@@ -405,6 +427,12 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
 module SMap3 =
 
+    let ofMap m =
+        m |> SMap3
+
+    let toMap (m:SMap3<_,_,_,_>) =
+        m.Values
+
     let ofList m =
         m |> Map.ofList |> SMap3
 
@@ -447,6 +475,9 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     member this.ContainsKey k =
         Map.containsKey k this.Values
+
+    member this.AsMap =
+        this.Values
 
     // Filter Values
     member private this.FilterValues k1f k2f k3f k4f =
@@ -628,6 +659,12 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
 
 module SMap4 =
+
+    let ofMap m =
+        m |> SMap4
+
+    let toMap (m:SMap4<_,_,_,_,_>) =
+        m.Values
 
     let ofList m =
         m |> Map.ofList |> SMap4
