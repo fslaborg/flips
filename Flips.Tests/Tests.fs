@@ -238,6 +238,15 @@ module Types =
             Assert.Equal(r1, r2)
 
         [<Property>]
+        let ``Addition of LinearExpression and float is commutative`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr = randomExpressionFromDecisions rng decisions
+            let r1 = expr + f
+            let r2 = f + expr
+            Assert.Equal(r1, r2)
+
+        [<Property>]
         let ``Addition of Zero to LinearExpression yields same expression`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
@@ -252,6 +261,15 @@ module Types =
             let expr = randomExpressionFromDecisions rng decisions
             let r = expr * 1.0
             Assert.Equal(expr, r)
+
+        [<Property>]
+        let ``Multiplication of LinearExpression and float is commutative`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr = randomExpressionFromDecisions rng decisions
+            let r1 = expr * f
+            let r2 = f * expr
+            Assert.Equal(r1, r2)
 
         [<Property>]
         let ``Multiplication of LinearExpression by X then by 1/X yields same expression`` () =

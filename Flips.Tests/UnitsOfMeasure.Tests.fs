@@ -8,7 +8,7 @@ open Flips.Types
 open Flips.Tests.Gens
 open Flips.Tests.Types
 
-[<Properties(Arbitrary = [| typeof<UnitsOfMeasure.UnitOfMeasureTypes>; typeof<Types> |] )>]
+
 module UnitsOfMeasureTests =
     open Flips.UnitsOfMeasure
     open Flips.UnitsOfMeasure.Types
@@ -24,11 +24,12 @@ module UnitsOfMeasureTests =
             |> List.sum
         expr
 
+    [<Properties(Arbitrary = [| typeof<UnitsOfMeasure.UnitOfMeasureTypes>; typeof<Types> |] )>]
     module Decision =
 
         [<Property>]
         let ``Addition of Decisions is associative`` (d1:Decision<Item>) =
-            let d2 = DecisionItemGen.Where(fun (Decision.Value x) -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
+            let d2 = DecisionItemGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = d1 + d2
             let e2 = d2 + d1
             Assert.Equal(e1, e2)
@@ -47,11 +48,11 @@ module UnitsOfMeasureTests =
             let e2 = f + d
             Assert.Equal(e1, e2)
 
-        [<Property>]
-        let ``Addition of Decisions and Scalar is associative`` (Decision.Value d:Decision<Item>) (s:Scalar) =
-            let e1 = d + s
-            let e2 = s + d
-            Assert.Equal(e1, e2)
+        //[<Property>]
+        //let ``Addition of Decisions and Scalar is associative`` (d:Decision<Item>) (s:Scalar) =
+        //    let e1 = d + s
+        //    let e2 = s + d
+        //    Assert.Equal(e1, e2)
 
         [<Property>]
         let ``Addition of Decisions and float is commutative`` (d1:Decision<Item>) (SmallFloatItem f1) (SmallFloatItem f2) =
@@ -68,7 +69,7 @@ module UnitsOfMeasureTests =
         //    Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of same Decisions is linear`` (Decision.Value d:Decision<Item>) =
+        let ``Addition of same Decisions is linear`` (d:Decision<Item>) =
             let x1 = randomFloat rng
             let x2 = randomFloat rng
             let r1 = (x1 * d) + (x2 * d)
@@ -139,7 +140,7 @@ module UnitsOfMeasureTests =
         //    let e2 = (Decision.Value d2 * s2) + (Decision.Value d1 * s1)
         //    Assert.Equal(e1, e2)
 
-
+    [<Properties(Arbitrary = [| typeof<UnitsOfMeasure.UnitOfMeasureTypes>; typeof<Types> |] )>]
     module LinearExpression =
 
         [<Property>]
@@ -171,6 +172,15 @@ module UnitsOfMeasureTests =
             Assert.Equal(r1, r2)
 
         [<Property>]
+        let ``Addition of LinearExpression and float is commutative`` () =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionItemGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr = randomItemExpressionFromDecisions rng decisions
+            let r1 = expr + 1.0<Item>
+            let r2 = 1.0<Item> + expr
+            Assert.Equal(r1, r2)
+
+        [<Property>]
         let ``Addition of Zero to LinearExpression yields same expression`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionItemGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
@@ -179,12 +189,30 @@ module UnitsOfMeasureTests =
             Assert.Equal(expr, r)
 
         [<Property>]
-        let ``Multiplication of LinearExpression by Scalar 1 yields same expression`` () =
+        let ``Multiplication of LinearExpression by float 1 yields same expression`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionItemGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
             let expr = randomItemExpressionFromDecisions rng decisions
             let r = expr * 1.0
             Assert.Equal(expr, r)
+
+        [<Property>]
+        let ``Multiplication of LinearExpression and float is commutative`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionItemGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr = randomItemExpressionFromDecisions rng decisions
+            let r1 = expr * f
+            let r2 = f * expr
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Multiplication of LinearExpression and float<Item> is commutative`` (SmallFloatItem f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionItemGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr = randomItemExpressionFromDecisions rng decisions
+            let r1 = expr * f
+            let r2 = f * expr
+            Assert.Equal(r1, r2)
 
         [<Property>]
         let ``Multiplication of LinearExpression by X then by 1/X yields same expression`` () =

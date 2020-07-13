@@ -211,12 +211,12 @@ module Gens =
         //        return Continuous (lowerBound, upperBound)
         //    }
 
-        let DecisionTypeGen =
-            gen {
-                let! integerBounds = IntegerBoundsGen
-                let! continuousBounds = ContinuousBoundsGen
-                return! Gen.elements [integerBounds; continuousBounds; Boolean]
-            }
+        //let DecisionTypeGen =
+        //    gen {
+        //        let! integerBounds = IntegerBoundsGen
+        //        let! continuousBounds = ContinuousBoundsGen
+        //        return! Gen.elements [integerBounds; continuousBounds; Boolean]
+        //    }
 
         //let DecisionNameGen =
         //    gen {
@@ -253,6 +253,7 @@ module Gens =
             }
 
         type UnitOfMeasureTypes =
+            static member ArbSmallFloatItem () = Arb.fromGen SmallFloatItemGen
             static member ArbDecisionItem () = Arb.fromGen DecisionItemGen
             static member ArbLinearExpressionItem () = Arb.fromGen LinearExpressionItemGen
             

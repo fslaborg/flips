@@ -86,7 +86,7 @@ and LinearExpression<[<Measure>] 'Measure> =
             expr + d
 
         static member (*) (Value expr:LinearExpression<'LMeasure>, f:float<'RMeasure>) =
-            LinearExpression<'Measure>.Value (expr + float f)
+            LinearExpression<'Measure>.Value (expr * float f)
 
         static member (*) (f:float<'LMeasure>, expr:LinearExpression<'RMeasure>) =
             expr * f
