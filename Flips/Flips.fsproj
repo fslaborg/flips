@@ -15,7 +15,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <PackageReleaseNotes>Added a Computation Expression for creating Decisions. Made the creation of Decision function return a Decision instead of a Linear Expression. Made extracting values from the solution more streamlined. Added docs for the Domain types.</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated to include the ability to model with Units of Measure</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
