@@ -30,12 +30,11 @@ let solve () =
     // to represent how much of each item we should pack for each location
     // with a Lower Bound of 0.0 and an Upper Bound of Infinity
     let numberOfItem =
-        [for item in items do
+        DecisionBuilder<Item> "NumberOf" {
             for location in locations do
-                let decName = sprintf "NumberOf_%s_At_%s" item location
-                let decision = Decision.createContinuous decName 0.0<Item> 1_000_000.0<Item>
-                (location, item), decision]
-        |> SMap2.ofList
+            for item in items ->
+                Continuous (0.0, infinity)
+        } |> SMap2.ofSeq
 
     // Create the Linear Expression for the objective
     let objectiveExpression = sum (profit .* numberOfItem)
