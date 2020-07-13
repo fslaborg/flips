@@ -133,6 +133,8 @@ let solve () =
         let roasterValues = Solution.getValues solution buildRoaster.AsMap
         let warehouseValues = Solution.getValues solution buildWarehouse.AsMap
 
+        printfn "Plan Cost: $%.2f" solution.ObjectiveResult
+
         printfn "Location\tRoaster\tWarehouse"
 
         for location in locations do
