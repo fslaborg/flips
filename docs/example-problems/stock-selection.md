@@ -1,6 +1,6 @@
 # Stock Selection
 
-This problem was provided 
+This problem was provided [Zbigniew Gajewski](https://github.com/zbigniew-gajewski) as an example of how to use Flips to select the best combination of stocks.
 
 ```fsharp
 open System
