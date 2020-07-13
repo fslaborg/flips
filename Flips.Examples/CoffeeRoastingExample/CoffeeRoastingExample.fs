@@ -137,6 +137,6 @@ let solve () =
 
         for location in locations do
             let (Location l) = location
-            printfn "%A\t%A\t%A" l roasterValues.[location] warehouseValues.[location]
+            printfn "%-12s\t%12A\t%12A" l roasterValues.[location] warehouseValues.[location]
 
     ()
