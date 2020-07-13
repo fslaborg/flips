@@ -48,25 +48,12 @@ module UnitsOfMeasureTests =
             let e2 = f + d
             Assert.Equal(e1, e2)
 
-        //[<Property>]
-        //let ``Addition of Decisions and Scalar is associative`` (d:Decision<Item>) (s:Scalar) =
-        //    let e1 = d + s
-        //    let e2 = s + d
-        //    Assert.Equal(e1, e2)
-
         [<Property>]
         let ``Addition of Decisions and float is commutative`` (d1:Decision<Item>) (SmallFloatItem f1) (SmallFloatItem f2) =
             let d2 = DecisionItemGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 + f1) + (d2 + f2)
             let e2 = d1 + (f1 + d2) + f2
             Assert.Equal(e1, e2)
-
-        //[<Property>]
-        //let ``Addition of Decisions and Scalar is commutative`` (Decision.Value d1:Decision<Item>) (s1:Scalar) (s2:Scalar) =
-        //    let d2 = DecisionItemGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
-        //    let e1 = (d1 + s1) + (d2 + s2)
-        //    let e2 = d1 + (s1 + d2) + s2
-        //    Assert.Equal(e1, e2)
 
         [<Property>]
         let ``Addition of same Decisions is linear`` (d:Decision<Item>) =
@@ -82,23 +69,11 @@ module UnitsOfMeasureTests =
             let r = d + f - f
             Assert.Equal(e, r)
 
-        //[<Property>]
-        //let ``Addition then Subtraction of Scalar returns Equivalent`` (d:Decision<Item>) (SmallFloatItem f) =
-        //    let e = 1.0 * d
-        //    let r = d + f - f
-        //    Assert.Equal(e, r)
-
         [<Property>]
         let ``Subtraction then Addition of float returns Equivalent`` (d:Decision<Item>) (SmallFloatItem f) =
             let e = 1.0 * d
             let r = d - f + f
             Assert.Equal(e, r)
-
-        //[<Property>]
-        //let ``Subtraction then Addition of Scalar returns Equivalent`` (d:Decision<Item>) (SmallFloatItem f) =
-        //    let e = 1.0 * d
-        //    let r = d - f + f
-        //    Assert.Equal(e, r)
 
         [<Property>]
         let ``Addition then Subtraction of Decision returns Equivalent`` (d1:Decision<Item>) =
@@ -120,12 +95,6 @@ module UnitsOfMeasureTests =
             let e2 = f * d
             Assert.Equal(e1, e2)
 
-        //[<Property>]
-        //let ``Multiplication of Decisions and Scalar is associative`` (Decision.Value d:Decision<Item>) (s:Scalar) =
-        //    let e1 = d * s
-        //    let e2 = s * d
-        //    Assert.Equal(e1, e2)
-
         [<Property>]
         let ``Multiplication of Decisions and float is commutative`` (d1:Decision<Item>) (SmallFloatItem f1) (SmallFloatItem f2) =
             let d2 = DecisionItemGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
@@ -133,12 +102,6 @@ module UnitsOfMeasureTests =
             let e2 = (d2 * f2) + (d1 * f1)
             Assert.Equal(e1, e2)
 
-        //[<Property>]
-        //let ``Multiplication of Decisions and Scalar is commutative`` (d1:Decision<Item>) (s1:Scalar) (s2:Scalar) =
-        //    let d2 = DecisionItemGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
-        //    let e1 = (Decision.Value d1 * s1) + (Decision.Value d2 * s2)
-        //    let e2 = (Decision.Value d2 * s2) + (Decision.Value d1 * s1)
-        //    Assert.Equal(e1, e2)
 
     [<Properties(Arbitrary = [| typeof<UnitsOfMeasure.UnitOfMeasureTypes>; typeof<Types> |] )>]
     module LinearExpression =
