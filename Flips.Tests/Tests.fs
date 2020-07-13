@@ -32,6 +32,64 @@ module Types =
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
+    module Scalar =
+
+        [<Property>]
+        let ``Addition of Scalar is associative`` (a:Scalar) (b:Scalar) =
+            let r1 = a + b
+            let r2 = b + a
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``Addition of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
+            let r1 = (a + b) + c
+            let r2 = a + (b + c)
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``Addition of negated Scalar yields Zero Scalar`` (a:Scalar) =
+            let r = a + (-1.0 * a)
+            Assert.StrictEqual(Scalar.Zero, r)
+
+        [<Property>]
+        let ``Addition of Zero Scalar yields same Scalar`` (a:Scalar) =
+            let r = a + Scalar.Zero
+            Assert.StrictEqual(a, r)
+
+        [<Property>]
+        let ``Addition then Subtraction of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
+            let r = a + b - b
+            Assert.StrictEqual(a, r)
+
+        [<Property>]
+        let ``Subtraction then Addition of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
+            let r = a - b + b
+            Assert.StrictEqual(a, r)
+
+        [<Property>]
+        let ``Multiplication of Scalar is associative`` (a:Scalar) (b:Scalar) =
+            let r1 = a * b
+            let r2 = b * a
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``Multiplication of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
+            let r1 = (a * b) * c
+            let r2 = a * (b * c)
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``Multiplication of Zero Scalar yields Zero Scalar`` (a:Scalar) =
+            let r = a * Scalar.Zero
+            Assert.StrictEqual(Scalar.Zero, r)
+
+        [<Property>]
+        let ``Multiplication of Identity Scalar yields same Scalar`` (a:Scalar) =
+            let r = a * (Scalar.Value 1.0)
+            Assert.StrictEqual(a, r)
+
+
+    [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module Decision =
 
         [<Property>]
@@ -231,6 +289,7 @@ module Types =
             let r = expr + d - d
             Assert.Equal(expr, r)
 
+
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module ModelTests =
 
@@ -274,6 +333,7 @@ module Types =
             | Optimal _ -> Assert.True(true)
             | Suboptimal _ -> Assert.True(false, "Simple model failed to solve")
 
+    
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMapTests =
         open Flips.SliceMap
@@ -339,6 +399,7 @@ module Types =
             let r1 = x * s
             let r2 = (1.0 / x) * r1
             Assert.StrictEqual(s, r2)
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMap2Tests =
@@ -526,6 +587,7 @@ module Types =
             let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
             let r = s2 .* (s2Inverse .* s1)
             Assert.StrictEqual(r, s1)
+
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]

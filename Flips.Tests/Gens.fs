@@ -175,7 +175,7 @@ module Gens =
         open Flips.UnitsOfMeasure.Types
 
         type [<Measure>] Item
-        type SmallFloatItem = SmallFloat of float<Item>
+        type SmallFloatItem = SmallFloatItem of float<Item>
 
         let MIN_FLOAT_ITEM = MIN_FLOAT * 1.0<Item>
         let MAX_FLOAT_ITEM = MAX_FLOAT * 1.0<Item>
@@ -188,7 +188,7 @@ module Gens =
         let SmallFloatItemGen =
             gen {
                 let! f = FloatItemGen
-                return SmallFloat f
+                return SmallFloatItem f
             }
 
         //let IntegerBoundsGen =
@@ -211,12 +211,12 @@ module Gens =
         //        return Continuous (lowerBound, upperBound)
         //    }
 
-        //let DecisionTypeGen =
-        //    gen {
-        //        let! integerBounds = IntegerBoundsGen
-        //        let! continuousBounds = ContinuousBoundsGen
-        //        return! Gen.elements [integerBounds; continuousBounds; Boolean]
-        //    }
+        let DecisionTypeGen =
+            gen {
+                let! integerBounds = IntegerBoundsGen
+                let! continuousBounds = ContinuousBoundsGen
+                return! Gen.elements [integerBounds; continuousBounds; Boolean]
+            }
 
         //let DecisionNameGen =
         //    gen {

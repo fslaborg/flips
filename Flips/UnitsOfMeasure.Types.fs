@@ -6,6 +6,10 @@ type Decision<[<Measure>] 'Measure> =
     | Value of Types.Decision
 with
 
+    member this.Name =
+        let (Value d) = this
+        d.Name
+
     static member (+) (Value lD:Decision<'Measure>, Value rD:Decision<'Measure>) =
         LinearExpression<'Measure>.Value (lD + rD)
 
