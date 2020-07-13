@@ -26,10 +26,8 @@ let solve () =
     let itemWeight = SMap.ofList [("Hamburger", 0.5<Lb/Item>); ("HotDog", 0.4<Lb/Item>); ("Pizza", 0.6<Lb/Item>)]
     let maxTruckWeight = SMap.ofList [("Woodstock", 200.0<Lb>); ("Sellwood", 300.0<Lb>); ("Portland", 280.0<Lb>) ]
 
-    // Create Decision Variable which is keyed by the tuple of Item and Location.
-    // The resulting type is a Map<(string*string),Decision> 
-    // to represent how much of each item we should pack for each location
-    // with a Lower Bound of 0.0 and an Upper Bound of Infinity
+    // Create Decisions for each loation and item using a DecisionBuilder
+    // Turn the result into a `SMap2`
     let numberOfItem =
         DecisionBuilder<Item> "NumberOf" {
             for location in locations do
@@ -46,18 +44,17 @@ let solve () =
     
     // Create Total Item Maximum constraints for each item
     let maxItemConstraints =
-        [for item in items do
-            let name = sprintf "MaxItemTotal|%s" item
-            Constraint.create name (sum (1.0 * numberOfItem.[All, item]) <== maxIngredients.[item])
-        ]
+        ConstraintBuilder "MaxItemTotal" {
+            for item in items ->
+                sum (1.0 * numberOfItem.[All, item]) <== maxIngredients.[item]
+        }
 
-
-    // Create a Constraint for the Max combined weight of items for each Location
-    let maxWeightConstraints = 
-        [for location in locations -> 
-            let name = sprintf "MaxTotalWeight|%s" location
-            Constraint.create name (sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location])
-        ]
+    // Create a Constraints for the Max combined weight of items for each Location
+    let maxWeightConstraints =
+        ConstraintBuilder "MaxTotalWeight" {
+            for location in locations ->
+                sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location]
+        }
 
     // Create a Model type and pipe it through the addition of the constraints
     let model =

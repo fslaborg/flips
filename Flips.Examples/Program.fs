@@ -10,6 +10,7 @@ let main argv =
     FoodTruckExample.solve ()
     FoodTruckMapExample.solve ()
     FoodTruckConstraintBuilderExample.solve ()
+    FoodTruckDecisionBuilder.solve ()
     FoodTruckUnitsOfMeasureExample.solve ()
     MultipleFoodTruckExample.solve ()
     MultipleFoodTruckWithSliceMapExample.solve ()

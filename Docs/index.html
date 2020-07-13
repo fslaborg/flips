@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/docute@4/dist/docute.js"></script>
     <script>
         new Docute({
+            detectSystemDarkTheme: true,
+            darkThemeToggler: true,
             target: '#root',
             highlight: ["fsharp", "bash", "powershell", "json"],
             nav: [
@@ -23,7 +25,7 @@
                     links: [
                         { title: 'Introduction', link: '/' },
                         { title: 'Types', link: '/types/'},
-                        { title: 'Units of Measure', linke: '/units-of-measure/'},
+                        { title: 'Units of Measure', link: '/units-of-measure/'},
                         { title: 'SliceMaps', link: '/slicemaps/' },
                         { title: 'Example Problems', link: '/example-problems/'}
                     ]

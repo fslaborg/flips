@@ -1,4 +1,5 @@
-﻿module Flips.Examples.FoodTruckMapExample
+﻿module Flips.Examples.FoodTruckDecisionBuilder
+
 
 open Flips
 open Flips.Types
@@ -12,12 +13,13 @@ let solve () =
     let itemWeight = Map.ofList [("Hamburger", 0.5); ("HotDog", 0.4)]
     let maxTruckWeight = 200.0
 
-    // Create Decision Variable Map<string,Decision> to represent how much of each item we should pack
-    // with a Lower Bound of 0.0 and an Upper Bound of Infinity
+    // Use a DecisionBuilder to create the Decisions and have them be automatically name
+    // The result is turned into a Map<string,Decision>
     let numberOfItem =
-        [for item in items do
-            item, Decision.createContinuous (sprintf "NumberOf%s" item) 0.0 infinity]
-        |> Map.ofList
+        DecisionBuilder "NumberOf" {
+            for item in items ->
+                Continuous (0.0, infinity)
+        } |> Map.ofSeq
 
     // Create the Linear Expression for the objective
     let objectiveExpression = List.sum [for item in items -> profit.[item] * numberOfItem.[item]]
@@ -26,14 +28,17 @@ let solve () =
     // the Objective Expression
     let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
     
-    // Create a Max Item Constraints
-    let maxItemConstraints =
-        [for item in items ->
-            Constraint.create (sprintf "MaxOf%s" item) (numberOfItem.[item] <== maxIngredients.[item])]
+    // Create a Max Item Constraints using the `ConstraintBuilder` the first argument for the builder
+    // is the prefix used for naming the constraint. The second argument is the F# expression which
+    // it will use for generating the `ConstraintExpressions`
+    let maxItemConstraints = ConstraintBuilder "MaxItem" {
+        for item in items ->
+            numberOfItem.[item] <== maxIngredients.[item]
+    }
 
     // Create a Constraint for the Max combined weight of Hamburgers and Hotdogs
     let weightExpression = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[item]]
-    let maxWeight = Constraint.create "MaxWeight" (weightExpression<== maxTruckWeight)
+    let maxWeight = Constraint.create "MaxWeight" (weightExpression <== maxTruckWeight)
 
     // Create a Model type and pipe it through the addition of the constraints
     let model =
@@ -64,5 +69,4 @@ let solve () =
         printfn "Objective Value: %f" solution.ObjectiveResult
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
-            let (DecisionName name) = decision.Name
-            printfn "Decision: %s\tValue: %f" name value
+            printfn "Decision: %A\tValue: %f" decision.Name value
