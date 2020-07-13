@@ -38,4 +38,4 @@ This shows a small facilities planning problem. There are minimum requirements f
 
 ### [Stock Selection](stock-selection.md)
 
-An example provided by <Person>. This shows how Flips can be used for selecting the best possible collection of stocks.
+An example provided by [Zbigniew Gajewski](https://github.com/zbigniew-gajewski). This shows how Flips can be used for selecting the best possible collection of stocks.
