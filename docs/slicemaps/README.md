@@ -6,20 +6,21 @@ Up to this point we have been using the built in `Map` type for holding our data
 
 So, we need something that has `Map` like lookup but also allows us to slice across different dimensions...? I know, let us create a new type, a `SliceMap`!
 
-> **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`. The numbers correspond to the dimensionality of the `Key` used in the `Map`. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
+> **Aside**: There was an attempt to simply extend the existing F# `Map` type. Ultimately the combination of features that was required in `SliceMap` made that not possible. Specifically, `SliceMap` is not a single type but a family of types: `SMap`, `SMap2`, `SMap3`, `SMap4`, `SMap5`. The numbers correspond to the dimensionality of the `Key` used in the `Map`. `SMap` is keyed by a single value. `SMap2` is keyed by a tuple of two values. `SMap3` is keyed by a tuple of three values and so forth. These types also have some unique interactions that could not be implemented with just extending the built in `Map` type.
 
 ## Types of SliceMaps
 
-SliceMaps are not a single type, they are a family of types akin to Tuples. Tuples can have any number elements: 2, 3, 4, etc. SliceMaps are like tuples in that they have different levels of dimensionality. An `SMap` has a key which is a single element. An `SMap2` has a key which is made up of two elements. An `SMap3` has a key which is made up of three elements. The family of SliceMaps goes up to 4-element keys currently. The type signatures for SliceMaps are the following:
+SliceMaps are not a single type, they are a family of types akin to Tuples. Tuples can have any number elements: 2, 3, 4, etc. SliceMaps are like tuples in that they have different levels of dimensionality. An `SMap` has a key which is a single element. An `SMap2` has a key which is made up of two elements. An `SMap3` has a key which is made up of three elements. The family of SliceMaps goes up to 5-element keys currently. The type signatures for SliceMaps are the following:
 
 ```fsahrp
 SMap<'Key, 'Value>
 SMap2<'Key1, 'Key2, 'Value>
 SMap3<'Key1, 'Key2, 'Key3, 'Value>
 SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value>
+SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value>
 ```
 
-> **Note:** If I come across a compelling reason to create SMap5, SMap6, etc. I will. At this time, I have not come across a real-world problem which would benefit for having higher dimensional SliceMaps.
+> **Note:** If I come across a compelling reason to create SMap6, SMap7, etc. I will. At this time, I have not come across a real-world problem which would benefit for having higher dimensional SliceMaps.
 
 SliceMaps support the ability to perform lookup by key, just like the standard F# `Map` type.
 
@@ -311,23 +312,45 @@ z .* x // Compiler error: No matching operator can be found
 You will notice now that the value in `x` is multiplied by the value in `z` where the second element of the key for `x` matches. The requirement for broadcasting can be summarized with these type signatures
 
 ```fsharp
+// SMap and SMap2
 SMap<'Key1, 'Value> .* SMap2<'Key1, 'Key2, 'Value>
 SMap2<'Key1, 'Key2, 'Value> .* SMap<'Key2, 'Value>
 
+// SMap and SMap3
 SMap<'Key1, 'Value> .* SMap3<'Key1, 'Key2, 'Key3, 'Value>
 SMap3<'Key1, 'Key2, 'Key3, 'Value> .* SMap<'Key3, 'Value>
 
+// SMap and SMap4
 SMap<'Key1, 'Value> .* SMap4<'Key1, 'Key2, 'Key3, 'Key4 'Value>
 SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> .* SMap<'Key4, 'Value>
 
+// SMap and SMap5
+SMap<'Key1, 'Value> .* SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Key5 'Value>
+SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> .* SMap<'Key5, 'Value>
+
+// SMap2 and SMap3
 SMap2<'Key1, 'Key2, 'Value> .* SMap3<'Key1, 'Key2, 'Key3, 'Value>
 SMap3<'Key1, 'Key2, 'Key3, 'Value> .* SMap2<'Key2, 'Key3, 'Value>
 
+// Smap2 and SMap4
 SMap2<'Key1, 'Key2, 'Value> .* SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value>
 SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> .* SMap2<'Key3, 'Key4, 'Value>
 
+// Smap2 and SMap5
+SMap2<'Key1, 'Key2, 'Value> .* SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value>
+SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> .* SMap2<'Key4, 'Key5, 'Value>
+
+// SMap3 and SMap4
 SMap3<'Key1, 'Key2, 'Key3, 'Value> .* SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value>
-SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> .* SMap3<'Key2, 'Key3, 'Key4, 'Value> 
+SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> .* SMap3<'Key2, 'Key3, 'Key4, 'Value>
+
+// SMap3 and SMap5
+SMap3<'Key1, 'Key2, 'Key3, 'Value> .* SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value>
+SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> .* SMap3<'Key3, 'Key4, 'Key5, 'Value>
+
+// SMap4 and SMap5
+SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> .* SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value>
+SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> .* SMap4<'Key2, 'Key3, 'Key4, 'Key5, 'Value>
 ```
 
 The important thing to remember, when multiplying a high-dimensional SliceMap by a lower-dimensional SliceMap, the keys used for matching are dependent on the side of the lower-dimensional SliceMap. If the lower-dimensional SliceMap is on the left then it is the first elements of the keys that must match. If the lower-dimensional SliceMap is on the right, then the last elements of the keys must match.
