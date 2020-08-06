@@ -52,7 +52,6 @@ module Utilities =
     let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
         ((^a) : (static member Sum: ^a -> ^b) k1)
 
-
     let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
                               and ^a: (static member (+): ^a * ^a -> ^a)
                               and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
@@ -125,6 +124,12 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
 
     static member inline Sum (m:SMap<_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap<_,Flips.Types.Decision>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
 module SMap =
@@ -253,6 +258,12 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     static member inline Sum (m:SMap2<_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
 module SMap2 =
@@ -423,6 +434,12 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     static member inline Sum (m:SMap3<_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap3<_,_,_,Flips.Types.Decision>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap3<_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
 module SMap3 =
@@ -656,6 +673,12 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     static member inline Sum (m:SMap4<_,_,_,_,_>) =
         m.Values |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap4<_,_,_,_,Flips.Types.Decision>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+
+    static member inline Sum (m:SMap4<_,_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
 module SMap4 =
