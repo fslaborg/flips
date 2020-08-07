@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
-    <Version>2.0.2</Version>
+    <Version>2.0.3</Version>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
@@ -13,8 +13,8 @@
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyVersion>2.0.2.0</AssemblyVersion>
-    <FileVersion>2.0.2.0</FileVersion>
+    <AssemblyVersion>2.0.3.0</AssemblyVersion>
+    <FileVersion>2.0.3.0</FileVersion>
     <PackageReleaseNotes>Made Decision type summable within SliceMaps</PackageReleaseNotes>
   </PropertyGroup>
 

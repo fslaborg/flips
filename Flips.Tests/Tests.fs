@@ -351,7 +351,22 @@ module Types =
             | Optimal _ -> Assert.True(true)
             | Suboptimal _ -> Assert.True(false, "Simple model failed to solve")
 
-    
+        [<Fact>]
+        let ``Adding Empty Constraint Seq does not raise error`` () =
+          let x1 = Decision.createContinuous "x1" 0.0 infinity
+        
+          let objExpr = 1.0 * x1
+          let objective = Objective.create "Get big" Maximize objExpr
+
+          let emptyConstraintList = []
+
+          let model = 
+              Model.create objective
+              |> Model.addConstraints emptyConstraintList
+
+          ()
+
+
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMapTests =
         open Flips.SliceMap

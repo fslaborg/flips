@@ -146,7 +146,7 @@ module Model =
         { model with _Constraints = [c] @ model.Constraints; _Decisions = newDecisionMap }
 
     let addConstraints constraints model =
-        (constraints |> Seq.map addConstraint |> Seq.reduce (>>)) model
+        (model, constraints) ||> Seq.fold (fun model c -> addConstraint c model)
 
 
 [<RequireQualifiedAccess>]
