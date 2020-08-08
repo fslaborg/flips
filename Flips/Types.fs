@@ -166,27 +166,26 @@ with
         LinearExpression.OfDecision decision >== rhsDecision
 
 
-and LinearExpression (coefficients : Map<DecisionName, Scalar>, decisions : Map<DecisionName, Decision>, offset:Scalar) =
-    member internal this.Coefficients = Map.empty<DecisionName, Scalar>
-    member internal this.Decisions = decisions
+and LinearExpression (elements : Map<DecisionName, Scalar * Decision>, offset:Scalar) =
+    member internal this.Elements = elements
     member internal this.Offset = offset
 
     static member private Equivalent (lExpr:LinearExpression) (rExpr:LinearExpression) =
         let isEqualOffset = (lExpr.Offset = rExpr.Offset)
 
         let leftOnlyNamesAreZero = 
-            (true, lExpr.Coefficients)
-            ||> Map.fold (fun a k lValue -> 
-                            match Map.tryFind k rExpr.Coefficients with
-                            | Some rValue -> lValue = rValue
-                            | None -> lValue = Scalar.Zero)
+            (true, lExpr.Elements)
+            ||> Map.fold (fun a k (lCoef, _) -> 
+                            match Map.tryFind k rExpr.Elements with
+                            | Some (rCoef, _) -> lCoef = rCoef
+                            | None -> lCoef = Scalar.Zero)
 
         let rightOnlyNamesAreZero =
-            (true, rExpr.Coefficients)
-            ||> Map.fold (fun a k rValue -> 
-                            match Map.tryFind k lExpr.Coefficients with
-                            | Some lValue -> lValue = rValue
-                            | None -> rValue = Scalar.Zero)
+            (true, rExpr.Elements)
+            ||> Map.fold (fun a k (rCoef, _) -> 
+                            match Map.tryFind k lExpr.Elements with
+                            | Some (lCoef, _) -> lCoef = rCoef
+                            | None -> rCoef = Scalar.Zero)
 
         isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero
 
@@ -199,55 +198,46 @@ and LinearExpression (coefficients : Map<DecisionName, Scalar>, decisions : Map<
         | _ -> false
 
     static member OfFloat (f:float) =
-        LinearExpression (Map.empty, Map.empty, Value f)
+        LinearExpression (Map.empty, Value f)
 
     static member OfScalar (s:Scalar) =
-        LinearExpression (Map.empty, Map.empty, s)
+        LinearExpression (Map.empty, s)
 
     static member OfDecision (d:Decision) =
-        let names = Set.ofList [d.Name]
-        let coefs = Map.ofList [d.Name, Value 1.0]
-        let decs = Map.ofList [d.Name, d]
-        LinearExpression (coefs, decs, Value 0.0)
+        let elements = Map.ofList [d.Name, (Value 1.0 , d)]
+        LinearExpression (elements, Value 0.0)
 
     static member GetDecisions (expr:LinearExpression) =
-        expr.Decisions
+        expr.Elements
         |> Map.toList
-        |> List.map snd
+        |> List.map (snd >> snd)
         |> Set.ofList
 
     static member Zero =
-        LinearExpression (Map.empty, Map.empty, Scalar.Zero)
+        LinearExpression (Map.empty, Scalar.Zero)
 
-    static member private Merge (l:LinearExpression, r:LinearExpression) =
+    static member private Merge (lExpr:LinearExpression, rightExpr:LinearExpression) =
         // Assume the Left LinearExpression is larger than the right
 
-        let newDecs = 
-            (l.Decisions, r.Decisions) 
-            ||> Map.fold (fun m k v -> 
-                            if m.ContainsKey(k) then
-                                if m.[k].Type = v.Type then
-                                    m
+        let newElements = 
+            (lExpr.Elements, rightExpr.Elements) 
+            ||> Map.fold (fun m k (rCoef, rDec) -> 
+                            match Map.tryFind k m with
+                            | Some (lCoef, lDec) ->
+                                if lDec.Type = rDec.Type then
+                                    Map.add k (lCoef + rCoef, lDec) m
                                 else
-                                    failwith "Cannot have mismatched DecitionType for same DecisionName"
-                            else
-                                Map.add k v m)
+                                    invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
+                            | None ->
+                                Map.add k (rCoef, rDec) m)
 
-        let newCoefs = 
-            (l.Coefficients, r.Coefficients) 
-            ||> Map.fold (fun m k v -> 
-                            if m.ContainsKey(k) then
-                                Map.add k (m.[k] + v) m
-                            else
-                                Map.add k v m)
+        let newOffset = lExpr.Offset + rightExpr.Offset
 
-        let newOffset = l.Offset + r.Offset
-
-        LinearExpression (newCoefs, newDecs, newOffset)
+        LinearExpression (newElements, newOffset)
 
     static member (+) (l:LinearExpression, r:LinearExpression) =
-        let lSize = l.Decisions.Count
-        let rSize = l.Decisions.Count
+        let lSize = l.Elements.Count
+        let rSize = l.Elements.Count
 
         if lSize > rSize then
             LinearExpression.Merge (l, r)
@@ -273,8 +263,8 @@ and LinearExpression (coefficients : Map<DecisionName, Scalar>, decisions : Map<
         LinearExpression.OfDecision decision + expr
 
     static member (*) (expr:LinearExpression, scalar:Scalar) =
-        let newCoefs = Map.map (fun k v -> v * scalar) expr.Coefficients
-        LinearExpression (newCoefs, expr.Decisions, expr.Offset * scalar)
+        let newElements = Map.map (fun k (c, d) -> (c * scalar, d)) expr.Elements
+        LinearExpression (newElements, expr.Offset * scalar)
 
     static member (*) (scalar:Scalar, expr:LinearExpression) =
         expr * scalar

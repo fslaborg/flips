@@ -18,8 +18,9 @@ module internal ORTools =
 
     let private buildExpression (varMap:Map<DecisionName,Variable>) (expr:LinearExpression) =
         let decisionExpr =
-            expr.Names
-            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
+            expr.Elements
+            |> Map.toSeq
+            |> Seq.map (fun (k, (s, d)) -> getScalarValue s * varMap.[k])
             |> fun x -> 
                 match Seq.isEmpty x with 
                 | true -> LinearExpr() 
@@ -143,9 +144,9 @@ module internal Optano =
         let v = getScalarValue expr.Offset
         let constant = Expression.Sum([v])
         let variables =
-            expr.Names
-            |> Set.toSeq
-            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
+            expr.Elements
+            |> Map.toSeq
+            |> Seq.map (fun (k, (s, d)) -> getScalarValue s * varMap.[k])
             |> (fun terms -> Expression.Sum(terms))
 
         constant + variables

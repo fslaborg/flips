@@ -67,7 +67,7 @@ and LinearExpression<[<Measure>] 'Measure> =
     with
 
         static member inline Zero =
-            let expr = Types.LinearExpression (Set.empty, Map.empty, Map.empty, Types.Scalar.Zero)
+            let expr = Types.LinearExpression (Map.empty, Types.Scalar.Zero)
             LinearExpression<'Measure>.Value expr
 
         static member (+) (Value lExpr:LinearExpression<'Measure>, Value rExpr:LinearExpression<'Measure>) =
