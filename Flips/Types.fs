@@ -222,24 +222,34 @@ and LinearExpression (names:Set<DecisionName>, coefficients : Map<DecisionName, 
         LinearExpression (Set.empty, Map.empty, Map.empty, Scalar.Zero)
 
     static member private Merge (l:LinearExpression, r:LinearExpression) =
-        // Assume the Left LinearExpression is larget than the right
-        let nameOverlap = Set.intersect l.Names r.Names
-        
-        for n in nameOverlap do
-            if l.Decisions.[n].Type <> r.Decisions.[n].Type then
-                let (DecisionName name) = n
-                invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
+        // Assume the Left LinearExpression is larger than the right
+        for n in r.Names do
+            if Set.contains n l.Names then
+                if l.Decisions.[n].Type <> r.Decisions.[n].Type then
+                    let (DecisionName name) = n
+                    invalidArg name "Cannot have mismatched DecisionTypes for same DecisionName"
 
         let newNames = l.Names + r.Names
 
-        let newDecs = (l.Decisions, (r.Names - l.Names)) ||> Set.fold (fun m k -> Map.add k r.Decisions.[k] m)
+        let newDecs = 
+            (l.Decisions, r.Names) 
+            ||> Set.fold (fun m k -> 
+                            if m.ContainsKey(k) then
+                                m
+                            else
+                                Map.add k r.Decisions.[k] m)
 
         let newCoefs =
-            (l.Coefficients, nameOverlap)
-            ||> Set.fold (fun m k -> Map.add k (l.Coefficients.[k] + r.Coefficients.[k]) m)
-            |> fun updatedCoefs -> Set.fold (fun m n -> Map.add n r.Coefficients.[n] m) updatedCoefs (r.Names - l.Names)
+            (l.Coefficients, r.Names)
+            ||> Set.fold (fun m k -> 
+                            if m.ContainsKey(k) then
+                                Map.add k (l.Coefficients.[k] + r.Coefficients.[k]) m
+                            else
+                                Map.add k r.Coefficients.[k] m)
 
-        LinearExpression (newNames, newCoefs, newDecs, l.Offset + r.Offset)
+        let newOffset = l.Offset + r.Offset
+
+        LinearExpression (newNames, newCoefs, newDecs, newOffset)
 
     static member (+) (l:LinearExpression, r:LinearExpression) =
         let lSize = Set.count l.Names
