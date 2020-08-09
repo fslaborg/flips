@@ -76,10 +76,12 @@ and [<NoComparison>][<CustomEquality>]
     static member private NearlyEquals (a:float) (b:float) : bool =
         let aValue = System.BitConverter.DoubleToInt64Bits a
         let bValue = System.BitConverter.DoubleToInt64Bits b
-        if (aValue >>> 63) <> (bValue >>> 63) then
-            a = b
-        else
-            System.Math.Abs(aValue - bValue) <= 10_000L
+        let result = 
+            if (aValue >>> 63) <> (bValue >>> 63) then
+                a = b
+            else
+                System.Math.Abs(aValue - bValue) <= 10_000L
+        result
 
     override this.GetHashCode () =
         hash this

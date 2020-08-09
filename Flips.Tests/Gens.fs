@@ -22,6 +22,12 @@ module Gens =
             return SmallFloat f
         }
 
+    let ScalarGen =
+        gen {
+            let! f = FloatGen
+            return Value f
+        }
+
     let IntegerBoundsGen =
         gen {
             let! lb = FloatGen
@@ -149,6 +155,7 @@ module Gens =
 
     type Types () =
         static member ArbSmallFloatGen () = Arb.fromGen SmallFloatGen
+        static member ArbScalarGen () = Arb.fromGen ScalarGen
         static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
         static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
         static member ArbDecision () = Arb.fromGen DecisionGen
@@ -182,40 +189,7 @@ module Gens =
             gen {
                 let! f = FloatItemGen
                 return SmallFloatItem f
-            }
-
-        //let IntegerBoundsGen =
-        //    gen {
-        //        let! lb = FloatGen
-        //        let! d = PositiveFloatGen
-        //        let lowerBound = lb
-        //        let delta = d
-        //        let upperBound = lowerBound + delta
-        //        return Integer (lowerBound, upperBound)
-        //    }
-         
-        //let ContinuousBoundsGen =
-        //    gen {
-        //        let! lb = FloatGen
-        //        let! d = PositiveFloatGen
-        //        let lowerBound = lb
-        //        let delta = d
-        //        let upperBound = lowerBound + delta
-        //        return Continuous (lowerBound, upperBound)
-        //    }
-
-        //let DecisionTypeGen =
-        //    gen {
-        //        let! integerBounds = IntegerBoundsGen
-        //        let! continuousBounds = ContinuousBoundsGen
-        //        return! Gen.elements [integerBounds; continuousBounds; Boolean]
-        //    }
-
-        //let DecisionNameGen =
-        //    gen {
-        //        let! (NonEmptyString name) = Arb.generate<NonEmptyString>
-        //        return DecisionName name
-        //    }
+            }   
 
         let DecisionItemGen = 
             gen {
