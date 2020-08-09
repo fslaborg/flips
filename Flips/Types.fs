@@ -1,70 +1,6 @@
 ﻿namespace Flips.Types
 
 
-[<CustomEquality; CustomComparison>]
-type Scalar = Value of float with
-
-    static member private NearlyEquals (Value a:Scalar) (Value b:Scalar) : bool =
-        let aValue = System.BitConverter.DoubleToInt64Bits a
-        let bValue = System.BitConverter.DoubleToInt64Bits b
-        if (aValue >>> 63) <> (bValue >>> 63) then
-            a = b
-        else
-            System.Math.Abs(aValue - bValue) <= 10_000L
-
-    static member (+) (Value lhs:Scalar, Value rhs:Scalar) =
-        Value (lhs + rhs)
-
-    static member (+) (Value s:Scalar, f:float) =
-        Value (s + f)
-
-    static member (+) (f:float, Value s:Scalar) =
-        Value (s + f)
-
-    static member (*) (Value lhs:Scalar, Value rhs:Scalar) =
-        Value (lhs * rhs)
-
-    static member (*) (Value s:Scalar, f:float) =
-        Value (s * f)
-
-    static member (*) (f:float, Value s:Scalar) =
-        Value (s * f)
-
-    static member (-) (Value lhs:Scalar, Value rhs:Scalar) =
-        Value (lhs - rhs)
-
-    static member (-) (Value s:Scalar, f:float) =
-        Value (s - f)
-
-    static member (-) (f:float, Value s:Scalar) =
-        Value (f - s)
-
-    static member (/) (Value lhs:Scalar, Value rhs:Scalar) =
-        Value (lhs / rhs)
-
-    static member (/) (f:float, Value s:Scalar) =
-        Value (f / s)
-
-    static member (/) (Value s:Scalar, f:float) =
-        Value (s / f)
-
-    static member Zero = Value 0.0
-
-    override this.GetHashCode () =
-        let (Value v) = this
-        hash v
-
-    override this.Equals(obj) =
-        match obj with
-        | :? Scalar as s -> Scalar.NearlyEquals this s 
-        | _ -> false
-
-    interface System.IComparable with
-        member this.CompareTo yObj =
-            match yObj with
-            | :? Scalar as s -> compare this s
-            | _ -> invalidArg "yObj" "Cannot compare values of different types"
-
 type DecisionType =
     | Boolean
     | Integer of LowerBound:float * UpperBound:float
@@ -84,23 +20,11 @@ with
     static member (*) (f:float, decision:Decision) =
         LinearExpression.OfDecision decision * f
 
-    static member (*) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision * scalar
-    
-    static member (*) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfDecision decision * scalar
-
     static member (+) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision + f
 
     static member (+) (f:float, decision:Decision) =
         LinearExpression.OfDecision decision + f
-
-    static member (+) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision + scalar
-
-    static member (+) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar + decision
 
     static member (+) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision + rhsDecision
@@ -114,23 +38,11 @@ with
     static member (-) (f:float, decision:Decision) =
         LinearExpression.OfDecision decision - f
 
-    static member (-) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar + (-1.0 * decision)
-
-    static member (-) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision + (-1.0 * scalar)
-
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
 
     static member (<==) (f:float, decision:Decision) =
         LinearExpression.OfFloat f <== decision
-
-    static member (<==) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision <== scalar
-
-    static member (<==) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar <== decision
 
     static member (<==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision <== rhsDecision
@@ -141,12 +53,6 @@ with
     static member (==) (f:float, decision:Decision) =
         LinearExpression.OfFloat f  == decision
 
-    static member (==) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision == scalar
-
-    static member (==) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar == decision
-
     static member (==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision == rhsDecision
 
@@ -156,19 +62,96 @@ with
     static member (>==) (f:float, decision:Decision) =
         LinearExpression.OfFloat f >== decision
 
-    static member (>==) (decision:Decision, scalar:Scalar) =
-        LinearExpression.OfDecision decision >== scalar
-
-    static member (>==) (scalar:Scalar, decision:Decision) =
-        LinearExpression.OfScalar scalar >== decision
-
     static member (>==) (decision:Decision, rhsDecision:Decision) =
         LinearExpression.OfDecision decision >== rhsDecision
 
 
-and LinearExpression (elements : Map<DecisionName, Scalar * Decision>, offset:Scalar) =
-    member internal this.Elements = elements
-    member internal this.Offset = offset
+and [<NoComparison>] internal 
+    ReducedLinearExpression =
+    {
+        DecisionTypes : Map<DecisionName, DecisionType>
+        Coefficients : Map<DecisionName, float>
+        Offset : float
+    } with
+    static member private NearlyEquals (a:float) (b:float) : bool =
+        let aValue = System.BitConverter.DoubleToInt64Bits a
+        let bValue = System.BitConverter.DoubleToInt64Bits b
+        if (aValue >>> 63) <> (bValue >>> 63) then
+            a = b
+        else
+            System.Math.Abs(aValue - bValue) <= 10_000L
+
+    override this.GetHashCode () =
+        hash this
+
+    override this.Equals(obj) =
+        match obj with
+        | :? ReducedLinearExpression as otherExpr ->
+            let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
+
+            let leftMatchesRight =
+                (true, this.Coefficients)
+                ||> Map.fold (fun b k thisCoef -> 
+                                match Map.tryFind k otherExpr.Coefficients with
+                                | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
+                                | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
+
+            let rightNonMatchesAreZero =
+                (true, otherExpr.Coefficients)
+                ||> Map.fold (fun b k otherCoef ->
+                                if this.Coefficients.ContainsKey(k) then
+                                    b
+                                else
+                                    b && (ReducedLinearExpression.NearlyEquals otherCoef 0.0))
+
+            offsetSame && leftMatchesRight && rightNonMatchesAreZero
+        | _ -> false
+
+and LinearExpression =
+    | Empty
+    | AddFloat of float * LinearExpression
+    | AddDecision of (float * Decision) * LinearExpression
+    | Multiply of float * LinearExpression
+    | AddLinearExpression of LinearExpression * LinearExpression
+
+    static member internal Reduce (expr:LinearExpression) : ReducedLinearExpression =
+        let initialState = {
+            DecisionTypes = Map.empty
+            Coefficients = Map.empty
+            Offset = 0.0
+        }
+
+        let rec evaluateNode (multiplier:float, state:ReducedLinearExpression) (node:LinearExpression) : float * ReducedLinearExpression =
+            match node with
+            | Empty -> multiplier, state
+            | AddFloat (addToOffset, nodeExpr) -> 
+                let newState = {state with Offset = multiplier * addToOffset + state.Offset}
+                evaluateNode (multiplier, newState) nodeExpr
+            | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
+                match Map.tryFind nodeDecision.Name state.DecisionTypes with
+                | Some existingType ->
+                    if existingType <> nodeDecision.Type then
+                        invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
+                    else
+                        let newCoefficients = Map.add nodeDecision.Name (state.Coefficients.[nodeDecision.Name] + nodeCoef * multiplier) state.Coefficients
+                        let newState = {state with Coefficients = newCoefficients}
+                        evaluateNode (multiplier, newState) nodeExpr
+                | None ->
+                    let newDecisionTypes = Map.add nodeDecision.Name nodeDecision.Type state.DecisionTypes
+                    let newCoefficient = Map.add nodeDecision.Name (multiplier * nodeCoef) state.Coefficients
+                    let newState = {state with DecisionTypes = newDecisionTypes; Coefficients = newCoefficient}
+                    evaluateNode (multiplier, newState) nodeExpr
+            | Multiply (nodeMultiplier, nodeExpr) ->
+                let newMultiplier = multiplier * nodeMultiplier
+                evaluateNode (newMultiplier, state) nodeExpr
+            | AddLinearExpression (lExpr, rExpr) ->
+                let (_, leftState) = evaluateNode (multiplier, state) lExpr
+                let (_,rightState) = evaluateNode (multiplier, leftState) rExpr
+                multiplier, rightState
+
+        let (_,reducedExpr) = evaluateNode (1.0, initialState) expr
+
+        reducedExpr
 
     static member private Equivalent (lExpr:LinearExpression) (rExpr:LinearExpression) =
         let isEqualOffset = (lExpr.Offset = rExpr.Offset)
