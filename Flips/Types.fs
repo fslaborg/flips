@@ -66,7 +66,7 @@ with
         LinearExpression.OfDecision decision >== rhsDecision
 
 
-and [<NoComparison>] internal 
+and [<NoComparison>][<CustomEquality>] internal 
     ReducedLinearExpression =
     {
         DecisionTypes : Map<DecisionName, DecisionType>
@@ -107,7 +107,7 @@ and [<NoComparison>] internal
             offsetSame && leftMatchesRight && rightNonMatchesAreZero
         | _ -> false
 
-and LinearExpression =
+and [<NoComparison>][<CustomEquality>] LinearExpression =
     | Empty
     | AddFloat of float * LinearExpression
     | AddDecision of (float * Decision) * LinearExpression
@@ -153,107 +153,37 @@ and LinearExpression =
 
         reducedExpr
 
-    static member private Equivalent (lExpr:LinearExpression) (rExpr:LinearExpression) =
-        let isEqualOffset = (lExpr.Offset = rExpr.Offset)
-
-        let leftOnlyNamesAreZero = 
-            (true, lExpr.Elements)
-            ||> Map.fold (fun a k (lCoef, _) -> 
-                            match Map.tryFind k rExpr.Elements with
-                            | Some (rCoef, _) -> lCoef = rCoef
-                            | None -> lCoef = Scalar.Zero)
-
-        let rightOnlyNamesAreZero =
-            (true, rExpr.Elements)
-            ||> Map.fold (fun a k (rCoef, _) -> 
-                            match Map.tryFind k lExpr.Elements with
-                            | Some (lCoef, _) -> lCoef = rCoef
-                            | None -> rCoef = Scalar.Zero)
-
-        isEqualOffset && leftOnlyNamesAreZero && rightOnlyNamesAreZero
-
     override this.GetHashCode () =
         hash this
 
     override this.Equals(obj) =
         match obj with
-        | :? LinearExpression as expr -> LinearExpression.Equivalent this expr
+        | :? LinearExpression as otherExpr -> 
+            let thisReduced = LinearExpression.Reduce this
+            let otherReduced = LinearExpression.Reduce otherExpr
+            thisReduced = otherReduced
         | _ -> false
 
-    static member OfFloat (f:float) =
-        LinearExpression (Map.empty, Value f)
-
-    static member OfScalar (s:Scalar) =
-        LinearExpression (Map.empty, s)
-
-    static member OfDecision (d:Decision) =
-        let elements = Map.ofList [d.Name, (Value 1.0 , d)]
-        LinearExpression (elements, Value 0.0)
-
-    static member GetDecisions (expr:LinearExpression) =
-        expr.Elements
-        |> Map.toList
-        |> List.map (snd >> snd)
-        |> Set.ofList
-
     static member Zero =
-        LinearExpression (Map.empty, Scalar.Zero)
-
-    static member private Merge (lExpr:LinearExpression, rightExpr:LinearExpression) =
-        // Assume the Left LinearExpression is larger than the right
-
-        let newElements = 
-            (lExpr.Elements, rightExpr.Elements) 
-            ||> Map.fold (fun m k (rCoef, rDec) -> 
-                            match Map.tryFind k m with
-                            | Some (lCoef, lDec) ->
-                                if lDec.Type = rDec.Type then
-                                    Map.add k (lCoef + rCoef, lDec) m
-                                else
-                                    invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
-                            | None ->
-                                Map.add k (rCoef, rDec) m)
-
-        let newOffset = lExpr.Offset + rightExpr.Offset
-
-        LinearExpression (newElements, newOffset)
+        LinearExpression.Empty
 
     static member (+) (l:LinearExpression, r:LinearExpression) =
-        let lSize = l.Elements.Count
-        let rSize = l.Elements.Count
-
-        if lSize > rSize then
-            LinearExpression.Merge (l, r)
-        else
-            LinearExpression.Merge (r, l)
+        LinearExpression.AddLinearExpression (l, r)
 
     static member (+) (expr:LinearExpression, f:float) =
-        expr + (LinearExpression.OfFloat f)
+        LinearExpression.AddFloat (f, expr)
 
     static member (+) (f:float, expr:LinearExpression) =
-        (LinearExpression.OfFloat f) + expr
-
-    static member (+) (expr:LinearExpression, scalar:Scalar) =
-        expr + (LinearExpression.OfScalar scalar)
-
-    static member (+) (scalar:Scalar, expr:LinearExpression) =
-        (LinearExpression.OfScalar scalar) + expr
+        expr + f
 
     static member (+) (expr:LinearExpression, decision:Decision) =
-        expr + (LinearExpression.OfDecision decision)
+        LinearExpression.AddDecision ((1.0, decision), expr)
     
     static member (+) (decision:Decision, expr:LinearExpression) =
-        LinearExpression.OfDecision decision + expr
-
-    static member (*) (expr:LinearExpression, scalar:Scalar) =
-        let newElements = Map.map (fun k (c, d) -> (c * scalar, d)) expr.Elements
-        LinearExpression (newElements, expr.Offset * scalar)
-
-    static member (*) (scalar:Scalar, expr:LinearExpression) =
-        expr * scalar
+        expr + decision
 
     static member (*) (expr:LinearExpression, f:float) =
-        expr * (Scalar.Value f)
+        LinearExpression.Multiply (f, expr)
 
     static member (*) (f:float, expr:LinearExpression) =
         expr * f
@@ -264,12 +194,6 @@ and LinearExpression =
     static member (-) (f:float, expr:LinearExpression) =
         f + (-1.0 * expr)
 
-    static member (-) (expr:LinearExpression, s:Scalar) =
-        expr + (-1.0 * s)
-
-    static member (-) (s:Scalar, expr:LinearExpression) =
-        s + (-1.0 * expr)
-
     static member (-) (expr:LinearExpression, d:Decision) =
         expr + (-1.0 * d)
 
@@ -279,17 +203,17 @@ and LinearExpression =
     static member (-) (lExpr:LinearExpression, rExpr:LinearExpression) =
         lExpr + (-1.0 * rExpr)
 
+    static member OfFloat (f:float) =
+        LinearExpression.Zero * f
+
+    static member OfDecision (d:Decision) =
+        LinearExpression.Zero + d
+
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
 
     static member (<==) (lhs:float, rhs:LinearExpression) =
         Inequality (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
-
-    static member (<==) (lhs:LinearExpression, rhs:Scalar) =
-        Inequality (lhs, LessOrEqual, LinearExpression.OfScalar rhs)
-
-    static member (<==) (lhs:Scalar, rhs:LinearExpression) =
-        Inequality (LinearExpression.OfScalar lhs, LessOrEqual, rhs)
 
     static member (<==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
@@ -306,12 +230,6 @@ and LinearExpression =
     static member (==) (lhs:float, rhs:LinearExpression) =
         Equality (LinearExpression.OfFloat lhs, rhs)
 
-    static member (==) (lhs:LinearExpression, rhs:Scalar) =
-        Equality (lhs, LinearExpression.OfScalar rhs)
-
-    static member (==) (lhs:Scalar, rhs:LinearExpression) =
-        Equality (LinearExpression.OfScalar lhs, rhs)
-
     static member (==) (lhs:LinearExpression, rhs:Decision) =
         Equality (lhs, LinearExpression.OfDecision rhs)
 
@@ -327,12 +245,6 @@ and LinearExpression =
     static member (>==) (lhs:float, rhs:LinearExpression) =
         Inequality (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
 
-    static member (>==) (lhs:LinearExpression, rhs:Scalar) =
-        Inequality (lhs, GreaterOrEqual, LinearExpression.OfScalar rhs)
-
-    static member (>==) (lhs:Scalar, rhs:LinearExpression) =
-        Inequality (LinearExpression.OfScalar lhs, GreaterOrEqual, rhs)
-
     static member (>==) (lhs:LinearExpression, rhs:Decision) =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
 
@@ -341,6 +253,8 @@ and LinearExpression =
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         Inequality (lhs, GreaterOrEqual, rhs)
+
+
 
 
 and Inequality =
