@@ -153,6 +153,21 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
 
         reducedExpr
 
+    static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
+
+        let rec evaluateNode (decisions:Set<Decision>) (node:LinearExpression) : Set<Decision> =
+            match node with
+            | Empty | AddFloat _ | Multiply _ -> decisions
+            | AddDecision ((_, nodeDecision), nodeExpr) ->
+                decisions.Add nodeDecision
+            | AddLinearExpression (lExpr, rExpr) ->
+                let leftDecisions = evaluateNode decisions lExpr
+                let rightDecisions = evaluateNode leftDecisions rExpr
+                rightDecisions
+
+        evaluateNode (Set.empty) expr
+
+
     override this.GetHashCode () =
         hash this
 
