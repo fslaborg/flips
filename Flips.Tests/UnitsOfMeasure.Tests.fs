@@ -107,13 +107,6 @@ module UnitsOfMeasureTests =
     module LinearExpression =
 
         [<Property>]
-        let ``Mismatched DecisionType throws error in LinearExpression`` (DecisionName decisionName:DecisionName) (type1:DecisionType) =
-            let type2 = DecisionTypeGen.Where(fun x -> x <> type1) |> Gen.sample 0 1 |> Seq.exactlyOne
-            let d1 = Decision.create<Item> decisionName type1
-            let d2 = Decision.create<Item> decisionName type2
-            Prop.throws<System.ArgumentException,_>(lazy (d1 + d2))
-
-        [<Property>]
         let ``Addition of LinearExpression is associative`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionItemGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)

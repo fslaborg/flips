@@ -66,7 +66,7 @@ with
         LinearExpression.OfDecision decision >== rhsDecision
 
 
-and [<NoComparison>][<CustomEquality>] internal 
+and [<NoComparison>][<CustomEquality>] 
     ReducedLinearExpression =
     {
         DecisionTypes : Map<DecisionName, DecisionType>
@@ -96,15 +96,19 @@ and [<NoComparison>][<CustomEquality>] internal
                                 | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
                                 | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
 
+            let evaluateRightElement b n otherCoef =
+                if this.Coefficients.ContainsKey(n) then
+                    b
+                else
+                    let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
+                    b && essentiallyZero
+
             let rightNonMatchesAreZero =
                 (true, otherExpr.Coefficients)
-                ||> Map.fold (fun b k otherCoef ->
-                                if this.Coefficients.ContainsKey(k) then
-                                    b
-                                else
-                                    b && (ReducedLinearExpression.NearlyEquals otherCoef 0.0))
+                ||> Map.fold evaluateRightElement
 
-            offsetSame && leftMatchesRight && rightNonMatchesAreZero
+            let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
+            allPassing
         | _ -> false
 
 and [<NoComparison>][<CustomEquality>] LinearExpression =
@@ -114,7 +118,7 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
     | Multiply of float * LinearExpression
     | AddLinearExpression of LinearExpression * LinearExpression
 
-    static member internal Reduce (expr:LinearExpression) : ReducedLinearExpression =
+    static member Reduce (expr:LinearExpression) : ReducedLinearExpression =
         let initialState = {
             DecisionTypes = Map.empty
             Coefficients = Map.empty
@@ -157,9 +161,12 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
 
         let rec evaluateNode (decisions:Set<Decision>) (node:LinearExpression) : Set<Decision> =
             match node with
-            | Empty | AddFloat _ | Multiply _ -> decisions
+            | Empty -> decisions
+            | AddFloat (_, nodeExpr) -> evaluateNode decisions nodeExpr
+            | Multiply (_, nodeExpr) -> evaluateNode decisions nodeExpr
             | AddDecision ((_, nodeDecision), nodeExpr) ->
-                decisions.Add nodeDecision
+                let newDecisions = decisions.Add nodeDecision
+                evaluateNode newDecisions nodeExpr
             | AddLinearExpression (lExpr, rExpr) ->
                 let leftDecisions = evaluateNode decisions lExpr
                 let rightDecisions = evaluateNode leftDecisions rExpr
@@ -219,7 +226,7 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
         lExpr + (-1.0 * rExpr)
 
     static member OfFloat (f:float) =
-        LinearExpression.Zero * f
+        LinearExpression.AddFloat(f, LinearExpression.Zero)
 
     static member OfDecision (d:Decision) =
         LinearExpression.Zero + d

@@ -22,12 +22,6 @@ module Gens =
             return SmallFloat f
         }
 
-    let ScalarGen =
-        gen {
-            let! f = FloatGen
-            return Value f
-        }
-
     let IntegerBoundsGen =
         gen {
             let! lb = FloatGen
@@ -155,7 +149,6 @@ module Gens =
 
     type Types () =
         static member ArbSmallFloatGen () = Arb.fromGen SmallFloatGen
-        static member ArbScalarGen () = Arb.fromGen ScalarGen
         static member ArbDecisionTypeGen () = Arb.fromGen DecisionTypeGen
         static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
         static member ArbDecision () = Arb.fromGen DecisionGen

@@ -23,7 +23,8 @@ module internal ORTools =
                 | true -> LinearExpr() 
                 | false -> Seq.reduce (+) x
         
-        reducedExpr.Offset + decisionExpr
+        let resultExpr = reducedExpr.Offset + decisionExpr
+        resultExpr
 
 
     let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
