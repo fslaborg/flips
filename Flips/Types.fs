@@ -1,12 +1,19 @@
 ﻿namespace Flips.Types
 
 
+
 type DecisionType =
     | Boolean
     | Integer of LowerBound:float * UpperBound:float
     | Continuous of LowerBound:float * UpperBound:float
 
 type DecisionName = DecisionName of string
+
+type internal ReduceAccumulator = {
+    DecisionTypes : Map<DecisionName, DecisionType>
+    Coefficients : Map<DecisionName, List<float>>
+    Offsets : List<float>
+}
 
 type Decision = {
     Name : DecisionName
@@ -106,6 +113,19 @@ and [<NoComparison>][<CustomEquality>]
             allPassing
         | _ -> false
 
+    static member internal OfReduceAccumulator (acc:ReduceAccumulator) =
+        let offset = acc.Offsets |> List.sortBy System.Math.Abs |> List.sum
+        let coefficients =
+            acc.Coefficients
+            |> Map.map (fun _ coefficients -> coefficients |> List.sortBy System.Math.Abs |> List.sum)
+
+        {
+            DecisionTypes = acc.DecisionTypes
+            Coefficients = coefficients
+            Offset = offset
+        }
+        
+
 and [<NoComparison>][<CustomEquality>] LinearExpression =
     | Empty
     | AddFloat of float * LinearExpression
@@ -113,18 +133,20 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
     | Multiply of float * LinearExpression
     | AddLinearExpression of LinearExpression * LinearExpression
 
+
+
     static member internal Reduce (expr:LinearExpression) : ReducedLinearExpression =
         let initialState = {
             DecisionTypes = Map.empty
             Coefficients = Map.empty
-            Offset = 0.0
+            Offsets = []
         }
 
-        let rec evaluateNode (multiplier:float, state:ReducedLinearExpression) (node:LinearExpression) : float * ReducedLinearExpression =
+        let rec evaluateNode (multiplier:float, state:ReduceAccumulator) (node:LinearExpression) : float * ReduceAccumulator =
             match node with
             | Empty -> multiplier, state
             | AddFloat (addToOffset, nodeExpr) -> 
-                let newState = {state with Offset = multiplier * addToOffset + state.Offset}
+                let newState = {state with Offsets = [multiplier * addToOffset] @ state.Offsets}
                 evaluateNode (multiplier, newState) nodeExpr
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
                 match Map.tryFind nodeDecision.Name state.DecisionTypes with
@@ -132,12 +154,12 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
                     if existingType <> nodeDecision.Type then
                         invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
                     else
-                        let newCoefficients = Map.add nodeDecision.Name (state.Coefficients.[nodeDecision.Name] + nodeCoef * multiplier) state.Coefficients
+                        let newCoefficients = Map.add nodeDecision.Name ([nodeCoef * multiplier] @ state.Coefficients.[nodeDecision.Name]) state.Coefficients
                         let newState = {state with Coefficients = newCoefficients}
                         evaluateNode (multiplier, newState) nodeExpr
                 | None ->
                     let newDecisionTypes = Map.add nodeDecision.Name nodeDecision.Type state.DecisionTypes
-                    let newCoefficient = Map.add nodeDecision.Name (multiplier * nodeCoef) state.Coefficients
+                    let newCoefficient = Map.add nodeDecision.Name [multiplier * nodeCoef] state.Coefficients
                     let newState = {state with DecisionTypes = newDecisionTypes; Coefficients = newCoefficient}
                     evaluateNode (multiplier, newState) nodeExpr
             | Multiply (nodeMultiplier, nodeExpr) ->
@@ -148,9 +170,9 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
                 let (_,rightState) = evaluateNode (multiplier, leftState) rExpr
                 multiplier, rightState
 
-        let (_,reducedExpr) = evaluateNode (1.0, initialState) expr
+        let (_,reduceResult) = evaluateNode (1.0, initialState) expr
 
-        reducedExpr
+        ReducedLinearExpression.OfReduceAccumulator reduceResult
 
     static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
 
