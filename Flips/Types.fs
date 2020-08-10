@@ -67,22 +67,13 @@ with
 
 
 and [<NoComparison>][<CustomEquality>] 
-    ReducedLinearExpression =
+    internal ReducedLinearExpression =
     {
         DecisionTypes : Map<DecisionName, DecisionType>
         Coefficients : Map<DecisionName, float>
         Offset : float
     } with
     static member private NearlyEquals (a:float) (b:float) : bool =
-        //let aValue = System.BitConverter.DoubleToInt64Bits a
-        //let bValue = System.BitConverter.DoubleToInt64Bits b
-        //let result = 
-        //    if (aValue >>> 63) <> (bValue >>> 63) then
-        //        a = b
-        //    else
-        //        System.Math.Abs(aValue - bValue) <= 10_000L
-        //result
-
         System.Math.Abs(a - b) < 1e-6
 
     override this.GetHashCode () =
@@ -122,7 +113,7 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
     | Multiply of float * LinearExpression
     | AddLinearExpression of LinearExpression * LinearExpression
 
-    static member Reduce (expr:LinearExpression) : ReducedLinearExpression =
+    static member internal Reduce (expr:LinearExpression) : ReducedLinearExpression =
         let initialState = {
             DecisionTypes = Map.empty
             Coefficients = Map.empty

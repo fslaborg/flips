@@ -185,10 +185,6 @@ module Types =
             let expr1 = randomExpressionFromDecisions rng decisions
             let expr2 = randomExpressionFromDecisions rng decisions
             let r = expr1 + expr2 - expr2
-            let reduce1 = LinearExpression.Reduce expr1
-            let reduce2 = LinearExpression.Reduce expr2
-            let reduceR = LinearExpression.Reduce r
-            Assert.Equal(reduce1, reduceR)
             Assert.Equal(expr1, r)
 
         [<Property>]
