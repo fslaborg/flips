@@ -1,5 +1,7 @@
 ﻿namespace Flips.SliceMap
 
+open System.Collections.Generic
+
 
 type SliceType<'a when 'a : comparison> =
     | All
@@ -59,9 +61,18 @@ module Utilities =
         ((^a) : (static member Sum: ^a -> ^b) r)
 
 
-type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key,'Value>) =
+type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, values:Dictionary<'Key,'Value>) =
+    member this.Keys = keys
+    member this.Values = values
 
-    member this.Values = m
+    new(m:Map<'Key,'Value>) =
+        let keys = m |> Map.toSeq |> Seq.map fst |> Seq.distinct |> Set.ofSeq
+        let values = 
+            let vs = m |> Map.toSeq |> Seq.map (fun (k, v) -> KeyValuePair(k, v))
+            new Dictionary<'Key, 'Value>(vs)
+
+        SMap(keys, values)
+
 
     override this.ToString() =
         sprintf "SMap %O" this.Values
@@ -75,24 +86,33 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
         hash this.Values
 
     member this.ContainsKey k =
-        Map.containsKey k this.Values
+        Set.contains k this.Keys
 
     member this.AsMap =
         this.Values
+        |> Seq.map (fun x -> x.Key, x.Value)
+        |> Map.ofSeq
 
     // Filter Values
     member private this.FilterValues k1f =
         let k1Filter = SliceFilterBuilder k1f
             
-        this.Values
-        |> Map.filter (fun k1 _ -> k1Filter k1 )
-        |> Map.toSeq
+        let newKeys = Set.filter k1Filter this.Keys
+
+        let newValues = new Dictionary<'Key,'Value>()
+        
+        for k in newKeys do
+            let (hasValue, v) = this.Values.TryGetValue(k)
+            if hasValue then
+                newValues.Add(k, v)
+
+        SMap(newKeys, newValues)
 
     // Slices
     // 1D
     member this.Item
         with get (k1f) =
-            this.FilterValues k1f |> Map.ofSeq |> SMap
+            this.FilterValues k1f
 
     // 0D (aka GetItem)
     member this.Item
@@ -101,65 +121,87 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (m:Map<'Key
 
     // Operators
     static member inline (*) (lhs, rhs:SMap<_,_>) =
-        rhs.Values
-        |> Map.map (fun _ v -> lhs * v)
-        |> SMap
+        
+        let newValues = new Dictionary<_,_>(rhs.Values.Count)
+        
+        for elem in rhs.Values do
+            newValues.[elem.Key] <- elem.Value * lhs
+
+        SMap(rhs.Keys, newValues)
 
     static member inline (*) (lhs:SMap<_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun _ v -> rhs * v)
-        |> SMap
+        let newValues = new Dictionary<_,_>(lhs.Values.Count)
+
+        for elem in lhs.Values do
+            newValues.[elem.Key] <- elem.Value * rhs
+
+        SMap(lhs.Keys, newValues)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        lhs.Values
-        |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun k v -> v * rhs.[k])
-        |> SMap
+        let newKeys = Set.intersect lhs.Keys rhs.Keys
+        let newValues = new Dictionary<_,_>(rhs.Values.Count)
+
+        for key in newKeys do
+            newValues.[key] <- lhs.Values.[key] * rhs.Values.[key]
+
+        SMap(newKeys, newValues)
 
     static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  mergeAddition lhs.Values rhs.Values
-        | false -> mergeAddition rhs.Values lhs.Values
-        |> SMap
+        let newKeys = lhs.Keys + rhs.Keys
+        let newValues = new Dictionary<_,_>(rhs.Values.Count)
+
+        for key in newKeys do
+            match lhs.Values.TryGetValue(key), rhs.Values.TryGetValue(key) with
+            | (true, lValue), (true, rValue) -> 
+                newValues.Add(key, lValue + rValue)
+            | (true, lValue), (false, _) -> 
+                newValues.Add(key, lValue)
+            | (false, _), (true, rValue) ->
+                newValues.Add(key, rValue)
+            | _, _ ->
+                invalidArg "rhs" "Mismatched keys in SliceMaps"
+
+        SMap(newKeys, newValues)
 
     static member inline Sum (m:SMap<_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
+        m.Values
+        |> Seq.sumBy (fun x -> x.Value)
 
     static member inline Sum (m:SMap<_,Flips.Types.Decision>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+        m.Values |> Seq.sumBy (fun x -> 1.0 * x.Value)
 
     static member inline Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+        m.Values |> Seq.sumBy (fun x -> 1.0 * x.Value)
 
 
 module SMap =
-
-    let ofMap m =
-        m |> SMap
-
-    let toMap (m:SMap<_,_>) =
-        m.Values
-
-    let ofList m =
-        m |> Map.ofList |> SMap
-
-    let toList (m:SMap<_,_>) =
-        m.Values |> Map.toList
 
     let ofSeq m =
         m |> Map.ofSeq |> SMap
 
     let toSeq (m:SMap<_,_>) =
-        m.Values |> Map.toSeq
+        m.Values |> Seq.map (fun x -> x.Key, x.Value)
+
+    let ofMap m =
+        m |> SMap
+
+    let toMap (m:SMap<_,_>) =
+        m |> toSeq |> Map.ofSeq
+
+    let ofList m =
+        m |> Map.ofList |> SMap
+
+    let toList (m:SMap<_,_>) =
+        m |> toSeq |> List.ofSeq
 
     let ofArray m =
         m |> Map.ofArray |> SMap
 
     let toArray (m:SMap<_,_>) =
-        m.Values |> Map.toArray
+        m |> toSeq |> Array.ofSeq
 
     let containsKey k (m:SMap<_,_>) =
-        Map.containsKey k m.Values
+        m.ContainsKey k
 
 
 type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2),'Value>) =
@@ -190,18 +232,18 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         
         this.Values
         |> Map.filter (fun (k1, k2) _ -> k1Filter k1 && k2Filter k2)
-        |> Map.toSeq
 
     // Slices
     // 2D
     member this.Item
         with get (k1f, k2f) =
-            this.FilterValues k1f k2f |> Map.ofSeq |> SMap2
+            this.FilterValues k1f k2f |> SMap2
 
     // 1D
     member this.Item
         with get (k1, k2f) =
             this.FilterValues (Equals k1) k2f 
+            |> Map.toSeq
             |> Seq.map (fun ((_, k2), v) -> k2, v) 
             |> Map.ofSeq 
             |> SMap
@@ -209,6 +251,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     member this.Item
         with get (k1f, k2) =
             this.FilterValues k1f (Equals k2)
+            |> Map.toSeq
             |> Seq.map (fun ((k1, _), v) -> k1, v)
             |> Map.ofSeq
             |> SMap
@@ -299,763 +342,763 @@ module SMap2 =
         m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
 
 
-type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
+//type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
 
-    member this.Values = m
+//    member this.Values = m
 
-    override this.ToString() =
-        sprintf "SMap3 %O" this.Values
+//    override this.ToString() =
+//        sprintf "SMap3 %O" this.Values
 
-    override this.Equals(obj) =
-        match obj with
-        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as s -> this.Values = s.Values
-        | _ -> false
+//    override this.Equals(obj) =
+//        match obj with
+//        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as s -> this.Values = s.Values
+//        | _ -> false
 
-    override this.GetHashCode () =
-        hash this.Values
+//    override this.GetHashCode () =
+//        hash this.Values
 
-    member this.ContainsKey k =
-        Map.containsKey k this.Values
+//    member this.ContainsKey k =
+//        Map.containsKey k this.Values
 
-    member this.AsMap =
-        this.Values
+//    member this.AsMap =
+//        this.Values
 
-    // Filter Values
-    member private this.FilterValues k1f k2f k3f =
-        let k1Filter = SliceFilterBuilder k1f
-        let k2Filter = SliceFilterBuilder k2f
-        let k3Filter = SliceFilterBuilder k3f
+//    // Filter Values
+//    member private this.FilterValues k1f k2f k3f =
+//        let k1Filter = SliceFilterBuilder k1f
+//        let k2Filter = SliceFilterBuilder k2f
+//        let k3Filter = SliceFilterBuilder k3f
         
-        this.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3)
-        |> Map.toSeq
+//        this.Values
+//        |> Map.filter (fun (k1, k2, k3) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3)
+//        |> Map.toSeq
 
-    // Slices
-    // 3D
-    member this.Item
-        with get (k1f, k2f, k3f) =
-            this.FilterValues k1f k2f k3f |> Map.ofSeq |> SMap3
+//    // Slices
+//    // 3D
+//    member this.Item
+//        with get (k1f, k2f, k3f) =
+//            this.FilterValues k1f k2f k3f |> Map.ofSeq |> SMap3
 
-    // 2D
-    member this.Item
-        with get (k1, k2f, k3f) =
-            this.FilterValues (Equals k1) k2f k3f
-            |> Seq.map (fun ((k1, k2, k3), v) -> (k2, k3), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    // 2D
+//    member this.Item
+//        with get (k1, k2f, k3f) =
+//            this.FilterValues (Equals k1) k2f k3f
+//            |> Seq.map (fun ((k1, k2, k3), v) -> (k2, k3), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    member this.Item
-        with get (k1f, k2, k3f) =
-            this.FilterValues k1f (Equals k2) k3f
-            |> Seq.map (fun ((k1, k2, k3), v) -> (k1, k3), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1f, k2, k3f) =
+//            this.FilterValues k1f (Equals k2) k3f
+//            |> Seq.map (fun ((k1, k2, k3), v) -> (k1, k3), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    member this.Item
-        with get (k1f, k2f, k3) =
-            this.FilterValues k1f k2f (Equals k3)
-            |> Seq.map (fun ((k1, k2, k3), v) -> (k1, k2), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1f, k2f, k3) =
+//            this.FilterValues k1f k2f (Equals k3)
+//            |> Seq.map (fun ((k1, k2, k3), v) -> (k1, k2), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    // 1D
-    member this.Item
-        with get (k1, k2, k3f) =
-            this.FilterValues (Equals k1) (Equals k2) k3f
-            |> Seq.map (fun ((k1, k2, k3), v) -> k3, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    // 1D
+//    member this.Item
+//        with get (k1, k2, k3f) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f
+//            |> Seq.map (fun ((k1, k2, k3), v) -> k3, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    member this.Item
-        with get (k1, k2f, k3) =
-            this.FilterValues (Equals k1) k2f (Equals k3)
-            |> Seq.map (fun ((k1, k2, k3), v) -> k2, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1, k2f, k3) =
+//            this.FilterValues (Equals k1) k2f (Equals k3)
+//            |> Seq.map (fun ((k1, k2, k3), v) -> k2, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    member this.Item
-        with get (k1f, k2, k3) =
-            this.FilterValues k1f (Equals k2) (Equals k3)
-            |> Seq.map (fun ((k1, k2, k3), v) -> k1, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1f, k2, k3) =
+//            this.FilterValues k1f (Equals k2) (Equals k3)
+//            |> Seq.map (fun ((k1, k2, k3), v) -> k1, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    // 0D (aka GetItem)
-    member this.Item
-        with get(k1, k2, k3) =
-            this.Values.[(k1, k2, k3)] 
+//    // 0D (aka GetItem)
+//    member this.Item
+//        with get(k1, k2, k3) =
+//            this.Values.[(k1, k2, k3)] 
 
-    // Operators
-    static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
-        rhs.Values
-        |> Map.map (fun k v -> lhs * v)
-        |> SMap3
+//    // Operators
+//    static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
+//        rhs.Values
+//        |> Map.map (fun k v -> lhs * v)
+//        |> SMap3
 
-    static member inline (*) (lhs:SMap3<_,_,_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun k v -> rhs * v)
-        |> SMap3
+//    static member inline (*) (lhs:SMap3<_,_,_,_>, rhs) =
+//        lhs.Values
+//        |> Map.map (fun k v -> rhs * v)
+//        |> SMap3
 
-    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
-        lhs.Values
-        |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k1, k2, k3])
-        |> SMap3
+//    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
+//        lhs.Values
+//        |> Map.filter (fun k _ -> rhs.ContainsKey k)
+//        |> Map.map (fun (k1, k2, k3) v -> v * rhs.[k1, k2, k3])
+//        |> SMap3
 
-    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap2<_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey (k2, k3))
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k2, k3])
-        |> SMap3
+//    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap2<_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey (k2, k3))
+//        |> Map.map (fun (k1, k2, k3) v -> v * b.[k2, k3])
+//        |> SMap3
 
-    static member inline (.*) (b:SMap2<_,_,_>, a:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k1, k2])
-        |> SMap3
+//    static member inline (.*) (b:SMap2<_,_,_>, a:SMap3<_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey (k1, k2))
+//        |> Map.map (fun (k1, k2, k3) v -> v * b.[k1, k2])
+//        |> SMap3
 
-    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap<_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey k3)
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k3])
-        |> SMap3
+//    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap<_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey k3)
+//        |> Map.map (fun (k1, k2, k3) v -> v * b.[k3])
+//        |> SMap3
 
-    static member inline (.*) (b:SMap<_,_>, a:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3) v -> v * b.[k1])
-        |> SMap3
+//    static member inline (.*) (b:SMap<_,_>, a:SMap3<_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3) _ -> b.ContainsKey k1)
+//        |> Map.map (fun (k1, k2, k3) v -> v * b.[k1])
+//        |> SMap3
 
-    static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
-        match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  mergeAddition lhs.Values rhs.Values
-        | false -> mergeAddition rhs.Values lhs.Values
-        |> SMap3
+//    static member inline (+) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
+//        match Map.count lhs.Values > Map.count rhs.Values with
+//        | true ->  mergeAddition lhs.Values rhs.Values
+//        | false -> mergeAddition rhs.Values lhs.Values
+//        |> SMap3
 
-    static member inline Sum (m:SMap3<_,_,_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
+//    static member inline Sum (m:SMap3<_,_,_,_>) =
+//        m.Values |> Map.toSeq |> Seq.sumBy snd
 
-    static member inline Sum (m:SMap3<_,_,_,Flips.Types.Decision>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+//    static member inline Sum (m:SMap3<_,_,_,Flips.Types.Decision>) =
+//        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
-    static member inline Sum (m:SMap3<_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
-
-
-module SMap3 =
-
-    let ofMap m =
-        m |> SMap3
-
-    let toMap (m:SMap3<_,_,_,_>) =
-        m.Values
-
-    let ofList m =
-        m |> Map.ofList |> SMap3
-
-    let toList (m:SMap3<_,_,_,_>) =
-        m.Values |> Map.toList
-
-    let ofSeq m =
-        m |> Map.ofSeq |> SMap3
-
-    let toSeq (m:SMap3<_,_,_,_>) =
-        m.Values |> Map.toSeq
-
-    let ofArray m =
-        m |> Map.ofArray |> SMap3
-
-    let toArray (m:SMap3<_,_,_,_>) =
-        m.Values |> Map.toArray
-
-    let containsKey k (m:SMap3<_,_,_,_>) =
-        Map.containsKey k m.Values
-
-    let inline reKey f m =
-        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+//    static member inline Sum (m:SMap3<_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+//        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
-type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
+//module SMap3 =
 
-    member this.Values = m
+//    let ofMap m =
+//        m |> SMap3
 
-    override this.ToString() =
-        sprintf "SMap4 %O" this.Values
+//    let toMap (m:SMap3<_,_,_,_>) =
+//        m.Values
 
-    override this.Equals(obj) =
-        match obj with
-        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> this.Values = s.Values
-        | _ -> false
+//    let ofList m =
+//        m |> Map.ofList |> SMap3
 
-    override this.GetHashCode () =
-        hash this.Values
+//    let toList (m:SMap3<_,_,_,_>) =
+//        m.Values |> Map.toList
 
-    member this.ContainsKey k =
-        Map.containsKey k this.Values
+//    let ofSeq m =
+//        m |> Map.ofSeq |> SMap3
 
-    member this.AsMap =
-        this.Values
+//    let toSeq (m:SMap3<_,_,_,_>) =
+//        m.Values |> Map.toSeq
 
-    // Filter Values
-    member private this.FilterValues k1f k2f k3f k4f =
-        let k1Filter = SliceFilterBuilder k1f
-        let k2Filter = SliceFilterBuilder k2f
-        let k3Filter = SliceFilterBuilder k3f
-        let k4Filter = SliceFilterBuilder k4f
+//    let ofArray m =
+//        m |> Map.ofArray |> SMap3
+
+//    let toArray (m:SMap3<_,_,_,_>) =
+//        m.Values |> Map.toArray
+
+//    let containsKey k (m:SMap3<_,_,_,_>) =
+//        Map.containsKey k m.Values
+
+//    let inline reKey f m =
+//        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+
+
+//type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
+
+//    member this.Values = m
+
+//    override this.ToString() =
+//        sprintf "SMap4 %O" this.Values
+
+//    override this.Equals(obj) =
+//        match obj with
+//        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> this.Values = s.Values
+//        | _ -> false
+
+//    override this.GetHashCode () =
+//        hash this.Values
+
+//    member this.ContainsKey k =
+//        Map.containsKey k this.Values
+
+//    member this.AsMap =
+//        this.Values
+
+//    // Filter Values
+//    member private this.FilterValues k1f k2f k3f k4f =
+//        let k1Filter = SliceFilterBuilder k1f
+//        let k2Filter = SliceFilterBuilder k2f
+//        let k3Filter = SliceFilterBuilder k3f
+//        let k4Filter = SliceFilterBuilder k4f
         
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4)
-        |> Map.toSeq
+//        this.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4)
+//        |> Map.toSeq
 
-    // Slices
-    // 4D
-    member this.Item
-        with get (k1f, k2f, k3f, k4f) =
-            this.FilterValues k1f k2f k3f k4f |> Map.ofSeq |> SMap4
+//    // Slices
+//    // 4D
+//    member this.Item
+//        with get (k1f, k2f, k3f, k4f) =
+//            this.FilterValues k1f k2f k3f k4f |> Map.ofSeq |> SMap4
 
-    // 3D
-    member this.Item
-        with get (k1, k2f, k3f, k4f) =
-            this.FilterValues (Equals k1) k2f k3f k4f
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k2, k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap3
+//    // 3D
+//    member this.Item
+//        with get (k1, k2f, k3f, k4f) =
+//            this.FilterValues (Equals k1) k2f k3f k4f
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k2, k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1f, k2, k3f, k4f) =
-            this.FilterValues k1f (Equals k2) k3f k4f
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap3
+//    member this.Item
+//        with get (k1f, k2, k3f, k4f) =
+//            this.FilterValues k1f (Equals k2) k3f k4f
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1f, k2f, k3, k4f) =
-            this.FilterValues k1f k2f (Equals k3) k4f
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k4), v) 
-            |> Map.ofSeq 
-            |> SMap3
+//    member this.Item
+//        with get (k1f, k2f, k3, k4f) =
+//            this.FilterValues k1f k2f (Equals k3) k4f
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1f, k2f, k3f, k4) =
-            this.FilterValues k1f k2f k3f (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) 
-            |> Map.ofSeq 
-            |> SMap3
+//    member this.Item
+//        with get (k1f, k2f, k3f, k4) =
+//            this.FilterValues k1f k2f k3f (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    // 2D
-    member this.Item
-        with get (k1, k2, k3f, k4f) =
-            this.FilterValues (Equals k1) (Equals k2) k3f k4f
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    // 2D
+//    member this.Item
+//        with get (k1, k2, k3f, k4f) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f k4f
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    member this.Item
-        with get (k1, k2f, k3, k4f) =
-            this.FilterValues (Equals k1) k2f (Equals k3) k4f
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k2, k4), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1, k2f, k3, k4f) =
+//            this.FilterValues (Equals k1) k2f (Equals k3) k4f
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k2, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    member this.Item
-        with get (k1, k2f, k3f, k4) =
-            this.FilterValues (Equals k1) k2f k3f (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1, k2f, k3f, k4) =
+//            this.FilterValues (Equals k1) k2f k3f (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    member this.Item
-        with get (k1f, k2, k3f, k4) =
-            this.FilterValues k1f (Equals k2) k3f (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k3), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1f, k2, k3f, k4) =
+//            this.FilterValues k1f (Equals k2) k3f (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k3), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    member this.Item
-        with get (k1f, k2f, k3, k4) =
-            this.FilterValues k1f k2f (Equals k3) (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1f, k2f, k3, k4) =
+//            this.FilterValues k1f k2f (Equals k3) (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    // 1D
-    member this.Item
-        with get (k1, k2, k3, k4f) =
-            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k4, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    // 1D
+//    member this.Item
+//        with get (k1, k2, k3, k4f) =
+//            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k4, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    member this.Item
-        with get (k1, k2, k3f, k4) =
-            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k3, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1, k2, k3f, k4) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k3, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    member this.Item
-        with get (k1, k2f, k3, k4) =
-            this.FilterValues (Equals k1) k2f (Equals k3) (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k2, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1, k2f, k3, k4) =
+//            this.FilterValues (Equals k1) k2f (Equals k3) (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k2, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    member this.Item
-        with get (k1f, k2, k3, k4) =
-            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) 
-            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k1, v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1f, k2, k3, k4) =
+//            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) 
+//            |> Seq.map (fun ((k1, k2, k3, k4), v) -> k1, v) 
+//            |> Map.ofSeq 
+//            |> SMap
 
-    // 0D (aka GetItem)
-    member this.Item
-        with get(k1, k2, k3, k4) =
-            this.Values.[k1, k2, k3, k4] 
+//    // 0D (aka GetItem)
+//    member this.Item
+//        with get(k1, k2, k3, k4) =
+//            this.Values.[k1, k2, k3, k4] 
 
-    // Operators
-    static member inline (*) (lhs, rhs:SMap4<_,_,_,_,_>) =
-        rhs.Values
-        |> Map.map (fun k v -> lhs * v)
-        |> SMap4
+//    // Operators
+//    static member inline (*) (lhs, rhs:SMap4<_,_,_,_,_>) =
+//        rhs.Values
+//        |> Map.map (fun k v -> lhs * v)
+//        |> SMap4
 
-    static member inline (*) (lhs:SMap4<_,_,_,_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun k v -> rhs * v)
-        |> SMap4
+//    static member inline (*) (lhs:SMap4<_,_,_,_,_>, rhs) =
+//        lhs.Values
+//        |> Map.map (fun k v -> rhs * v)
+//        |> SMap4
 
-    static member inline (.*) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
-        lhs.Values
-        |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
-        |> SMap4
+//    static member inline (.*) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
+//        lhs.Values
+//        |> Map.filter (fun k _ -> rhs.ContainsKey k)
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
+//        |> SMap4
 
-    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k2, k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k2, k3, k4])
-        |> SMap4
+//    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap3<_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k2, k3, k4))
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k2, k3, k4])
+//        |> SMap4
 
-    static member inline (.*) (b:SMap3<_,_,_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2, k3))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2, k3])
-        |> SMap4
+//    static member inline (.*) (b:SMap3<_,_,_,_>, a:SMap4<_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2, k3))
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2, k3])
+//        |> SMap4
 
-    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap2<_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k3, k4])
-        |> SMap4
+//    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap2<_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k3, k4))
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k3, k4])
+//        |> SMap4
 
-    static member inline (.*) (b:SMap2<_,_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2])
-        |> SMap4
+//    static member inline (.*) (b:SMap2<_,_,_>, a:SMap4<_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2))
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2])
+//        |> SMap4
 
-    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap<_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k4)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k4])
-        |> SMap4
+//    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap<_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k4)
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k4])
+//        |> SMap4
 
-    static member inline (.*) (b:SMap<_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1])
-        |> SMap4
+//    static member inline (.*) (b:SMap<_,_>, a:SMap4<_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k1)
+//        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1])
+//        |> SMap4
 
-    static member inline (+) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
-        match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  mergeAddition lhs.Values rhs.Values
-        | false -> mergeAddition rhs.Values lhs.Values
-        |> SMap4
+//    static member inline (+) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
+//        match Map.count lhs.Values > Map.count rhs.Values with
+//        | true ->  mergeAddition lhs.Values rhs.Values
+//        | false -> mergeAddition rhs.Values lhs.Values
+//        |> SMap4
 
-    static member inline Sum (m:SMap4<_,_,_,_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
+//    static member inline Sum (m:SMap4<_,_,_,_,_>) =
+//        m.Values |> Map.toSeq |> Seq.sumBy snd
 
-    static member inline Sum (m:SMap4<_,_,_,_,Flips.Types.Decision>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+//    static member inline Sum (m:SMap4<_,_,_,_,Flips.Types.Decision>) =
+//        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
-    static member inline Sum (m:SMap4<_,_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
-
-
-module SMap4 =
-
-    let ofMap m =
-        m |> SMap4
-
-    let toMap (m:SMap4<_,_,_,_,_>) =
-        m.Values
-
-    let ofList m =
-        m |> Map.ofList |> SMap4
-
-    let toList (m:SMap4<_,_,_,_,_>) =
-        m.Values |> Map.toList
-
-    let ofSeq m =
-        m |> Map.ofSeq |> SMap4
-
-    let toSeq (m:SMap4<_,_,_,_,_>) =
-        m.Values |> Map.toSeq
-
-    let ofArray m =
-        m |> Map.ofArray |> SMap4
-
-    let toArray (m:SMap4<_,_,_,_,_>) =
-        m.Values |> Map.toArray
-
-    let containsKey k (m:SMap4<_,_,_,_,_>) =
-        Map.containsKey k m.Values
-
-    let reKey f m =
-        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+//    static member inline Sum (m:SMap4<_,_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+//        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
-type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Key5 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4 * 'Key5),'Value>) =
+//module SMap4 =
 
-    member this.Values = m
+//    let ofMap m =
+//        m |> SMap4
 
-    override this.ToString() =
-        sprintf "SMap5 %O" this.Values
+//    let toMap (m:SMap4<_,_,_,_,_>) =
+//        m.Values
 
-    override this.Equals(obj) =
-        match obj with
-        | :? SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> as s -> this.Values = s.Values
-        | _ -> false
+//    let ofList m =
+//        m |> Map.ofList |> SMap4
 
-    override this.GetHashCode () =
-        hash this.Values
+//    let toList (m:SMap4<_,_,_,_,_>) =
+//        m.Values |> Map.toList
 
-    member this.ContainsKey k =
-        Map.containsKey k this.Values
+//    let ofSeq m =
+//        m |> Map.ofSeq |> SMap4
 
-    member this.AsMap =
-        this.Values
+//    let toSeq (m:SMap4<_,_,_,_,_>) =
+//        m.Values |> Map.toSeq
 
-    // Filter Values
-    member private this.FilterValues k1f k2f k3f k4f k5f =
-        let k1Filter = SliceFilterBuilder k1f
-        let k2Filter = SliceFilterBuilder k2f
-        let k3Filter = SliceFilterBuilder k3f
-        let k4Filter = SliceFilterBuilder k4f
-        let k5Filter = SliceFilterBuilder k5f
+//    let ofArray m =
+//        m |> Map.ofArray |> SMap4
+
+//    let toArray (m:SMap4<_,_,_,_,_>) =
+//        m.Values |> Map.toArray
+
+//    let containsKey k (m:SMap4<_,_,_,_,_>) =
+//        Map.containsKey k m.Values
+
+//    let reKey f m =
+//        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+
+
+//type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Key5 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4 * 'Key5),'Value>) =
+
+//    member this.Values = m
+
+//    override this.ToString() =
+//        sprintf "SMap5 %O" this.Values
+
+//    override this.Equals(obj) =
+//        match obj with
+//        | :? SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> as s -> this.Values = s.Values
+//        | _ -> false
+
+//    override this.GetHashCode () =
+//        hash this.Values
+
+//    member this.ContainsKey k =
+//        Map.containsKey k this.Values
+
+//    member this.AsMap =
+//        this.Values
+
+//    // Filter Values
+//    member private this.FilterValues k1f k2f k3f k4f k5f =
+//        let k1Filter = SliceFilterBuilder k1f
+//        let k2Filter = SliceFilterBuilder k2f
+//        let k3Filter = SliceFilterBuilder k3f
+//        let k4Filter = SliceFilterBuilder k4f
+//        let k5Filter = SliceFilterBuilder k5f
         
-        this.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4 && k5Filter k5)
-        |> Map.toSeq
+//        this.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4 && k5Filter k5)
+//        |> Map.toSeq
 
-    // Slices
-    // 5D
-    member this.Item
-        with get (k1f, k2f, k3f, k4f, k5f) =
-            this.FilterValues k1f k2f k3f k4f k5f |> Map.ofSeq |> SMap5
+//    // Slices
+//    // 5D
+//    member this.Item
+//        with get (k1f, k2f, k3f, k4f, k5f) =
+//            this.FilterValues k1f k2f k3f k4f k5f |> Map.ofSeq |> SMap5
 
-    // 4D
-    member this.Item
-        with get (k1, k2f, k3f, k4f, k5f) =
-            this.FilterValues (Equals k1) k2f k3f k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap4
+//    // 4D
+//    member this.Item
+//        with get (k1, k2f, k3f, k4f, k5f) =
+//            this.FilterValues (Equals k1) k2f k3f k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap4
 
-    member this.Item
-        with get (k1f, k2, k3f, k4f, k5f) =
-            this.FilterValues k1f (Equals k2) k3f k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k3, k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap4
+//    member this.Item
+//        with get (k1f, k2, k3f, k4f, k5f) =
+//            this.FilterValues k1f (Equals k2) k3f k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k3, k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap4
 
-    member this.Item
-        with get (k1f, k2f, k3, k4f, k5f) =
-            this.FilterValues k1f k2f (Equals k3) k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap4
+//    member this.Item
+//        with get (k1f, k2f, k3, k4f, k5f) =
+//            this.FilterValues k1f k2f (Equals k3) k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap4
 
-    member this.Item
-        with get (k1f, k2f, k3f, k4, k5f) =
-            this.FilterValues k1f k2f k3f (Equals k4) k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3, k5), v) 
-            |> Map.ofSeq 
-            |> SMap4
+//    member this.Item
+//        with get (k1f, k2f, k3f, k4, k5f) =
+//            this.FilterValues k1f k2f k3f (Equals k4) k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap4
 
-    member this.Item
-        with get (k1f, k2f, k3f, k4f, k5) =
-            this.FilterValues k1f k2f k3f k4f (Equals k5) 
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap4
-
-
-    // 3D
-    member this.Item
-        with get (k1, k2, k3f, k4f, k5f) =
-            this.FilterValues (Equals k1) (Equals k2) k3f k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1, k2f, k3, k4f, k5f) =
-            this.FilterValues (Equals k1) k2f (Equals k3) k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1, k2f, k3f, k4, k5f) =
-            this.FilterValues (Equals k1) k2f k3f (Equals k4) k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k5), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1, k2f, k3f, k4f, k5) =
-            this.FilterValues (Equals k1) k2f k3f k4f (Equals k5) 
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1f, k2, k3, k4f, k5f) =
-            this.FilterValues k1f (Equals k2) (Equals k3) k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1f, k2, k3f, k4, k5f) =
-            this.FilterValues k1f (Equals k2) k3f (Equals k4) k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k3, k5), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1f, k2, k3f, k4f, k5) =
-            this.FilterValues k1f (Equals k2) k3f k4f (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1f, k2f, k3, k4, k5f) =
-            this.FilterValues k1f k2f (Equals k3) (Equals k4) k5f 
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k5), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1f, k2f, k3, k4f, k5) =
-            this.FilterValues k1f k2f (Equals k3) k4f (Equals k5)  
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k4), v) 
-            |> Map.ofSeq 
-            |> SMap3
-
-    member this.Item
-        with get (k1f, k2f, k3f, k4, k5) =
-            this.FilterValues k1f k2f k3f (Equals k4) (Equals k5)  
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3), v) 
-            |> Map.ofSeq 
-            |> SMap3
+//    member this.Item
+//        with get (k1f, k2f, k3f, k4f, k5) =
+//            this.FilterValues k1f k2f k3f k4f (Equals k5) 
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap4
 
 
-    // 2D
-    member this.Item
-        with get (k1, k2, k3, k4f, k5f) =
-            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k4, k5), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    // 3D
+//    member this.Item
+//        with get (k1, k2, k3f, k4f, k5f) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1, k2, k3f, k4, k5f) =
-            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k5), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1, k2f, k3, k4f, k5f) =
+//            this.FilterValues (Equals k1) k2f (Equals k3) k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1, k2, k3f, k4f, k5) =
-            this.FilterValues (Equals k1) (Equals k2) k3f k4f (Equals k5) 
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k4), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1, k2f, k3f, k4, k5f) =
+//            this.FilterValues (Equals k1) k2f k3f (Equals k4) k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1f, k2, k3, k4, k5f) =
-            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k5), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1, k2f, k3f, k4f, k5) =
+//            this.FilterValues (Equals k1) k2f k3f k4f (Equals k5) 
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1f, k2, k3, k4f, k5) =
-            this.FilterValues k1f (Equals k2) (Equals k3) k4f (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k4), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1f, k2, k3, k4f, k5f) =
+//            this.FilterValues k1f (Equals k2) (Equals k3) k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1f, k2f, k3, k4, k5) =
-            this.FilterValues k1f k2f (Equals k3) (Equals k4) (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2), v) 
-            |> Map.ofSeq 
-            |> SMap2
+//    member this.Item
+//        with get (k1f, k2, k3f, k4, k5f) =
+//            this.FilterValues k1f (Equals k2) k3f (Equals k4) k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k3, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    // 1D
-    member this.Item
-        with get (k1, k2, k3, k4, k5f) =
-            this.FilterValues (Equals k1) (Equals k2) (Equals k3) (Equals k4) k5f
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k5), v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1f, k2, k3f, k4f, k5) =
+//            this.FilterValues k1f (Equals k2) k3f k4f (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1, k2, k3, k4f, k5) =
-            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k4), v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1f, k2f, k3, k4, k5f) =
+//            this.FilterValues k1f k2f (Equals k3) (Equals k4) k5f 
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1, k2, k3f, k4, k5) =
-            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3), v) 
-            |> Map.ofSeq 
-            |> SMap
+//    member this.Item
+//        with get (k1f, k2f, k3, k4f, k5) =
+//            this.FilterValues k1f k2f (Equals k3) k4f (Equals k5)  
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
-    member this.Item
-        with get (k1, k2f, k3, k4, k5) =
-            this.FilterValues (Equals k1) k2f (Equals k3) (Equals k4) (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2), v) 
-            |> Map.ofSeq 
-            |> SMap
-
-    member this.Item
-        with get (k1f, k2, k3, k4, k5) =
-            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) (Equals k5)
-            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1), v) 
-            |> Map.ofSeq 
-            |> SMap
-
-    // 0D (aka GetItem)
-    member this.Item
-        with get(k1, k2, k3, k4, k5) =
-            this.Values.[k1, k2, k3, k4, k5] 
-
-    // Operators
-    static member inline (*) (lhs, rhs:SMap5<_,_,_,_,_,_>) =
-        rhs.Values
-        |> Map.map (fun k v -> lhs * v)
-        |> SMap5
-
-    static member inline (*) (lhs:SMap5<_,_,_,_,_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun k v -> rhs * v)
-        |> SMap5
-
-    static member inline (.*) (lhs:SMap5<_,_,_,_,_,_>, rhs:SMap5<_,_,_,_,_,_>) =
-        lhs.Values
-        |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * rhs.[k1, k2, k3, k4, k5])
-        |> SMap5
-
-    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k2, k3, k4, k5))
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k2, k3, k4, k5])
-        |> SMap5
-
-    static member inline (.*) (b:SMap4<_,_,_,_,_>, a:SMap5<_,_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k1, k2, k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1, k2, k3, k4])
-        |> SMap5
-
-    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k3, k4, k5))
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k3, k4, k5])
-        |> SMap5
-
-    static member inline (.*) (b:SMap3<_,_,_,_>, a:SMap5<_,_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k1, k2, k3))
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1, k2, k3])
-        |> SMap5
-
-    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap2<_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k4, k5))
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k4, k5])
-        |> SMap5
-
-    static member inline (.*) (b:SMap2<_,_,_>, a:SMap5<_,_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1, k2])
-        |> SMap5
-
-    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap<_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey k5)
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k5])
-        |> SMap5
-
-    static member inline (.*) (b:SMap<_,_>, a:SMap5<_,_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1])
-        |> SMap5
+//    member this.Item
+//        with get (k1f, k2f, k3f, k4, k5) =
+//            this.FilterValues k1f k2f k3f (Equals k4) (Equals k5)  
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3), v) 
+//            |> Map.ofSeq 
+//            |> SMap3
 
 
-    static member inline (+) (lhs:SMap5<_,_,_,_,_,_>, rhs:SMap5<_,_,_,_,_,_>) =
-        match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  mergeAddition lhs.Values rhs.Values
-        | false -> mergeAddition rhs.Values lhs.Values
-        |> SMap5
+//    // 2D
+//    member this.Item
+//        with get (k1, k2, k3, k4f, k5f) =
+//            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k4, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    static member inline Sum (m:SMap5<_,_,_,_,_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
+//    member this.Item
+//        with get (k1, k2, k3f, k4, k5f) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    static member inline Sum (m:SMap5<_,_,_,_,_,Flips.Types.Decision>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+//    member this.Item
+//        with get (k1, k2, k3f, k4f, k5) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f k4f (Equals k5) 
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
 
-    static member inline Sum (m:SMap5<_,_,_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
+//    member this.Item
+//        with get (k1f, k2, k3, k4, k5f) =
+//            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
+
+//    member this.Item
+//        with get (k1f, k2, k3, k4f, k5) =
+//            this.FilterValues k1f (Equals k2) (Equals k3) k4f (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
+
+//    member this.Item
+//        with get (k1f, k2f, k3, k4, k5) =
+//            this.FilterValues k1f k2f (Equals k3) (Equals k4) (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2), v) 
+//            |> Map.ofSeq 
+//            |> SMap2
+
+//    // 1D
+//    member this.Item
+//        with get (k1, k2, k3, k4, k5f) =
+//            this.FilterValues (Equals k1) (Equals k2) (Equals k3) (Equals k4) k5f
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k5), v) 
+//            |> Map.ofSeq 
+//            |> SMap
+
+//    member this.Item
+//        with get (k1, k2, k3, k4f, k5) =
+//            this.FilterValues (Equals k1) (Equals k2) (Equals k3) k4f (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k4), v) 
+//            |> Map.ofSeq 
+//            |> SMap
+
+//    member this.Item
+//        with get (k1, k2, k3f, k4, k5) =
+//            this.FilterValues (Equals k1) (Equals k2) k3f (Equals k4) (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k3), v) 
+//            |> Map.ofSeq 
+//            |> SMap
+
+//    member this.Item
+//        with get (k1, k2f, k3, k4, k5) =
+//            this.FilterValues (Equals k1) k2f (Equals k3) (Equals k4) (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k2), v) 
+//            |> Map.ofSeq 
+//            |> SMap
+
+//    member this.Item
+//        with get (k1f, k2, k3, k4, k5) =
+//            this.FilterValues k1f (Equals k2) (Equals k3) (Equals k4) (Equals k5)
+//            |> Seq.map (fun ((k1, k2, k3, k4, k5), v) -> (k1), v) 
+//            |> Map.ofSeq 
+//            |> SMap
+
+//    // 0D (aka GetItem)
+//    member this.Item
+//        with get(k1, k2, k3, k4, k5) =
+//            this.Values.[k1, k2, k3, k4, k5] 
+
+//    // Operators
+//    static member inline (*) (lhs, rhs:SMap5<_,_,_,_,_,_>) =
+//        rhs.Values
+//        |> Map.map (fun k v -> lhs * v)
+//        |> SMap5
+
+//    static member inline (*) (lhs:SMap5<_,_,_,_,_,_>, rhs) =
+//        lhs.Values
+//        |> Map.map (fun k v -> rhs * v)
+//        |> SMap5
+
+//    static member inline (.*) (lhs:SMap5<_,_,_,_,_,_>, rhs:SMap5<_,_,_,_,_,_>) =
+//        lhs.Values
+//        |> Map.filter (fun k _ -> rhs.ContainsKey k)
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * rhs.[k1, k2, k3, k4, k5])
+//        |> SMap5
+
+//    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap4<_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k2, k3, k4, k5))
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k2, k3, k4, k5])
+//        |> SMap5
+
+//    static member inline (.*) (b:SMap4<_,_,_,_,_>, a:SMap5<_,_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k1, k2, k3, k4))
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1, k2, k3, k4])
+//        |> SMap5
+
+//    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap3<_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k3, k4, k5))
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k3, k4, k5])
+//        |> SMap5
+
+//    static member inline (.*) (b:SMap3<_,_,_,_>, a:SMap5<_,_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k1, k2, k3))
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1, k2, k3])
+//        |> SMap5
+
+//    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap2<_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k4, k5))
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k4, k5])
+//        |> SMap5
+
+//    static member inline (.*) (b:SMap2<_,_,_>, a:SMap5<_,_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey (k1, k2))
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1, k2])
+//        |> SMap5
+
+//    static member inline (.*) (a:SMap5<_,_,_,_,_,_>, b:SMap<_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey k5)
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k5])
+//        |> SMap5
+
+//    static member inline (.*) (b:SMap<_,_>, a:SMap5<_,_,_,_,_,_>) =
+//        a.Values
+//        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> b.ContainsKey k1)
+//        |> Map.map (fun (k1, k2, k3, k4, k5) v -> v * b.[k1])
+//        |> SMap5
 
 
-module SMap5 =
+//    static member inline (+) (lhs:SMap5<_,_,_,_,_,_>, rhs:SMap5<_,_,_,_,_,_>) =
+//        match Map.count lhs.Values > Map.count rhs.Values with
+//        | true ->  mergeAddition lhs.Values rhs.Values
+//        | false -> mergeAddition rhs.Values lhs.Values
+//        |> SMap5
 
-    let ofMap m =
-        m |> SMap5
+//    static member inline Sum (m:SMap5<_,_,_,_,_,_>) =
+//        m.Values |> Map.toSeq |> Seq.sumBy snd
 
-    let toMap (m:SMap5<_,_,_,_,_,_>) =
-        m.Values
+//    static member inline Sum (m:SMap5<_,_,_,_,_,Flips.Types.Decision>) =
+//        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
-    let ofList m =
-        m |> Map.ofList |> SMap5
+//    static member inline Sum (m:SMap5<_,_,_,_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+//        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
-    let toList (m:SMap5<_,_,_,_,_,_>) =
-        m.Values |> Map.toList
 
-    let ofSeq m =
-        m |> Map.ofSeq |> SMap5
+//module SMap5 =
 
-    let toSeq (m:SMap5<_,_,_,_,_,_>) =
-        m.Values |> Map.toSeq
+//    let ofMap m =
+//        m |> SMap5
 
-    let ofArray m =
-        m |> Map.ofArray |> SMap5
+//    let toMap (m:SMap5<_,_,_,_,_,_>) =
+//        m.Values
 
-    let toArray (m:SMap5<_,_,_,_,_,_>) =
-        m.Values |> Map.toArray
+//    let ofList m =
+//        m |> Map.ofList |> SMap5
 
-    let containsKey k (m:SMap5<_,_,_,_,_,_>) =
-        Map.containsKey k m.Values
+//    let toList (m:SMap5<_,_,_,_,_,_>) =
+//        m.Values |> Map.toList
 
-    let reKey f m =
-        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+//    let ofSeq m =
+//        m |> Map.ofSeq |> SMap5
+
+//    let toSeq (m:SMap5<_,_,_,_,_,_>) =
+//        m.Values |> Map.toSeq
+
+//    let ofArray m =
+//        m |> Map.ofArray |> SMap5
+
+//    let toArray (m:SMap5<_,_,_,_,_,_>) =
+//        m.Values |> Map.toArray
+
+//    let containsKey k (m:SMap5<_,_,_,_,_,_>) =
+//        Map.containsKey k m.Values
+
+//    let reKey f m =
+//        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
