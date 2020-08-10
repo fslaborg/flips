@@ -46,7 +46,7 @@ module Decision =
 [<RequireQualifiedAccess>]
 module Constraint =
 
-    let internal GetDecisions (c:Constraint) =
+    let internal getDecisions (c:Constraint) =
         match c.Expression with
         | Inequality (lhs, _, rhs) | Equality (lhs, rhs) ->
             let lhsDecisions = LinearExpression.GetDecisions lhs
@@ -66,7 +66,7 @@ module Constraint =
 [<RequireQualifiedAccess>]
 module Objective =
 
-    let internal GetDecisions (objective:Objective) =
+    let internal getDecisions (objective:Objective) =
         LinearExpression.GetDecisions objective.Expression
 
     let create objectiveName sense expression =
@@ -90,11 +90,11 @@ module Model =
         member public this.Objective = this._Objective
         member public this.Constraints = this._Constraints
 
-    let internal GetDecisions (m:Model) =
-        let objectiveDecisions = Objective.GetDecisions m.Objective
+    let internal getDecisions (m:Model) =
+        let objectiveDecisions = Objective.getDecisions m.Objective
 
         (objectiveDecisions, m.Constraints)
-        ||> List.fold (fun decs c -> decs + (Constraint.GetDecisions c))
+        ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
 
     let create objective =
 

@@ -111,7 +111,7 @@ module internal ORTools =
         solver.SetTimeLimit(settings.MaxDuration)
         solver.EnableOutput()
     
-        let vars = createVariableMap solver (Model.GetDecisions model)
+        let vars = createVariableMap solver (Model.getDecisions model)
         addConstraints vars model.Constraints solver
         setObjective vars model.Objective solver
     
@@ -122,7 +122,7 @@ module internal ORTools =
     
         match resultStatus with
         | Solver.ResultStatus.OPTIMAL -> 
-            buildSolution (Model.GetDecisions model) vars solver model.Objective
+            buildSolution (Model.getDecisions model) vars solver model.Objective
             |> SolveResult.Optimal
         | _ ->
             "Unable to find optimal solution"
@@ -248,7 +248,7 @@ module internal Optano =
     let internal solve (solverType:OptanoSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
         
         let optanoModel = new Model()
-        let varMap = createVariableMap (Model.GetDecisions model)
+        let varMap = createVariableMap (Model.getDecisions model)
         addConstraints varMap model.Constraints optanoModel
         setObjective varMap model.Objective optanoModel
 
@@ -263,7 +263,7 @@ module internal Optano =
         | Solver.ModelStatus.Unbounded, _ -> Suboptimal "Model is unbounded"
         | Solver.ModelStatus.Unknown, _ -> Suboptimal "Model status is unknown"
         | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) -> 
-            let solution = buildSolution (Model.GetDecisions model) varMap optanoSolution
+            let solution = buildSolution (Model.getDecisions model) varMap optanoSolution
             Optimal solution
         | _ -> Suboptimal "Model state is undetermined"
 
