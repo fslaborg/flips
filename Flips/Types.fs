@@ -15,28 +15,28 @@ type Decision = {
 with
 
     static member (*) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision * f
+        LinearExpression.AddDecision ((f, decision), LinearExpression.Zero)
 
     static member (*) (f:float, decision:Decision) =
-        LinearExpression.OfDecision decision * f
+        decision * f
 
     static member (+) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision + f
+        LinearExpression.AddDecision ((1.0, decision), LinearExpression.OfFloat f)
 
     static member (+) (f:float, decision:Decision) =
-        LinearExpression.OfDecision decision + f
+        decision + f
 
     static member (+) (decision:Decision, rhsDecision:Decision) =
-        LinearExpression.OfDecision decision + rhsDecision
+        (1.0 * decision) + (1.0 * rhsDecision)
 
     static member (-) (decision:Decision, rhsDecision:Decision) =
-        LinearExpression.OfDecision decision + (-1.0 * rhsDecision)
+        decision + (-1.0 * rhsDecision)
 
     static member (-) (decision:Decision, f:float) =
-        LinearExpression.OfDecision decision - f
+        decision + (-1.0 * f)
 
     static member (-) (f:float, decision:Decision) =
-        LinearExpression.OfDecision decision - f
+        f + (-1.0 * decision)
 
     static member (<==) (decision:Decision, f:float) =
         LinearExpression.OfDecision decision <== f
@@ -74,14 +74,16 @@ and [<NoComparison>][<CustomEquality>]
         Offset : float
     } with
     static member private NearlyEquals (a:float) (b:float) : bool =
-        let aValue = System.BitConverter.DoubleToInt64Bits a
-        let bValue = System.BitConverter.DoubleToInt64Bits b
-        let result = 
-            if (aValue >>> 63) <> (bValue >>> 63) then
-                a = b
-            else
-                System.Math.Abs(aValue - bValue) <= 10_000L
-        result
+        //let aValue = System.BitConverter.DoubleToInt64Bits a
+        //let bValue = System.BitConverter.DoubleToInt64Bits b
+        //let result = 
+        //    if (aValue >>> 63) <> (bValue >>> 63) then
+        //        a = b
+        //    else
+        //        System.Math.Abs(aValue - bValue) <= 10_000L
+        //result
+
+        System.Math.Abs(a - b) < 1e-6
 
     override this.GetHashCode () =
         hash this
@@ -231,7 +233,7 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
         LinearExpression.AddFloat(f, LinearExpression.Zero)
 
     static member OfDecision (d:Decision) =
-        LinearExpression.Zero + d
+        LinearExpression.AddDecision((1.0, d), LinearExpression.Zero)
 
     static member (<==) (lhs:LinearExpression, rhs:float) =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
