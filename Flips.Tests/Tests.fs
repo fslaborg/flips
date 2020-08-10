@@ -10,8 +10,8 @@ module Types =
     open Flips.Tests.Gens
 
     let rng = System.Random()
-    let MIN_COEFFICIENT = -1_000_000_000.0
-    let MAX_COEFFICIENT = 1_000_000_000.0
+    let MIN_COEFFICIENT = -1_000_000_000_000.0
+    let MAX_COEFFICIENT = 1_000_000_000_000.0
 
     let randomInRange lowerBound upperBound (rng:System.Random) =
         let range = upperBound - lowerBound
