@@ -230,7 +230,7 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
         LinearExpression.Multiply (f, expr)
 
     static member (*) (f:float, expr:LinearExpression) =
-        expr * f
+        LinearExpression.Multiply (f, expr)
 
     static member (-) (expr:LinearExpression, f:float) =
         expr + (-1.0 * f)
@@ -297,8 +297,6 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         Inequality (lhs, GreaterOrEqual, rhs)
-
-
 
 
 and Inequality =
