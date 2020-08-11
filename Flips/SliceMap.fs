@@ -51,6 +51,19 @@ module Utilities =
         | NotIn set -> fun k2 -> not (Set.contains k2 set)
         | Where f -> f
 
+    let internal filterKeys (f:SliceType<'a>) (keys:Set<'a>) : Set<'a> =
+        match f with
+        | All -> keys
+        | Equals k -> Set.add k Set.empty
+        | GreaterThan k -> Set.filter (fun x -> x > k) keys
+        | GreaterOrEqual k -> Set.filter (fun x -> x >= k) keys
+        | LessThan k -> Set.filter (fun x -> x < k) keys
+        | LessOrEqual k -> Set.filter (fun x -> x <= k) keys
+        | Between (lowerBound, upperBound) -> Set.filter (fun x -> x >= lowerBound && x <= upperBound) keys
+        | In set -> Set.filter (fun x -> Set.contains x set) keys
+        | NotIn set -> Set.filter (fun x -> not (Set.contains x set)) keys
+        | Where f -> Set.filter f keys
+
     let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
         ((^a) : (static member Sum: ^a -> ^b) k1)
 
@@ -204,57 +217,67 @@ module SMap =
         m.ContainsKey k
 
 
-type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2),'Value>) =
-
-    member this.Values = m
+type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:Set<'Key1>, keys2:Set<'Key2>, values:Dictionary<('Key1 * 'Key2),'Value>) =
+    member this.Keys1 = keys1
+    member this.Keys2 = keys2
+    member this.Values = values
 
     override this.ToString () = 
         sprintf "SMap2 %O" this.Values
 
     override this.Equals(obj) =
         match obj with
-        | :? SMap2<'Key1, 'Key2, 'Value > as s -> this.Values = s.Values
+        | :? SMap2<'Key1, 'Key2, 'Value > as s -> this.Values = s.Values // TODO: Fix this because this is reference comparison
         | _ -> false
 
     override this.GetHashCode () =
         hash this.Values
 
     member this.ContainsKey k =
-        Map.containsKey k this.Values
+        this.Values.ContainsKey k
 
     member this.AsMap =
         this.Values
 
     // Filter Values
-    member private this.FilterValues k1f k2f =
-        let k1Filter = SliceFilterBuilder k1f
-        let k2Filter = SliceFilterBuilder k2f
-        
-        this.Values
-        |> Map.filter (fun (k1, k2) _ -> k1Filter k1 && k2Filter k2)
+    static member inline private FilterValues keys1 keys2 (keyBuilder:'Key1 -> 'Key2 -> 'a) (values:Dictionary<('Key1 * 'Key2),'Value>) =
+        let newValues = new Dictionary<'a,'Value>()
+
+        for k1 in keys1 do
+            for k2 in keys2 do
+                let (hasValue, value) = values.TryGetValue ((k1, k2))
+                if hasValue then
+                    let newKey = keyBuilder k1 k2
+                    newValues.Add(newKey, value)
+
+        newValues
 
     // Slices
     // 2D
     member this.Item
         with get (k1f, k2f) =
-            this.FilterValues k1f k2f |> SMap2
+            let keys1 = filterKeys k1f this.Keys1
+            let keys2 = filterKeys k2f this.Keys2
+            let keyBuilder x y = (x, y)
+            let newValues = SMap2.FilterValues keys1 keys2 keyBuilder this.Values
+            SMap2 (keys1, keys2, newValues)
 
     // 1D
     member this.Item
         with get (k1, k2f) =
-            this.FilterValues (Equals k1) k2f 
-            |> Map.toSeq
-            |> Seq.map (fun ((_, k2), v) -> k2, v) 
-            |> Map.ofSeq 
-            |> SMap
+            let keys1 = filterKeys (Equals k1) this.Keys1
+            let keys2 = filterKeys k2f this.Keys2
+            let keyBuilder x y = y
+            let newValues = SMap2.FilterValues keys1 keys2 keyBuilder this.Values
+            SMap (keys2, newValues)
 
     member this.Item
         with get (k1f, k2) =
-            this.FilterValues k1f (Equals k2)
-            |> Map.toSeq
-            |> Seq.map (fun ((k1, _), v) -> k1, v)
-            |> Map.ofSeq
-            |> SMap
+            let keys1 = filterKeys k1f this.Keys1
+            let keys2 = filterKeys (Equals k2) this.Keys2
+            let keyBuilder x y = x
+            let newValues = SMap2.FilterValues keys1 keys2 keyBuilder this.Values
+            SMap (keys1, newValues)
 
     // 0D (aka GetItem)
     member this.Item
