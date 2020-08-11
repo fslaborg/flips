@@ -183,13 +183,6 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
 
         SMap(keys, values)
 
-    new(s:seq<('Key * 'Value)>) =
-        let keys = s |> Seq.map fst |> Set.ofSeq
-        let values = 
-          let vs = s |> Seq.map (fun (k, v) -> KeyValuePair(k, v))
-          new Dictionary<'Key, 'Value>(vs)
-
-        SMap(keys, values)
 
     override this.ToString() =
         sprintf "SMap %O" this.Values
@@ -242,13 +235,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
         let newValues = Dictionary.add newKeys lhs.Values rhs.Values
         SMap(newKeys, newValues)
 
-    //static member inline Sum (m:SMap<_,_>) =
-    //    Dictionary.sum m.Values
-
-    static member Sum (m:SMap<_,Flips.Types.LinearExpression>) =
-        Dictionary.sum m.Values
-
-    static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) =
+    static member inline Sum (m:SMap<_,_>) =
         Dictionary.sum m.Values
 
     static member Sum (m:SMap<_,Flips.Types.Decision>) =
@@ -266,7 +253,7 @@ module SMap =
     let toSeq (m:SMap<_,_>) =
         m.Values |> Seq.map (fun x -> x.Key, x.Value)
 
-    let ofMap (m:Map<_,_>) =
+    let ofMap m =
         m |> SMap
 
     let toMap (m:SMap<_,_>) =
@@ -303,16 +290,6 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let keys2 = keys |> Set.map snd
         SMap2(keys1, keys2, values)
 
-    new(s:seq<(('Key1 * 'Key2) * 'Value)>) =
-        let keys = s |> Seq.map fst |> Set.ofSeq
-        let keys1 = keys |> Set.map fst
-        let keys2 = keys |> Set.map snd
-        let values = 
-            let vs = s |> Seq.map (fun (k, v) -> KeyValuePair(k, v))
-            new Dictionary<('Key1 * 'Key2), 'Value>(vs)
-
-        SMap2(keys1, keys2, values)
-
     override this.ToString () = 
         sprintf "SMap2 %O" this.Values
 
@@ -330,19 +307,6 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     member this.AsMap =
         Dictionary.toMap this.Values
-
-    // Filter Values
-    //static member inline private FilterValues keys1 keys2 (keyBuilder:'Key1 -> 'Key2 -> 'a) (values:Dictionary<('Key1 * 'Key2),'Value>) =
-    //    let newValues = new Dictionary<'a,'Value>()
-
-    //    for k1 in keys1 do
-    //        for k2 in keys2 do
-    //            let (hasValue, value) = values.TryGetValue ((k1, k2))
-    //            if hasValue then
-    //                let newKey = keyBuilder k1 k2
-    //                newValues.Add(newKey, value)
-
-    //    newValues
 
     // Slices
     // 2D
@@ -422,20 +386,14 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let newValues = Dictionary.add keySet lhs.Values rhs.Values
         SMap2(newKeys1, newKeys2, newValues)
 
-    //static member inline Sum (m:SMap2<_,_,_>) =
-    //    Dictionary.sum m.Values
-
-    static member Sum (m:SMap2<_,_,Flips.Types.LinearExpression>) =
+    static member inline Sum (m:SMap2<_,_,_>) =
         Dictionary.sum m.Values
 
-    static member Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) =
+    static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
         Dictionary.sum m.Values
 
-    static member Sum (m:SMap2<_,_,Flips.Types.Decision>) =
-        Dictionary.sumDecisions m.Values
-
-    static member Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        Dictionary.sumDecisionsWithUnits m.Values
+    static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        Dictionary.sum m.Values
 
 
 module SMap2 =
@@ -446,7 +404,7 @@ module SMap2 =
     let toSeq (m:SMap2<_,_,_>) =
         Dictionary.toSeq m.Values
 
-    let ofMap (m:Map<_,_>) =
+    let ofMap m =
         m |> SMap2
 
     let toMap (m:SMap2<_,_,_>) =
