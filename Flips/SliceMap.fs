@@ -189,7 +189,8 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
 
     override this.Equals(obj) =
         match obj with
-        | :? SMap<'Key, 'Value> as s -> this.Values = s.Values
+        | :? SMap<'Key, 'Value> as s -> 
+            Dictionary.toMap this.Values = Dictionary.toMap s.Values
         | _ -> false
 
     override this.GetHashCode () =
@@ -301,7 +302,8 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     override this.Equals(obj) =
         match obj with
-        | :? SMap2<'Key1, 'Key2, 'Value > as s -> this.Values = s.Values // TODO: Fix this because this is reference comparison
+        | :? SMap2<'Key1, 'Key2, 'Value > as s -> 
+          Dictionary.toMap this.Values = Dictionary.toMap s.Values // TODO: Fix this because this is reference comparison
         | _ -> false
 
     override this.GetHashCode () =
