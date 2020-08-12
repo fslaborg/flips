@@ -189,40 +189,7 @@ module Gens =
             gen {
                 let! f = FloatItemGen
                 return SmallFloatItem f
-            }
-
-        //let IntegerBoundsGen =
-        //    gen {
-        //        let! lb = FloatGen
-        //        let! d = PositiveFloatGen
-        //        let lowerBound = lb
-        //        let delta = d
-        //        let upperBound = lowerBound + delta
-        //        return Integer (lowerBound, upperBound)
-        //    }
-         
-        //let ContinuousBoundsGen =
-        //    gen {
-        //        let! lb = FloatGen
-        //        let! d = PositiveFloatGen
-        //        let lowerBound = lb
-        //        let delta = d
-        //        let upperBound = lowerBound + delta
-        //        return Continuous (lowerBound, upperBound)
-        //    }
-
-        //let DecisionTypeGen =
-        //    gen {
-        //        let! integerBounds = IntegerBoundsGen
-        //        let! continuousBounds = ContinuousBoundsGen
-        //        return! Gen.elements [integerBounds; continuousBounds; Boolean]
-        //    }
-
-        //let DecisionNameGen =
-        //    gen {
-        //        let! (NonEmptyString name) = Arb.generate<NonEmptyString>
-        //        return DecisionName name
-        //    }
+            }   
 
         let DecisionItemGen = 
             gen {

@@ -2,13 +2,8 @@
 
 open Flips.Types
 
-module private Utilities =
-
-    let internal getScalarValue (Value s:Scalar) = s
-
 
 module internal ORTools =
-    open Utilities
     open Google.OrTools.LinearSolver
 
     type internal OrToolsSolverType =
@@ -17,15 +12,19 @@ module internal ORTools =
 
 
     let private buildExpression (varMap:Map<DecisionName,Variable>) (expr:LinearExpression) =
+        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
+        
         let decisionExpr =
-            expr.Names
-            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
+            reducedExpr.Coefficients
+            |> Map.toSeq
+            |> Seq.map (fun (decisionName, coefficient) -> coefficient * varMap.[decisionName])
             |> fun x -> 
                 match Seq.isEmpty x with 
                 | true -> LinearExpr() 
                 | false -> Seq.reduce (+) x
         
-        getScalarValue expr.Offset + decisionExpr
+        let resultExpr = reducedExpr.Offset + decisionExpr
+        resultExpr
 
 
     let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
@@ -35,9 +34,11 @@ module internal ORTools =
         | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, name)
 
 
-    let private createVariableMap (solver:Solver) (decisionMap:Map<DecisionName, Decision>) =
-        decisionMap
-        |> Map.map (fun n d -> createVariable solver n d.Type)
+    let private createVariableMap (solver:Solver) (decisions:seq<Decision>) =
+        decisions
+        |> Seq.map (fun d -> d.Name, d.Type)
+        |> Map.ofSeq
+        |> Map.map (fun name decisionType -> createVariable solver name decisionType)
 
 
     let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
@@ -80,18 +81,17 @@ module internal ORTools =
             addConstraint varMap c solver |> ignore
 
 
-    let private buildSolution (decisionMap:Map<DecisionName,Decision>) (varMap:Map<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
-        let decisions =
-            decisionMap
-            |> Map.toSeq
-            |> Seq.map (fun (n, d) -> 
-                            match Map.tryFind n varMap with 
+    let private buildSolution (decisions:seq<Decision>) (varMap:Map<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
+        let decisionMap =
+            decisions
+            |> Seq.map (fun d -> 
+                            match Map.tryFind d.Name varMap with 
                             | Some var -> d, var.SolutionValue() 
                             | None -> d, 0.0)
             |> Map.ofSeq
 
         {
-            DecisionResults = decisions
+            DecisionResults = decisionMap
             ObjectiveResult = solver.Objective().BestBound()
         }
 
@@ -111,7 +111,7 @@ module internal ORTools =
         solver.SetTimeLimit(settings.MaxDuration)
         solver.EnableOutput()
     
-        let vars = createVariableMap solver model.Decisions
+        let vars = createVariableMap solver (Model.getDecisions model)
         addConstraints vars model.Constraints solver
         setObjective vars model.Objective solver
     
@@ -122,7 +122,7 @@ module internal ORTools =
     
         match resultStatus with
         | Solver.ResultStatus.OPTIMAL -> 
-            buildSolution model.Decisions vars solver model.Objective
+            buildSolution (Model.getDecisions model) vars solver model.Objective
             |> SolveResult.Optimal
         | _ ->
             "Unable to find optimal solution"
@@ -130,7 +130,6 @@ module internal ORTools =
 
 
 module internal Optano =
-    open Utilities
     open OPTANO.Modeling.Optimization
 
     type internal OptanoSolverType =
@@ -139,13 +138,13 @@ module internal Optano =
 
 
     let private buildExpression (varMap:Map<DecisionName, Variable>) (expr:LinearExpression) =
+        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
 
-        let v = getScalarValue expr.Offset
-        let constant = Expression.Sum([v])
+        let constant = Expression.Sum([reducedExpr.Offset])
         let variables =
-            expr.Names
-            |> Set.toSeq
-            |> Seq.map (fun n -> getScalarValue expr.Coefficients.[n] * varMap.[n])
+            reducedExpr.Coefficients
+            |> Map.toSeq
+            |> Seq.map (fun (decisionName, coefficient) -> coefficient * varMap.[decisionName])
             |> (fun terms -> Expression.Sum(terms))
 
         constant + variables
@@ -159,9 +158,11 @@ module internal Optano =
         | Continuous (lb, ub) -> new Variable(name, lb, ub, Enums.VariableType.Continuous)
             
 
-    let private createVariableMap (decisionMap:Map<DecisionName, Decision>) =
-        decisionMap
-        |> Map.map (fun n d -> createVariable d)
+    let private createVariableMap (decisions:seq<Decision>) =
+        decisions
+        |> Seq.map (fun d -> d.Name, d)
+        |> Map.ofSeq
+        |> Map.map (fun _ d -> createVariable d)
 
 
     let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Types.Objective) (optanoModel:Model) =
@@ -209,18 +210,17 @@ module internal Optano =
             addConstraint vars c optanoModel |> ignore
 
 
-    let private buildSolution (decisionMap:Map<DecisionName,Decision>) (varMap:Map<DecisionName, Variable>) (optanoSolution:Solution) =
-        let decisions =
-            decisionMap
-            |> Map.toSeq
-            |> Seq.map (fun (n, d) -> 
-                            match Map.tryFind n varMap with 
+    let private buildSolution (decisions:seq<Decision>) (varMap:Map<DecisionName, Variable>) (optanoSolution:Solution) =
+        let decisionMap =
+            decisions
+            |> Seq.map (fun d -> 
+                            match Map.tryFind d.Name varMap with 
                             | Some var -> d, var.Value 
                             | None -> d, 0.0)
             |> Map.ofSeq
 
         {
-            DecisionResults = decisions
+            DecisionResults = decisionMap
             ObjectiveResult = optanoSolution.BestBound
         }
 
@@ -248,7 +248,7 @@ module internal Optano =
     let internal solve (solverType:OptanoSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
         
         let optanoModel = new Model()
-        let varMap = createVariableMap model.Decisions
+        let varMap = createVariableMap (Model.getDecisions model)
         addConstraints varMap model.Constraints optanoModel
         setObjective varMap model.Objective optanoModel
 
@@ -263,7 +263,7 @@ module internal Optano =
         | Solver.ModelStatus.Unbounded, _ -> Suboptimal "Model is unbounded"
         | Solver.ModelStatus.Unknown, _ -> Suboptimal "Model status is unknown"
         | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) -> 
-            let solution = buildSolution model.Decisions varMap optanoSolution
+            let solution = buildSolution (Model.getDecisions model) varMap optanoSolution
             Optimal solution
         | _ -> Suboptimal "Model state is undetermined"
 

@@ -32,64 +32,6 @@ module Types =
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
-    module Scalar =
-
-        [<Property>]
-        let ``Addition of Scalar is associative`` (a:Scalar) (b:Scalar) =
-            let r1 = a + b
-            let r2 = b + a
-            Assert.StrictEqual(r1, r2)
-
-        [<Property>]
-        let ``Addition of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
-            let r1 = (a + b) + c
-            let r2 = a + (b + c)
-            Assert.StrictEqual(r1, r2)
-
-        [<Property>]
-        let ``Addition of negated Scalar yields Zero Scalar`` (a:Scalar) =
-            let r = a + (-1.0 * a)
-            Assert.StrictEqual(Scalar.Zero, r)
-
-        [<Property>]
-        let ``Addition of Zero Scalar yields same Scalar`` (a:Scalar) =
-            let r = a + Scalar.Zero
-            Assert.StrictEqual(a, r)
-
-        [<Property>]
-        let ``Addition then Subtraction of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
-            let r = a + b - b
-            Assert.StrictEqual(a, r)
-
-        [<Property>]
-        let ``Subtraction then Addition of Scalar yields same Scalar`` (a:Scalar) (b:Scalar)  =
-            let r = a - b + b
-            Assert.StrictEqual(a, r)
-
-        [<Property>]
-        let ``Multiplication of Scalar is associative`` (a:Scalar) (b:Scalar) =
-            let r1 = a * b
-            let r2 = b * a
-            Assert.StrictEqual(r1, r2)
-
-        [<Property>]
-        let ``Multiplication of Scalar is commutative`` (a:Scalar) (b:Scalar) (c:Scalar) =
-            let r1 = (a * b) * c
-            let r2 = a * (b * c)
-            Assert.StrictEqual(r1, r2)
-
-        [<Property>]
-        let ``Multiplication of Zero Scalar yields Zero Scalar`` (a:Scalar) =
-            let r = a * Scalar.Zero
-            Assert.StrictEqual(Scalar.Zero, r)
-
-        [<Property>]
-        let ``Multiplication of Identity Scalar yields same Scalar`` (a:Scalar) =
-            let r = a * (Scalar.Value 1.0)
-            Assert.StrictEqual(a, r)
-
-
-    [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module Decision =
 
         [<Property>]
@@ -114,23 +56,10 @@ module Types =
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
-            let e1 = d + s
-            let e2 = s + d
-            Assert.Equal(e1, e2)
-
-        [<Property>]
         let ``Addition of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
             let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 + f1) + (d2 + f2)
             let e2 = d1 + (f1 + d2) + f2
-            Assert.Equal(e1, e2)
-
-        [<Property>]
-        let ``Addition of Decisions and Scalar is commutative`` (d1:Decision) (s1:Scalar) (s2:Scalar) =
-            let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
-            let e1 = (d1 + s1) + (d2 + s2)
-            let e2 = d1 + (s1 + d2) + s2
             Assert.Equal(e1, e2)
 
         [<Property>]
@@ -148,21 +77,9 @@ module Types =
             Assert.Equal(e, r)
 
         [<Property>]
-        let ``Addition then Subtraction of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
-            let e = LinearExpression.OfDecision d
-            let r = d + s - s
-            Assert.Equal(e, r)
-
-        [<Property>]
         let ``Subtraction then Addition of float returns Equivalent`` (d:Decision) (SmallFloat f) =
             let e = LinearExpression.OfDecision d
             let r = d - f + f
-            Assert.Equal(e, r)
-
-        [<Property>]
-        let ``Subtraction then Addition of Scalar returns Equivalent`` (d:Decision) (s:Scalar) =
-            let e = LinearExpression.OfDecision d
-            let r = d - s + s
             Assert.Equal(e, r)
 
         [<Property>]
@@ -186,35 +103,15 @@ module Types =
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Multiplication of Decisions and Scalar is associative`` (d:Decision) (s:Scalar) =
-            let e1 = d * s
-            let e2 = s * d
-            Assert.Equal(e1, e2)
-
-        [<Property>]
         let ``Multiplication of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
             let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 * f1) + (d2 * f2)
             let e2 = (d2 * f2) + (d1 * f1)
             Assert.Equal(e1, e2)
 
-        [<Property>]
-        let ``Multiplication of Decisions and Scalar is commutative`` (d1:Decision) (s1:Scalar) (s2:Scalar) =
-            let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
-            let e1 = (d1 * s1) + (d2 * s2)
-            let e2 = (d2 * s2) + (d1 * s1)
-            Assert.Equal(e1, e2)
-
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module LinearExpression =
-
-        [<Property>]
-        let ``Mismatched DecisionType throws error in LinearExpression`` (decisionName:DecisionName) (type1:DecisionType) =
-            let type2 = DecisionTypeGen.Where(fun x -> x <> type1) |> Gen.sample 0 1 |> Seq.exactlyOne
-            let d1 = { Name = decisionName; Type = type1 }
-            let d2 = { Name = decisionName; Type = type2 }
-            Prop.throws<System.ArgumentException,_>(lazy (d1 + d2))
 
         [<Property>]
         let ``Addition of LinearExpression is associative`` () =
@@ -289,14 +186,6 @@ module Types =
             let expr2 = randomExpressionFromDecisions rng decisions
             let r = expr1 + expr2 - expr2
             Assert.Equal(expr1, r)
-
-        [<Property>]
-        let ``Adding then Subtracting Scalar yields equivalent LinearExpression`` (s:Scalar) =
-            let numberOfDecisions = rng.Next(1, 100)
-            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
-            let expr = randomExpressionFromDecisions rng decisions
-            let r = expr + s - s
-            Assert.Equal(expr, r)
 
         [<Property>]
         let ``Adding then Subtracting Decision yields equivalent LinearExpression`` () =

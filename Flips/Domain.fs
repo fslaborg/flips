@@ -47,13 +47,12 @@ module Decision =
 module Constraint =
 
     let internal getDecisions (c:Constraint) =
-        let (lhs, rhs) =
-            match c.Expression with
-            | Inequality (lhs, c, rhs) -> lhs, rhs
-            | Equality (lhs, rhs) -> lhs, rhs
-        let lhsDecisions = LinearExpression.GetDecisions lhs
-        let rhsDecisions = LinearExpression.GetDecisions rhs
-        lhsDecisions + rhsDecisions
+        match c.Expression with
+        | Inequality (lhs, _, rhs) | Equality (lhs, rhs) ->
+            let lhsDecisions = LinearExpression.GetDecisions lhs
+            let rhsDecisions = LinearExpression.GetDecisions rhs
+            lhsDecisions + rhsDecisions
+        
 
     let create (constraintName:string) (cExpr:ConstraintExpression) =
         if System.String.IsNullOrEmpty(constraintName) then
@@ -66,6 +65,9 @@ module Constraint =
 
 [<RequireQualifiedAccess>]
 module Objective =
+
+    let internal getDecisions (objective:Objective) =
+        LinearExpression.GetDecisions objective.Expression
 
     let create objectiveName sense expression =
         if System.String.IsNullOrEmpty(objectiveName) then
@@ -83,67 +85,27 @@ module Model =
     type Model = private {
         _Objective : Objective
         _Constraints : List<Constraint>
-        _Decisions : Map<DecisionName, Decision>
     } 
     with
         member public this.Objective = this._Objective
         member public this.Constraints = this._Constraints
-        member public this.Decisions = this._Decisions
 
-    let private getMismatchedDecisionTypesInSet(decisions:Set<Decision>) =
-        decisions
-        |> Set.toList
-        |> List.map (fun x -> x.Name, x.Type)
-        |> List.groupBy fst
-        |> List.map (fun (k, g) -> k, g |> Seq.map snd |> Set.ofSeq |> Set.count)
-        |> List.filter (fun (k, c) -> c > 1)
+    let internal getDecisions (m:Model) =
+        let objectiveDecisions = Objective.getDecisions m.Objective
 
-    let private existingDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
-        decisions
-        |> Set.filter (fun n -> Map.containsKey n.Name decisionMap)
-
-    let private newDecisions (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
-        decisions - (existingDecisions decisionMap decisions)
-        |> Set.toList
-
-    let private getMismatchedDecisionTypes (decisionMap:Map<DecisionName,Decision>) (decisions:Set<Decision>) =
-        existingDecisions decisionMap decisions
-        |> Set.filter (fun x -> decisionMap.[x.Name].Type <> x.Type)
-
-    let private addToDecisionMap (decision:Decision) (decisionMap:Map<DecisionName, Decision>) =
-        Map.add decision.Name decision decisionMap
+        (objectiveDecisions, m.Constraints)
+        ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
 
     let create objective =
-        let objectiveDecisions = LinearExpression.GetDecisions objective.Expression
-        let mismatchedDecisionsInObjective = getMismatchedDecisionTypesInSet objectiveDecisions
-
-        if not (List.isEmpty mismatchedDecisionsInObjective) then
-            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
-
-        let decisions = 
-            objectiveDecisions 
-            |> Set.toList 
-            |> List.map (fun x -> x.Name, x) 
-            |> Map.ofList
 
         {
             _Objective = objective
             _Constraints = []
-            _Decisions = decisions
         }
 
     let addConstraint c (model:Model) =
-        let decisions = Constraint.getDecisions c
 
-        let mismatchedDecisions = getMismatchedDecisionTypes model.Decisions decisions
-        if not (Set.isEmpty mismatchedDecisions) then
-            // TODO Make this error more informative
-            failwith "Cannot have mismatched DecisionTypes for same DecisionName"
-
-        let newDecisions = newDecisions model.Decisions decisions
-        let newDecisionMap = (model.Decisions, newDecisions) ||> List.fold (fun m d -> Map.add d.Name d m )
-
-        { model with _Constraints = [c] @ model.Constraints; _Decisions = newDecisionMap }
+        { model with _Constraints = [c] @ model.Constraints }
 
     let addConstraints constraints model =
         (model, constraints) ||> Seq.fold (fun model c -> addConstraint c model)
