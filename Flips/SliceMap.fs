@@ -3,6 +3,12 @@
 open System.Collections.Generic
 
 
+type ISliceMapStore<'Key, 'Value> =
+  //abstract member ContainsItem : 'Key -> bool
+  abstract member GetItem : 'Key -> 'Value
+  abstract member TryGetItem : 'Key -> 'Value option
+
+
 type SliceType<'a when 'a : comparison> =
     | All
     | Equals of 'a
@@ -37,19 +43,6 @@ module Utilities =
                                   | None -> lhsV)
         |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
-
-    let internal SliceFilterBuilder<'a when 'a : comparison> (f:SliceType<'a>) =
-        match f with
-        | All -> fun _ -> true
-        | Equals k1 -> fun k2 -> k2 = k1
-        | GreaterThan k1 -> fun k2 -> k2 > k1
-        | GreaterOrEqual k1 -> fun k2 -> k2 >= k1
-        | LessThan k1 -> fun k2 -> k2 < k1
-        | LessOrEqual k1 -> fun k2 -> k2 <= k1
-        | Between (lowerBound, upperBound) -> fun k3 -> k3 >= lowerBound && k3 <= upperBound
-        | In set -> fun k2 -> Set.contains k2 set
-        | NotIn set -> fun k2 -> not (Set.contains k2 set)
-        | Where f -> f
 
     let inline internal filterKeys (f:SliceType<'a>) (keys:Set<'a>) : Set<'a> =
         match f with
@@ -94,6 +87,17 @@ module internal Dictionary =
 
     let toList d =
       toSeq d |> List.ofSeq
+
+    let asISliceMapStore (d:Dictionary<'Key,'Value>) =
+        { new ISliceMapStore<'Key, 'Value> with
+
+            member this.GetItem k = d.[k]
+
+            member this.TryGetItem k = 
+                match d.TryGetValue(k) with
+                | true, value -> Some value
+                | false, _ -> None
+        }
 
 
     let inline scale coef (d:Dictionary<_,_>) =
@@ -171,9 +175,9 @@ module internal Dictionary =
       acc
 
 
-type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, values:Dictionary<'Key,'Value>) =
+type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, store:ISliceMapStore<'Key, 'Value>) =
     member this.Keys = keys
-    member this.Values = values
+    member this.Store = store
 
     new(m:Map<'Key,'Value>) =
         let keys = m |> Map.toSeq |> Seq.map fst |> Seq.distinct |> Set.ofSeq
@@ -181,66 +185,72 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
             let vs = m |> Map.toSeq |> Seq.map (fun (k, v) -> KeyValuePair(k, v))
             new Dictionary<'Key, 'Value>(vs)
 
-        SMap(keys, values)
+        let store = Dictionary.asISliceMapStore values
+        SMap(keys, store)
+
+    member this.AsMap =
+      [for k in this.Keys ->
+              this.Store.TryGetItem (k)
+              |> Option.map (fun v -> k, v)
+      ]
+      |> List.choose id
+      |> Map.ofList
 
 
     override this.ToString() =
-        sprintf "SMap %O" this.Values
+        sprintf "SMap %O" this.AsMap
 
     override this.Equals(obj) =
         match obj with
         | :? SMap<'Key, 'Value> as s -> 
-            Dictionary.toMap this.Values = Dictionary.toMap s.Values
+            this.AsMap = s.AsMap
         | _ -> false
 
     override this.GetHashCode () =
-        hash this.Values
+        hash this.AsMap
 
     member this.ContainsKey k =
         Set.contains k this.Keys
-
-    member this.AsMap =
-        Dictionary.toMap this.Values
 
     // Slices
     // 1D
     member this.Item
         with get (k1f) =
             let newKeys = filterKeys k1f this.Keys
-            SMap(newKeys, this.Values)
+            SMap(newKeys, this.Store)
 
     // 0D (aka GetItem)
     member this.Item
         with get(k) =
-            this.Values.[k] 
+            this.Store.GetItem k
 
-    // Operators
-    static member inline (*) (coef, smap:SMap<_,_>) =
-        let newValues = Dictionary.scale coef smap.Values
-        SMap(smap.Keys, newValues)
+    //// Operators
+    //static member inline (*) (coef, smap:SMap<_,_>) =
+    //    let newValues = Dictionary.scale coef smap.Values
+    //    SMap(smap.Keys, newValues)
 
-    static member inline (*) (smap:SMap<_,_>, coef) =
-        let newValues = Dictionary.scale coef smap.Values
-        SMap(smap.Keys, newValues)
+    //static member inline (*) (smap:SMap<_,_>, coef) =
+    //    let newValues = Dictionary.scale coef smap.Values
+    //    SMap(smap.Keys, newValues)
 
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        let newKeys = Set.intersect lhs.Keys rhs.Keys
-        let newValues = Dictionary.multiply newKeys lhs.Values id rhs.Values
-        SMap(newKeys, newValues)
+    //static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
+    //    let newKeys = Set.intersect lhs.Keys rhs.Keys
+    //    let newValues = Dictionary.multiply newKeys lhs.Values id rhs.Values
+    //    SMap(newKeys, newValues)
 
-    static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        let newKeys = lhs.Keys + rhs.Keys
-        let newValues = Dictionary.add newKeys lhs.Values rhs.Values
-        SMap(newKeys, newValues)
+    //static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
+    //    let newKeys = lhs.Keys + rhs.Keys
+    //    let newValues = Dictionary.add newKeys lhs.Values rhs.Values
+    //    SMap(newKeys, newValues)
 
-    static member inline Sum (m:SMap<_,_>) =
-        Dictionary.sum m.Values
+    //static member inline Sum (m:SMap<_,_>) =
+    //    Dictionary.sum m.Values
 
-    static member Sum (m:SMap<_,Flips.Types.Decision>) =
-        Dictionary.sumDecisions m.Values
+    //static member Sum (m:SMap<_,Flips.Types.Decision>) =
+    //    Dictionary.sumDecisions m.Values
 
-    static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        Dictionary.sumDecisionsWithUnits m.Values
+    //static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    //    Dictionary.sumDecisionsWithUnits m.Values
 
 
 module SMap =
@@ -248,35 +258,35 @@ module SMap =
     let ofSeq m =
         m |> Map.ofSeq |> SMap
 
-    let toSeq (m:SMap<_,_>) =
-        m.Values |> Seq.map (fun x -> x.Key, x.Value)
+    //let toSeq (m:SMap<_,_>) =
+    //    m.Values |> Seq.map (fun x -> x.Key, x.Value)
 
-    let ofMap m =
-        m |> SMap
+    //let ofMap m =
+    //    m |> SMap
 
-    let toMap (m:SMap<_,_>) =
-        m |> toSeq |> Map.ofSeq
+    //let toMap (m:SMap<_,_>) =
+    //    m |> toSeq |> Map.ofSeq
 
-    let ofList m =
-        m |> Map.ofList |> SMap
+    //let ofList m =
+    //    m |> Map.ofList |> SMap
 
-    let toList (m:SMap<_,_>) =
-        m |> toSeq |> List.ofSeq
+    //let toList (m:SMap<_,_>) =
+    //    m |> toSeq |> List.ofSeq
 
-    let ofArray m =
-        m |> Map.ofArray |> SMap
+    //let ofArray m =
+    //    m |> Map.ofArray |> SMap
 
-    let toArray (m:SMap<_,_>) =
-        m |> toSeq |> Array.ofSeq
+    //let toArray (m:SMap<_,_>) =
+    //    m |> toSeq |> Array.ofSeq
 
     let containsKey k (m:SMap<_,_>) =
         m.ContainsKey k
 
 
-type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:Set<'Key1>, keys2:Set<'Key2>, values:Dictionary<('Key1 * 'Key2),'Value>) =
+type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:Set<'Key1>, keys2:Set<'Key2>, store:ISliceMapStore<('Key1 * 'Key2), 'Value>) =
     member this.Keys1 = keys1
     member this.Keys2 = keys2
-    member this.Values = values
+    member this.Store = store
 
     new(m:Map<('Key1 * 'Key2),'Value>) =
         let keys = m |> Map.toSeq |> Seq.map fst |> Seq.distinct |> Set.ofSeq
@@ -286,25 +296,29 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
         let keys1 = keys |> Set.map fst
         let keys2 = keys |> Set.map snd
-        SMap2(keys1, keys2, values)
+        let store = Dictionary.asISliceMapStore values
+        SMap2(keys1, keys2, store)
+
+    member this.AsMap =
+        [for k1 in this.Keys1 do
+            for k2 in this.Keys2 ->
+                this.Store.TryGetItem (k1, k2)
+                |> Option.map (fun v -> (k1, k2), v)
+        ]
+        |> List.choose id
+        |> Map.ofList
 
     override this.ToString () = 
-        sprintf "SMap2 %O" this.Values
+        sprintf "SMap2 %O" this.AsMap
 
     override this.Equals(obj) =
         match obj with
         | :? SMap2<'Key1, 'Key2, 'Value > as s -> 
-          Dictionary.toMap this.Values = Dictionary.toMap s.Values // TODO: Fix this because this is reference comparison
+          this.AsMap = s.AsMap
         | _ -> false
 
     override this.GetHashCode () =
-        hash this.Values
-
-    member this.ContainsKey k =
-        this.Values.ContainsKey k
-
-    member this.AsMap =
-        Dictionary.toMap this.Values
+        hash this.AsMap
 
     // Slices
     // 2D
@@ -312,86 +326,85 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         with get (k1f, k2f) =
             let keys1 = filterKeys k1f this.Keys1
             let keys2 = filterKeys k2f this.Keys2
-            let newKeys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-            let keyMap = id
-            //let newValues = Dictionary.select newKeys keyMap this.Values
-            SMap2(keys1, keys2, this.Values)
+            SMap2(keys1, keys2, this.Store)
 
     // 1D
     member this.Item
         with get (k1, k2f) =
-            let keys1 = filterKeys (Equals k1) this.Keys1
             let keys2 = filterKeys k2f this.Keys2
-            let newKeys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-            let keyMap = fun (x, y) -> y
-            let newValues = Dictionary.select newKeys keyMap this.Values
-            SMap (keys2, newValues)
+            let newStore = 
+              { new ISliceMapStore<'Key2, 'Value> with
+                  member __.GetItem k = this.Store.GetItem (k1, k)
+                  member __.TryGetItem k = this.Store.TryGetItem (k1, k)
+              }
+            SMap (keys2, newStore)
 
     member this.Item
         with get (k1f, k2) =
             let keys1 = filterKeys k1f this.Keys1
-            let keys2 = filterKeys (Equals k2) this.Keys2
-            let newKeys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-            let keyMap = fun (x, y) -> x
-            let newValues = Dictionary.select newKeys keyMap this.Values
-            SMap (keys1, newValues)
+            let newStore = 
+              { new ISliceMapStore<'Key1, 'Value> with
+                  member __.GetItem k = this.Store.GetItem (k, k2)
+                  member __.TryGetItem k = this.Store.TryGetItem (k, k2)
+              }
+            SMap (keys1, newStore)
 
     // 0D (aka GetItem)
     member this.Item
         with get(k1, k2) =
-            this.Values.[(k1, k2)]
+            this.Store.GetItem (k1, k2)
 
-    // Operators
-    static member inline (*) (coef, smap:SMap2<_,_,_>) =
-        let newValues = Dictionary.scale coef smap.Values
-        SMap2(smap.Keys1, smap.Keys2, newValues)
+    //// Operators
+    //static member inline (*) (coef, smap:SMap2<_,_,_>) =
+    //    let newValues = Dictionary.scale coef smap.Values
+    //    SMap2(smap.Keys1, smap.Keys2, newValues)
 
-    static member inline (*) (smap:SMap2<_,_,_>, coef) =
-        let newValues = Dictionary.scale coef smap.Values
-        SMap2(smap.Keys1, smap.Keys2, newValues)
+    //static member inline (*) (smap:SMap2<_,_,_>, coef) =
+    //    let newValues = Dictionary.scale coef smap.Values
+    //    SMap2(smap.Keys1, smap.Keys2, newValues)
 
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
-        let keys1 = Set.intersect lhs.Keys1 rhs.Keys1
-        let keys2 = Set.intersect lhs.Keys2 rhs.Keys2
-        let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-        let rKeyBuilder = id
-        let newValues = Dictionary.multiply keySet lhs.Values rKeyBuilder rhs.Values
+    //static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
+    //    let keys1 = Set.intersect lhs.Keys1 rhs.Keys1
+    //    let keys2 = Set.intersect lhs.Keys2 rhs.Keys2
+    //    let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+    //    let rKeyBuilder = id
+    //    let newValues = Dictionary.multiply keySet lhs.Values rKeyBuilder rhs.Values
 
-        SMap2(keys1, keys2, newValues)
+    //    SMap2(keys1, keys2, newValues)
 
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
-        let keys1 = lhs.Keys1
-        let keys2 = Set.intersect lhs.Keys2 rhs.Keys
-        let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-        let keyBuilder = fun (x, y) -> y
-        let newValues = Dictionary.multiply keySet lhs.Values keyBuilder rhs.Values
+    //static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
+    //    let keys1 = lhs.Keys1
+    //    let keys2 = Set.intersect lhs.Keys2 rhs.Keys
+    //    let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+    //    let keyBuilder = fun (x, y) -> y
+    //    let newValues = Dictionary.multiply keySet lhs.Values keyBuilder rhs.Values
 
-        SMap2(keys1, keys2, newValues)
+    //    SMap2(keys1, keys2, newValues)
 
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
-        let keys1 = Set.intersect lhs.Keys rhs.Keys1
-        let keys2 = rhs.Keys2
-        let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-        let keyBuilder = fun (x, y) -> x
-        let newValues = Dictionary.multiply keySet rhs.Values keyBuilder lhs.Values
+    //static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
+    //    let keys1 = Set.intersect lhs.Keys rhs.Keys1
+    //    let keys2 = rhs.Keys2
+    //    let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+    //    let keyBuilder = fun (x, y) -> x
+    //    let newValues = Dictionary.multiply keySet rhs.Values keyBuilder lhs.Values
 
-        SMap2(keys1, keys2, newValues)
+    //    SMap2(keys1, keys2, newValues)
 
-    static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
-        let newKeys1 = lhs.Keys1 + rhs.Keys1
-        let newKeys2 = lhs.Keys2 + rhs.Keys2
-        let keySet = seq {for k1 in newKeys1 do for k2 in newKeys2 -> (k1, k2)}
-        let newValues = Dictionary.add keySet lhs.Values rhs.Values
-        SMap2(newKeys1, newKeys2, newValues)
+    //static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
+    //    let newKeys1 = lhs.Keys1 + rhs.Keys1
+    //    let newKeys2 = lhs.Keys2 + rhs.Keys2
+    //    let keySet = seq {for k1 in newKeys1 do for k2 in newKeys2 -> (k1, k2)}
+    //    let newValues = Dictionary.add keySet lhs.Values rhs.Values
+    //    SMap2(newKeys1, newKeys2, newValues)
 
-    static member inline Sum (m:SMap2<_,_,_>) =
-        Dictionary.sum m.Values
+    //static member inline Sum (m:SMap2<_,_,_>) =
+    //    Dictionary.sum m.Values
 
-    static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
-        Dictionary.sum m.Values
+    //static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
+    //    Dictionary.sum m.Values
 
-    static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        Dictionary.sum m.Values
+    //static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    //    Dictionary.sum m.Values
 
 
 module SMap2 =
@@ -399,32 +412,32 @@ module SMap2 =
     let ofSeq m =
         m |> Map.ofSeq |> SMap2
 
-    let toSeq (m:SMap2<_,_,_>) =
-        Dictionary.toSeq m.Values
+    //let toSeq (m:SMap2<_,_,_>) =
+    //    Dictionary.toSeq m.Values
 
-    let ofMap m =
-        m |> SMap2
+//    let ofMap m =
+//        m |> SMap2
 
-    let toMap (m:SMap2<_,_,_>) =
-        Dictionary.toMap m.Values
+//    let toMap (m:SMap2<_,_,_>) =
+//        Dictionary.toMap m.Values
 
-    let ofList m =
-        m |> Map.ofList |> SMap2
+//    let ofList m =
+//        m |> Map.ofList |> SMap2
 
-    let toList (m:SMap2<_,_,_>) =
-        Dictionary.toList m.Values
+//    let toList (m:SMap2<_,_,_>) =
+//        Dictionary.toList m.Values
 
-    let ofArray m =
-        m |> Map.ofArray |> SMap2
+//    let ofArray m =
+//        m |> Map.ofArray |> SMap2
 
-    let toArray (m:SMap2<_,_,_>) =
-        m.Values |> Dictionary.toSeq |> Array.ofSeq
+//    let toArray (m:SMap2<_,_,_>) =
+//        m.Values |> Dictionary.toSeq |> Array.ofSeq
 
-    let containsKey k (m:SMap2<_,_,_>) =
-        m.Values.ContainsKey k
+//    let containsKey k (m:SMap2<_,_,_>) =
+//        m.Values.ContainsKey k
 
-    let inline reKey f m =
-        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+//    let inline reKey f m =
+//        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
 
 
 //type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
