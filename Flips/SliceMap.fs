@@ -60,8 +60,8 @@ module Utilities =
         | LessThan k -> Set.filter (fun x -> x < k) keys
         | LessOrEqual k -> Set.filter (fun x -> x <= k) keys
         | Between (lowerBound, upperBound) -> Set.filter (fun x -> x >= lowerBound && x <= upperBound) keys
-        | In set -> Set.filter (fun x -> Set.contains x set) keys
-        | NotIn set -> Set.filter (fun x -> not (Set.contains x set)) keys
+        | In set -> Set.intersect set keys
+        | NotIn set -> Set.difference keys set
         | Where f -> Set.filter f keys
 
     let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
@@ -206,10 +206,8 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
     // 1D
     member this.Item
         with get (k1f) =
-            let k1Filter = SliceFilterBuilder k1f
-            let newKeys = Set.filter k1Filter this.Keys
-            let newValues = Dictionary.select newKeys id this.Values
-            SMap(newKeys, newValues)
+            let newKeys = filterKeys k1f this.Keys
+            SMap(newKeys, this.Values)
 
     // 0D (aka GetItem)
     member this.Item
@@ -316,8 +314,8 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
             let keys2 = filterKeys k2f this.Keys2
             let newKeys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
             let keyMap = id
-            let newValues = Dictionary.select newKeys keyMap this.Values
-            SMap2(keys1, keys2, newValues)
+            //let newValues = Dictionary.select newKeys keyMap this.Values
+            SMap2(keys1, keys2, this.Values)
 
     // 1D
     member this.Item
