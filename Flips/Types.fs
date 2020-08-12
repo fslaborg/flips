@@ -139,7 +139,6 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
     | AddLinearExpression of LinearExpression * LinearExpression
 
 
-
     static member internal Reduce (expr:LinearExpression) : ReducedLinearExpression =
         let initialState = {
             DecisionTypes = Map.empty
