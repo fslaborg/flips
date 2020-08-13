@@ -3,9 +3,6 @@
 open System.Collections.Generic
 
 
-type IStore<'Key, 'Value> =
-  abstract member GetItem : 'Key -> 'Value
-  abstract member TryGetItem : 'Key -> 'Value option
 
 
 
@@ -47,7 +44,7 @@ module Utilities =
     let inline internal filterKeys (f:SliceType<'a>) (keys:Set<'a>) : Set<'a> =
         match f with
         | All -> keys
-        | Equals k -> Set.add k Set.empty
+        | Equals k -> match Set.contains k keys with | true -> Set.add k Set.empty | false -> Set.empty
         | GreaterThan k -> Set.filter (fun x -> x > k) keys
         | GreaterOrEqual k -> Set.filter (fun x -> x >= k) keys
         | LessThan k -> Set.filter (fun x -> x < k) keys
@@ -66,48 +63,37 @@ module Utilities =
         let r = Seq.sum k1
         ((^a) : (static member Sum: ^a -> ^b) r)
 
+type TryFind<'Key, 'Value> = 'Key -> 'Value option
 
-module IStore =
+module TryFind =
 
-    let create getItem tryGetItem =
-        { new IStore<'Key, 'Value> with
-            member this.GetItem k = getItem k
-            member this.TryGetItem k = tryGetItem k
-        }
+    let ofDictionary (d:Dictionary<'Key,'Value>) : TryFind<'Key, 'Value> =
+        fun k -> 
+          match d.TryGetValue(k) with
+          | true, value -> Some value
+          | false, _ -> None
 
-    let ofDictionary (d:Dictionary<'Key,'Value>) =
-        { new IStore<'Key, 'Value> with
-
-            member this.GetItem k = d.[k]
-
-            member this.TryGetItem k = 
-                match d.TryGetValue(k) with
-                | true, value -> Some value
-                | false, _ -> None
-        }
-
-    let ofSeq (s:seq<'Key * 'Value>) =
+    let ofSeq (s:seq<'Key * 'Value>) : TryFind<'Key, 'Value> =
         s 
         |> Seq.map (fun (k, v) -> KeyValuePair(k, v)) 
         |> Dictionary
         |> ofDictionary
 
-    let toSeq (keys:seq<_>) (s:IStore<_,_>) =
-        let tryGet k =
-            s.TryGetItem(k) |> Option.map (fun v -> k, v)
+    let toSeq (keys:seq<_>) (s:TryFind<_,_>) =
+        let lookup k = s k |> Option.map (fun v -> k, v)
         
         keys
-        |> Seq.choose tryGet
+        |> Seq.choose lookup
 
-    let toMap keys (s:IStore<_,_>) =
+    let toMap keys (s:TryFind<_,_>) =
         s |> (toSeq keys) |> Map.ofSeq
 
 
-    let inline scale coef keys (d:IStore<_,_>) =
+    let inline scale coef keys (tryFind:TryFind<_,_>) =
         let newDict = new Dictionary<_,_>()
       
         for k in keys do
-            match d.TryGetItem(k) with
+            match tryFind k with
             | Some v ->
                 newDict.[k] <- v * coef
             | None -> ()
@@ -115,11 +101,11 @@ module IStore =
         ofDictionary newDict
 
 
-    let inline mergeAdd (keys:seq<_>) (a:IStore<_,_>) (b:IStore<_,_>) =
+    let inline mergeAdd (keys:seq<_>) (aTryFind:TryFind<_,_>) (bTryFind:TryFind<_,_>) =
         let newDict = new Dictionary<_,_>()
 
         for key in keys do
-            match a.TryGetItem(key), b.TryGetItem(key) with
+            match aTryFind key, bTryFind key with
             | Some lValue, Some rValue -> 
                 newDict.Add(key, lValue + rValue)
             | Some lValue, None -> 
@@ -132,11 +118,11 @@ module IStore =
         ofDictionary newDict
 
 
-    let inline multiply (keys:seq<_>) (a:IStore<_,_>) keyBuilder (b:IStore<_,_>) =
+    let inline multiply (keys:seq<_>) (aTryFind:TryFind<_,_>) keyBuilder (bTryFind:TryFind<_,_>) =
         let newDict = new Dictionary<_,_>()
 
         for key in keys do
-            match a.TryGetItem(key), b.TryGetItem(keyBuilder key) with
+            match aTryFind key, bTryFind (keyBuilder key) with
             | Some lValue, Some rValue -> 
                 newDict.Add(key, lValue * rValue)
             | _, _ ->
@@ -145,46 +131,69 @@ module IStore =
         ofDictionary newDict
 
 
-    let inline sum keys (d:IStore<_,_>) =
+    let inline sum keys (tryFind:TryFind<_,_>) =
         let mutable acc = LanguagePrimitives.GenericZero
 
         for k in keys do
-            acc <- acc + d.GetItem(k)
+            match tryFind k with
+            | Some v -> 
+                acc <- acc + v
+            | None -> ()
 
         acc
 
-
-    let sumDecisions keys (d:IStore<_,Flips.Types.Decision>) =
+    let sumLinearExpressions keys (tryFind:TryFind<_,Flips.Types.LinearExpression>) =
         let mutable acc = LanguagePrimitives.GenericZero
         
         for k in keys do
-            acc <- acc + (1.0 * d.GetItem(k))
+            match tryFind k with
+            | Some v ->
+                acc <- acc + (1.0 * v)
+            | None -> ()
+
+        acc
+
+    let sumDecisions keys (tryFind:TryFind<_,Flips.Types.Decision>) =
+        let mutable acc = LanguagePrimitives.GenericZero
+        
+        for k in keys do
+            match tryFind k with
+            | Some v ->
+                acc <- acc + (1.0 * v)
+            | None -> ()
 
         acc
 
 
-    let sumDecisionsWithUnits keys (d:IStore<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    let sumDecisionsWithUnits keys (tryFind:TryFind<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
         let mutable acc = LanguagePrimitives.GenericZero
       
         for k in keys do
-            acc <- acc + (1.0 * d.GetItem(k))
+            match tryFind k with
+            | Some v ->
+                acc <- acc + (1.0 * v)
+            | None -> ()
 
         acc
 
 
 
-type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, values:IStore<'Key, 'Value>) =
+type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, tryFind:TryFind<'Key, 'Value>) =
     member this.Keys = keys
-    member this.Values = values
+    member this.TryFind = tryFind
 
     new (s:seq<'Key * 'Value>) =
         let keys = s |> Seq.map fst |> Set.ofSeq
-        let store = IStore.ofSeq s
+        let store = TryFind.ofSeq s
         SMap (keys, store)
 
+    new (m:Map<'Key, 'Value>) =
+      let s = m |> Map.toSeq
+      SMap s
+
     member this.AsMap =
-      this.Values
-      |> IStore.toMap this.Keys
+      this.TryFind
+      |> TryFind.toMap this.Keys
 
     override this.ToString() =
         sprintf "SMap %O" this.AsMap
@@ -199,7 +208,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
         hash this.AsMap
 
     member this.ContainsKey k =
-        match this.Values.TryGetItem k with
+        match this.TryFind k with
         | Some _ -> true
         | None -> false
 
@@ -208,40 +217,45 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
     member this.Item
         with get (k1f) =
             let newKeys = filterKeys k1f this.Keys
-            SMap(newKeys, this.Values)
+            SMap(newKeys, this.TryFind)
 
     // 0D (aka GetItem)
     member this.Item
         with get(k) =
-            this.Values.GetItem k
+            match this.TryFind k with
+            | Some v -> v
+            | None -> raise (KeyNotFoundException("The given key was not present in the slicemap."))
 
     // Operators
     static member inline (*) (coef, smap:SMap<_,_>) =
-        let newStore = IStore.scale coef smap.Keys smap.Values
+        let newStore = TryFind.scale coef smap.Keys smap.TryFind
         SMap(smap.Keys, newStore)
 
     static member inline (*) (smap:SMap<_,_>, coef) =
-        let newValues = IStore.scale coef smap.Keys smap.Values
+        let newValues = TryFind.scale coef smap.Keys smap.TryFind
         SMap(smap.Keys, newValues)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         let newKeys = Set.intersect lhs.Keys rhs.Keys
-        let newValues = IStore.multiply newKeys lhs.Values id rhs.Values
+        let newValues = TryFind.multiply newKeys lhs.TryFind id rhs.TryFind
         SMap(newKeys, newValues)
 
     static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         let newKeys = lhs.Keys + rhs.Keys
-        let newValues = IStore.mergeAdd newKeys lhs.Values rhs.Values
+        let newValues = TryFind.mergeAdd newKeys lhs.TryFind rhs.TryFind
         SMap(newKeys, newValues)
 
     static member inline Sum (m:SMap<_,_>) =
-        IStore.sum m.Keys m.Values
+        TryFind.sum m.Keys m.TryFind
 
-    static member Sum (m:SMap<_,Flips.Types.Decision>) =
-        IStore.sumDecisions m.Keys m.Values
+    //static member Sum (m:SMap<_,Flips.Types.LinearExpression>) =
+    //    TryFind.sumLinearExpressions m.Keys m.TryFind
 
-    static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        IStore.sumDecisionsWithUnits m.Keys m.Values
+    //static member Sum (m:SMap<_,Flips.Types.Decision>) =
+    //    TryFind.sumDecisions m.Keys m.TryFind
+
+    //static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    //    TryFind.sumDecisionsWithUnits m.Keys m.TryFind
 
 
 module SMap =
@@ -250,7 +264,7 @@ module SMap =
         m |> SMap
 
     let toSeq (m:SMap<_,_>) =
-        IStore.toSeq m.Keys m.Values
+        TryFind.toSeq m.Keys m.TryFind
 
     let ofMap (m:Map<_,_>) =
         m |> Map.toSeq |> ofSeq
@@ -274,21 +288,25 @@ module SMap =
         m.ContainsKey k
 
 
-type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:Set<'Key1>, keys2:Set<'Key2>, values:IStore<('Key1 * 'Key2), 'Value>) =
+type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:Set<'Key1>, keys2:Set<'Key2>, tryFind:TryFind<('Key1 * 'Key2), 'Value>) =
     member this.Keys1 = keys1
     member this.Keys2 = keys2
     member this.PossibleKeys = seq {for k1 in this.Keys1 do for k2 in this.Keys2 -> (k1, k2)}
-    member this.Values = values
+    member this.TryFind = tryFind
 
     new (s:seq<('Key1 * 'Key2) * 'Value>) =
         let keys1 = s |> Seq.map (fst >> fst) |> Set.ofSeq
         let keys2 = s |> Seq.map (fst >> snd) |> Set.ofSeq
-        let store = IStore.ofSeq s
+        let store = TryFind.ofSeq s
         SMap2 (keys1, keys2, store)
 
+    new (m:Map<('Key1 * 'Key2), 'Value>) =
+      let s = m |> Map.toSeq
+      SMap2 s
+
     member this.AsMap =
-        this.Values
-        |> IStore.toMap this.PossibleKeys
+        this.TryFind
+        |> TryFind.toMap this.PossibleKeys
 
     override this.ToString () = 
         sprintf "SMap2 %O" this.AsMap
@@ -303,7 +321,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         hash this.AsMap
 
     member this.ContainsKey k =
-        match this.Values.TryGetItem k with
+        match this.TryFind k with
         | Some _ -> true
         | None -> false
 
@@ -313,37 +331,35 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         with get (k1f, k2f) =
             let keys1 = filterKeys k1f this.Keys1
             let keys2 = filterKeys k2f this.Keys2
-            SMap2(keys1, keys2, this.Values)
+            SMap2(keys1, keys2, this.TryFind)
 
     // 1D
     member this.Item
         with get (k1, k2f) =
             let keys2 = filterKeys k2f this.Keys2
-            let getItem k = this.Values.GetItem (k1, k)
-            let tryGetItem k = this.Values.TryGetItem (k1, k)
-            let newStore = IStore.create getItem tryGetItem
-            SMap (keys2, newStore)
+            let newTryFind k = this.TryFind (k1, k)
+            SMap (keys2, newTryFind)
 
     member this.Item
         with get (k1f, k2) =
             let keys1 = filterKeys k1f this.Keys1
-            let getItem k = this.Values.GetItem (k, k2)
-            let tryGetItem k = this.Values.TryGetItem (k, k2)
-            let newStore = IStore.create getItem tryGetItem
-            SMap (keys1, newStore)
+            let newTryFind k = this.TryFind (k, k2)
+            SMap (keys1, newTryFind)
 
     // 0D (aka GetItem)
     member this.Item
         with get(k1, k2) =
-            this.Values.GetItem (k1, k2)
+            match this.TryFind (k1, k2) with
+            | Some v -> v
+            | None -> raise (KeyNotFoundException("The given key was not present in the slicemap."))
 
     // Operators
     static member inline (*) (coef, s:SMap2<_,_,_>) =
-        let newValues = IStore.scale coef s.PossibleKeys s.Values
+        let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
         SMap2(s.Keys1, s.Keys2, newValues)
 
     static member inline (*) (s:SMap2<_,_,_>, coef) =
-        let newValues = IStore.scale coef s.PossibleKeys s.Values
+        let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
         SMap2(s.Keys1, s.Keys2, newValues)
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
@@ -351,7 +367,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let keys2 = Set.intersect lhs.Keys2 rhs.Keys2
         let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
         let rKeyBuilder = id
-        let newValues = IStore.multiply keySet lhs.Values rKeyBuilder rhs.Values
+        let newValues = TryFind.multiply keySet lhs.TryFind rKeyBuilder rhs.TryFind
 
         SMap2(keys1, keys2, newValues)
 
@@ -360,7 +376,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let keys2 = Set.intersect lhs.Keys2 rhs.Keys
         let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
         let keyBuilder = fun (x, y) -> y
-        let newValues = IStore.multiply keySet lhs.Values keyBuilder rhs.Values
+        let newValues = TryFind.multiply keySet lhs.TryFind keyBuilder rhs.TryFind
 
         SMap2(keys1, keys2, newValues)
 
@@ -369,7 +385,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let keys2 = rhs.Keys2
         let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
         let keyBuilder = fun (x, y) -> x
-        let newValues = IStore.multiply keySet rhs.Values keyBuilder lhs.Values
+        let newValues = TryFind.multiply keySet rhs.TryFind keyBuilder lhs.TryFind
 
         SMap2(keys1, keys2, newValues)
 
@@ -377,28 +393,28 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let newKeys1 = lhs.Keys1 + rhs.Keys1
         let newKeys2 = lhs.Keys2 + rhs.Keys2
         let keySet = seq {for k1 in newKeys1 do for k2 in newKeys2 -> (k1, k2)}
-        let newValues = IStore.mergeAdd keySet lhs.Values rhs.Values
+        let newValues = TryFind.mergeAdd keySet lhs.TryFind rhs.TryFind
         SMap2(newKeys1, newKeys2, newValues)
 
     static member inline Sum (m:SMap2<_,_,_>) =
-        IStore.sum m.PossibleKeys m.Values
+        TryFind.sum m.PossibleKeys m.TryFind
 
-    static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
-        IStore.sumDecisions m.PossibleKeys m.Values
+    //static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
+    //    TryFind.sumDecisions m.PossibleKeys m.TryFind
 
-    static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        IStore.sumDecisionsWithUnits m.PossibleKeys m.Values
+    //static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    //    TryFind.sumDecisionsWithUnits m.PossibleKeys m.TryFind
 
 
 module SMap2 =
 
-    let ofSeq m =
+    let ofSeq (m:seq<_>) =
         m |> SMap2
 
     let toSeq (m:SMap2<_,_,_>) =
-        IStore.toSeq m.PossibleKeys m.Values
+        TryFind.toSeq m.PossibleKeys m.TryFind
 
-    let ofMap m =
+    let ofMap (m:Map<_,_>) =
         m |> SMap2
 
     let toMap (m:SMap2<_,_,_>) =
@@ -425,24 +441,24 @@ module SMap2 =
 
 //type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3),'Value>) =
 
-//    member this.Values = m
+//    member this.TryFind = m
 
 //    override this.ToString() =
-//        sprintf "SMap3 %O" this.Values
+//        sprintf "SMap3 %O" this.TryFind
 
 //    override this.Equals(obj) =
 //        match obj with
-//        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as s -> this.Values = s.Values
+//        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as s -> this.TryFind = s.Values
 //        | _ -> false
 
 //    override this.GetHashCode () =
-//        hash this.Values
+//        hash this.TryFind
 
 //    member this.ContainsKey k =
-//        Map.containsKey k this.Values
+//        Map.containsKey k this.TryFind
 
 //    member this.AsMap =
-//        this.Values
+//        this.TryFind
 
 //    // Filter Values
 //    member private this.FilterValues k1f k2f k3f =
@@ -450,7 +466,7 @@ module SMap2 =
 //        let k2Filter = SliceFilterBuilder k2f
 //        let k3Filter = SliceFilterBuilder k3f
         
-//        this.Values
+//        this.TryFind
 //        |> Map.filter (fun (k1, k2, k3) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3)
 //        |> Map.toSeq
 
@@ -507,7 +523,7 @@ module SMap2 =
 //    // 0D (aka GetItem)
 //    member this.Item
 //        with get(k1, k2, k3) =
-//            this.Values.[(k1, k2, k3)] 
+//            this.TryFind.[(k1, k2, k3)] 
 
 //    // Operators
 //    static member inline (*) (lhs, rhs:SMap3<_,_,_,_>) =
@@ -601,24 +617,24 @@ module SMap2 =
 
 //type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4),'Value>) =
 
-//    member this.Values = m
+//    member this.TryFind = m
 
 //    override this.ToString() =
-//        sprintf "SMap4 %O" this.Values
+//        sprintf "SMap4 %O" this.TryFind
 
 //    override this.Equals(obj) =
 //        match obj with
-//        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> this.Values = s.Values
+//        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> this.TryFind = s.Values
 //        | _ -> false
 
 //    override this.GetHashCode () =
-//        hash this.Values
+//        hash this.TryFind
 
 //    member this.ContainsKey k =
-//        Map.containsKey k this.Values
+//        Map.containsKey k this.TryFind
 
 //    member this.AsMap =
-//        this.Values
+//        this.TryFind
 
 //    // Filter Values
 //    member private this.FilterValues k1f k2f k3f k4f =
@@ -627,7 +643,7 @@ module SMap2 =
 //        let k3Filter = SliceFilterBuilder k3f
 //        let k4Filter = SliceFilterBuilder k4f
         
-//        this.Values
+//        this.TryFind
 //        |> Map.filter (fun (k1, k2, k3, k4) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4)
 //        |> Map.toSeq
 
@@ -734,7 +750,7 @@ module SMap2 =
 //    // 0D (aka GetItem)
 //    member this.Item
 //        with get(k1, k2, k3, k4) =
-//            this.Values.[k1, k2, k3, k4] 
+//            this.TryFind.[k1, k2, k3, k4] 
 
 //    // Operators
 //    static member inline (*) (lhs, rhs:SMap4<_,_,_,_,_>) =
@@ -840,24 +856,24 @@ module SMap2 =
 
 //type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Key5 : comparison and 'Value : equality> (m:Map<('Key1 * 'Key2 * 'Key3 * 'Key4 * 'Key5),'Value>) =
 
-//    member this.Values = m
+//    member this.TryFind = m
 
 //    override this.ToString() =
-//        sprintf "SMap5 %O" this.Values
+//        sprintf "SMap5 %O" this.TryFind
 
 //    override this.Equals(obj) =
 //        match obj with
-//        | :? SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> as s -> this.Values = s.Values
+//        | :? SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> as s -> this.TryFind = s.Values
 //        | _ -> false
 
 //    override this.GetHashCode () =
-//        hash this.Values
+//        hash this.TryFind
 
 //    member this.ContainsKey k =
-//        Map.containsKey k this.Values
+//        Map.containsKey k this.TryFind
 
 //    member this.AsMap =
-//        this.Values
+//        this.TryFind
 
 //    // Filter Values
 //    member private this.FilterValues k1f k2f k3f k4f k5f =
@@ -867,7 +883,7 @@ module SMap2 =
 //        let k4Filter = SliceFilterBuilder k4f
 //        let k5Filter = SliceFilterBuilder k5f
         
-//        this.Values
+//        this.TryFind
 //        |> Map.filter (fun (k1, k2, k3, k4, k5) _ -> k1Filter k1 && k2Filter k2 && k3Filter k3 && k4Filter k4 && k5Filter k5)
 //        |> Map.toSeq
 
@@ -1068,7 +1084,7 @@ module SMap2 =
 //    // 0D (aka GetItem)
 //    member this.Item
 //        with get(k1, k2, k3, k4, k5) =
-//            this.Values.[k1, k2, k3, k4, k5] 
+//            this.TryFind.[k1, k2, k3, k4, k5] 
 
 //    // Operators
 //    static member inline (*) (lhs, rhs:SMap5<_,_,_,_,_,_>) =

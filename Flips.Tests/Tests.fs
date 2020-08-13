@@ -302,8 +302,9 @@ module Types =
 
         [<Property>]
         let ``Multiply SMap by its inverse then itself yields original `` (v:List<(NonEmptyString * Scalar)>)=
-            let s = Map.ofList v |> SMap
-            let inverse = v |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap.ofList
+            let distinctV = v |> List.distinctBy fst
+            let s = Map.ofList distinctV |> SMap
+            let inverse = distinctV |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap.ofList
             let r = s .* inverse .* s
             Assert.StrictEqual(s, r)
 
@@ -369,8 +370,9 @@ module Types =
 
         [<Property>]
         let ``Multiply SMap2 by its inverse then itself yields original `` (v:List<((NonEmptyString * NonEmptyString) * Scalar)>)=
-            let s = Map.ofList v |> SMap2
-            let inverse = v |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap2.ofList
+            let distinctV = v |> List.distinctBy fst
+            let s = Map.ofList distinctV |> SMap2
+            let inverse = distinctV |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap2.ofList
             let r = s .* inverse .* s
             Assert.StrictEqual(s, r)
 
