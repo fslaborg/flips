@@ -4,9 +4,10 @@ open System.Collections.Generic
 
 
 type ISliceMapStore<'Key, 'Value> =
-  //abstract member ContainsItem : 'Key -> bool
+  inherit IEnumerable<KeyValuePair<'Key, 'Value>>
   abstract member GetItem : 'Key -> 'Value
   abstract member TryGetItem : 'Key -> 'Value option
+
 
 
 type SliceType<'a when 'a : comparison> =
@@ -67,29 +68,15 @@ module Utilities =
         ((^a) : (static member Sum: ^a -> ^b) r)
 
 
-module internal Dictionary =
+module internal ISliceMapStore =
 
-    let ofSeq s =
-        let vs = s |> Seq.map (fun (k, v) -> KeyValuePair(k, v))
-        new Dictionary<'Key, 'Value>(vs)
-
-    let toSeq (d:Dictionary<_,_>) =
-        d |> Seq.map (fun x -> x.Key, x.Value)
-
-    let ofMap m =
-        m |> Map.toSeq |> ofSeq
-
-    let toMap d =
-        d |> toSeq |> Map.ofSeq
-
-    let ofList l =
-      List.toSeq l |> ofSeq
-
-    let toList d =
-      toSeq d |> List.ofSeq
-
-    let asISliceMapStore (d:Dictionary<'Key,'Value>) =
+    let ofDictionary (d:Dictionary<'Key,'Value>) =
         { new ISliceMapStore<'Key, 'Value> with
+            member this.GetEnumerator(): IEnumerator<KeyValuePair<'Key,'Value>> = 
+                d.GetEnumerator() :> IEnumerator<KeyValuePair<'Key,'Value>>
+
+            member this.GetEnumerator(): System.Collections.IEnumerator = 
+                d.GetEnumerator() :> System.Collections.IEnumerator 
 
             member this.GetItem k = d.[k]
 
@@ -99,66 +86,61 @@ module internal Dictionary =
                 | false, _ -> None
         }
 
+    let ofSeq (s:seq<'Key * 'Value>) =
+        s 
+        |> Seq.map (fun (k, v) -> KeyValuePair(k, v)) 
+        |> Dictionary
+        |> ofDictionary
 
-    let inline scale coef (d:Dictionary<_,_>) =
-      let newDict = new Dictionary<_,_>(d.Count)
+    let inline scale coef (d:ISliceMapStore<_,_>) =
+        let newDict = new Dictionary<_,_>()
       
-      for elem in d do
-          newDict.[elem.Key] <- elem.Value * coef
+        for elem in d do
+            newDict.[elem.Key] <- elem.Value * coef
 
-      newDict
+        ofDictionary newDict
 
-    let inline add (keys:seq<_>) (a:Dictionary<_,_>) (b:Dictionary<_,_>) =
+
+    let inline mergeAdd (keys:seq<_>) (a:ISliceMapStore<_,_>) (b:ISliceMapStore<_,_>) =
         let newDict = new Dictionary<_,_>()
 
         for key in keys do
-            match a.TryGetValue(key), b.TryGetValue(key) with
-            | (true, lValue), (true, rValue) -> 
+            match a.TryGetItem(key), b.TryGetItem(key) with
+            | Some lValue, Some rValue -> 
                 newDict.Add(key, lValue + rValue)
-            | (true, lValue), (false, _) -> 
+            | Some lValue, None -> 
                 newDict.Add(key, lValue)
-            | (false, _), (true, rValue) ->
+            | None, Some rValue ->
                 newDict.Add(key, rValue)
-            | _, _ ->
+            | None, None->
                 ()
 
-        newDict
+        ofDictionary newDict
 
 
-    let inline multiply (keys:seq<_>) (a:Dictionary<_,_>) keyBuilder (b:Dictionary<_,_>) =
+    let inline multiply (keys:seq<_>) (a:ISliceMapStore<_,_>) keyBuilder (b:ISliceMapStore<_,_>) =
         let newDict = new Dictionary<_,_>()
 
         for key in keys do
-            match a.TryGetValue(key), b.TryGetValue(keyBuilder key) with
-            | (true, lValue), (true, rValue) -> 
+            match a.TryGetItem(key), b.TryGetItem(keyBuilder key) with
+            | Some lValue, Some rValue -> 
                 newDict.Add(key, lValue * rValue)
             | _, _ ->
                 ()
 
-        newDict
+        ofDictionary newDict
 
 
-    let inline select (keys:seq<_>) keyMap (d:Dictionary<_,_>) =
-        let newDict = new Dictionary<_,_>()
-
-        for k in keys do
-            let (hasValue, v) = d.TryGetValue(k)
-            if hasValue then
-                let newKey = keyMap k
-                newDict.Add(newKey, v)
-
-        newDict
-
-
-    let inline sum (d:Dictionary<_,_>) =
+    let inline sum (d:ISliceMapStore<_,_>) =
         let mutable acc = LanguagePrimitives.GenericZero
 
         for elem in d do
-          acc <- acc + elem.Value
+            acc <- acc + elem.Value
 
         acc
 
-    let sumDecisions (d:Dictionary<_,Flips.Types.Decision>) =
+
+    let sumDecisions (d:ISliceMapStore<_,Flips.Types.Decision>) =
         let mutable acc = LanguagePrimitives.GenericZero
         
         for elem in d do
@@ -166,27 +148,29 @@ module internal Dictionary =
         
         acc
 
-    let sumDecisionsWithUnits (d:Dictionary<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-      let mutable acc = LanguagePrimitives.GenericZero
+
+    let sumDecisionsWithUnits (d:ISliceMapStore<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        let mutable acc = LanguagePrimitives.GenericZero
       
-      for elem in d do
-        acc <- acc + (1.0 * elem.Value)
+        for elem in d do
+            acc <- acc + (1.0 * elem.Value)
       
-      acc
+        acc
+
 
 
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, store:ISliceMapStore<'Key, 'Value>) =
     member this.Keys = keys
     member this.Store = store
 
-    new(m:Map<'Key,'Value>) =
-        let keys = m |> Map.toSeq |> Seq.map fst |> Seq.distinct |> Set.ofSeq
-        let values = 
-            let vs = m |> Map.toSeq |> Seq.map (fun (k, v) -> KeyValuePair(k, v))
-            new Dictionary<'Key, 'Value>(vs)
+    new (s:seq<'Key * 'Value>) =
+        let keys = s |> Seq.map fst |> Set.ofSeq
+        let store = ISliceMapStore.ofSeq s
+        SMap (keys, store)
 
-        let store = Dictionary.asISliceMapStore values
-        SMap(keys, store)
+    new (m:Map<'Key,'Value>) =
+        let s = m |> Map.toSeq
+        SMap s
 
     member this.AsMap =
       [for k in this.Keys ->
@@ -224,10 +208,10 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
         with get(k) =
             this.Store.GetItem k
 
-    //// Operators
-    //static member inline (*) (coef, smap:SMap<_,_>) =
-    //    let newValues = Dictionary.scale coef smap.Values
-    //    SMap(smap.Keys, newValues)
+    // Operators
+    static member inline (*) (coef, smap:SMap<_,_>) =
+        let newValues = Dictionary.scale coef smap.Store
+        SMap(smap.Keys, newValues)
 
     //static member inline (*) (smap:SMap<_,_>, coef) =
     //    let newValues = Dictionary.scale coef smap.Values
