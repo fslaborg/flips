@@ -4,7 +4,6 @@ open System.Collections.Generic
 
 
 type ISliceMapStore<'Key, 'Value> =
-  inherit IEnumerable<KeyValuePair<'Key, 'Value>>
   abstract member GetItem : 'Key -> 'Value
   abstract member TryGetItem : 'Key -> 'Value option
 
@@ -70,13 +69,14 @@ module Utilities =
 
 module internal ISliceMapStore =
 
+    let create getItem tryGetItem =
+        { new ISliceMapStore<'Key, 'Value> with
+            member this.GetItem k = getItem k
+            member this.TryGetItem k = tryGetItem k
+        }
+
     let ofDictionary (d:Dictionary<'Key,'Value>) =
         { new ISliceMapStore<'Key, 'Value> with
-            member this.GetEnumerator(): IEnumerator<KeyValuePair<'Key,'Value>> = 
-                d.GetEnumerator() :> IEnumerator<KeyValuePair<'Key,'Value>>
-
-            member this.GetEnumerator(): System.Collections.IEnumerator = 
-                d.GetEnumerator() :> System.Collections.IEnumerator 
 
             member this.GetItem k = d.[k]
 
@@ -92,18 +92,25 @@ module internal ISliceMapStore =
         |> Dictionary
         |> ofDictionary
 
-    let toSeq (s:ISliceMapStore<_,_>) =
-        s |> Seq.map (fun p -> p.Key, p.Value)
+    let toSeq (keys:seq<_>) (s:ISliceMapStore<_,_>) =
+        let tryGet k =
+            s.TryGetItem(k) |> Option.map (fun v -> k, v)
+        
+        keys
+        |> Seq.choose tryGet
 
-    let toMap (s:ISliceMapStore<_,_>) =
-        s |> toSeq |> Map.ofSeq
+    let toMap keys (s:ISliceMapStore<_,_>) =
+        s |> (toSeq keys) |> Map.ofSeq
 
 
-    let inline scale coef (d:ISliceMapStore<_,_>) =
+    let inline scale coef keys (d:ISliceMapStore<_,_>) =
         let newDict = new Dictionary<_,_>()
       
-        for elem in d do
-            newDict.[elem.Key] <- elem.Value * coef
+        for k in keys do
+            match d.TryGetItem(k) with
+            | Some v ->
+                newDict.[k] <- v * coef
+            | None -> ()
 
         ofDictionary newDict
 
@@ -138,30 +145,30 @@ module internal ISliceMapStore =
         ofDictionary newDict
 
 
-    let inline sum (d:ISliceMapStore<_,_>) =
+    let inline sum keys (d:ISliceMapStore<_,_>) =
         let mutable acc = LanguagePrimitives.GenericZero
 
-        for elem in d do
-            acc <- acc + elem.Value
+        for k in keys do
+            acc <- acc + d.GetItem(k)
 
         acc
 
 
-    let sumDecisions (d:ISliceMapStore<_,Flips.Types.Decision>) =
+    let sumDecisions keys (d:ISliceMapStore<_,Flips.Types.Decision>) =
         let mutable acc = LanguagePrimitives.GenericZero
         
-        for elem in d do
-          acc <- acc + (1.0 * elem.Value)
-        
+        for k in keys do
+            acc <- acc + (1.0 * d.GetItem(k))
+
         acc
 
 
-    let sumDecisionsWithUnits (d:ISliceMapStore<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    let sumDecisionsWithUnits keys (d:ISliceMapStore<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
         let mutable acc = LanguagePrimitives.GenericZero
       
-        for elem in d do
-            acc <- acc + (1.0 * elem.Value)
-      
+        for k in keys do
+            acc <- acc + (1.0 * d.GetItem(k))
+
         acc
 
 
@@ -177,7 +184,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
 
     member this.AsMap =
       this.Values
-      |> ISliceMapStore.toMap
+      |> ISliceMapStore.toMap this.Keys
 
     override this.ToString() =
         sprintf "SMap %O" this.AsMap
@@ -208,11 +215,11 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
 
     // Operators
     static member inline (*) (coef, smap:SMap<_,_>) =
-        let newStore = ISliceMapStore.scale coef smap.Values
+        let newStore = ISliceMapStore.scale coef smap.Keys smap.Values
         SMap(smap.Keys, newStore)
 
     static member inline (*) (smap:SMap<_,_>, coef) =
-        let newValues = ISliceMapStore.scale coef smap.Values
+        let newValues = ISliceMapStore.scale coef smap.Keys smap.Values
         SMap(smap.Keys, newValues)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
@@ -226,13 +233,13 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'
         SMap(newKeys, newValues)
 
     static member inline Sum (m:SMap<_,_>) =
-        ISliceMapStore.sum m.Values
+        ISliceMapStore.sum m.Keys m.Values
 
     static member Sum (m:SMap<_,Flips.Types.Decision>) =
-        ISliceMapStore.sumDecisions m.Values
+        ISliceMapStore.sumDecisions m.Keys m.Values
 
     static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        ISliceMapStore.sumDecisionsWithUnits m.Values
+        ISliceMapStore.sumDecisionsWithUnits m.Keys m.Values
 
 
 module SMap =
@@ -241,7 +248,7 @@ module SMap =
         m |> SMap
 
     let toSeq (m:SMap<_,_>) =
-        ISliceMapStore.toSeq m.Values
+        ISliceMapStore.toSeq m.Keys m.Values
 
     let ofMap (m:Map<_,_>) =
         m |> Map.toSeq |> ofSeq
@@ -277,8 +284,10 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         SMap2 (keys1, keys2, store)
 
     member this.AsMap =
+        let keys = seq {for k1 in this.Keys1 do for k2 in this.Keys2 -> (k1, k2)}
+
         this.Values
-        |> ISliceMapStore.toMap
+        |> ISliceMapStore.toMap keys
 
     override this.ToString () = 
         sprintf "SMap2 %O" this.AsMap
@@ -304,11 +313,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     member this.Item
         with get (k1, k2f) =
             let keys2 = filterKeys k2f this.Keys2
-            let newStore = 
-              { new ISliceMapStore<'Key2, 'Value> with
-                  member __.GetItem k = this.Values.GetItem (k1, k)
-                  member __.TryGetItem k = this.Values.TryGetItem (k1, k)
-              }
+            let getItem x = this.Values.GetItem (k1, x)
+            let tryGetItem x = this.Values.TryGetItem (k1, x)
+            let newStore = ISliceMapStore.create getItem tryGetItem
             SMap (keys2, newStore)
 
     member this.Item
@@ -382,7 +389,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 module SMap2 =
 
     let ofSeq m =
-        m |> Map.ofSeq |> SMap2
+        m |> SMap2
 
     //let toSeq (m:SMap2<_,_,_>) =
     //    Dictionary.toSeq m.Values
