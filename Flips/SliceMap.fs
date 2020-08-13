@@ -67,7 +67,7 @@ module Utilities =
         ((^a) : (static member Sum: ^a -> ^b) r)
 
 
-module internal IStore =
+module IStore =
 
     let create getItem tryGetItem =
         { new IStore<'Key, 'Value> with
