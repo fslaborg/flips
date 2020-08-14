@@ -19,8 +19,8 @@ type DecisionName = DecisionName of string
 
 type internal ReduceAccumulator = {
     DecisionTypes : Dictionary<DecisionName, DecisionType>
-    Coefficients : Dictionary<DecisionName, ResizeArray<float>>
-    Offsets : ResizeArray<float>
+    Coefficients : Dictionary<DecisionName, List<float>>
+    Offsets : List<float>
 }
 
 type Decision = {
@@ -139,9 +139,9 @@ and [<NoComparison>][<CustomEquality>]
         
         let coefficients = Dictionary()
         for elem in acc.Coefficients do
-          elem.Value.Sort(SignInsenstiveComparer())
-          let coefficient = Seq.sum elem.Value
-          coefficients.Add(elem.Key, coefficient)
+            elem.Value.Sort(SignInsenstiveComparer())
+            let coefficient = Seq.sum elem.Value
+            coefficients.Add(elem.Key, coefficient)
 
         {
             DecisionTypes = acc.DecisionTypes
