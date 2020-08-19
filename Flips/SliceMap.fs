@@ -1,9 +1,7 @@
 ﻿namespace Flips.SliceMap
 
+open Flips.KeySet
 open System.Collections.Generic
-
-
-
 
 
 type SliceType<'a when 'a : comparison> =
@@ -21,15 +19,6 @@ type SliceType<'a when 'a : comparison> =
 [<AutoOpen>]
 module Utilities =
 
-    // Declared here so it can be used by any of the MapXD types
-    let inline internal getKeyCheck lb ub =
-        match lb, ub with
-        | Some lb, Some ub -> fun k1 -> k1 >= lb && k1 <= ub
-        | Some lb, None -> fun k1 -> k1 >= lb
-        | None, Some ub -> fun k1 -> k1 <= ub
-        | None, None -> fun _ -> true
-
-
     let inline internal mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
         /// The assumption is that the LHS Map has more entries than the RHS Map
         let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
@@ -41,18 +30,18 @@ module Utilities =
         |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
 
-    let inline internal filterKeys (f:SliceType<'a>) (keys:Set<'a>) : Set<'a> =
+    let inline internal filterKeys (f:SliceType<'a>) (keys:KeySet<'a>) : KeySet<'a> =
         match f with
         | All -> keys
-        | Equals k -> match Set.contains k keys with | true -> Set.add k Set.empty | false -> Set.empty
-        | GreaterThan k -> Set.filter (fun x -> x > k) keys
-        | GreaterOrEqual k -> Set.filter (fun x -> x >= k) keys
-        | LessThan k -> Set.filter (fun x -> x < k) keys
-        | LessOrEqual k -> Set.filter (fun x -> x <= k) keys
+        | Equals k -> match keys.Contains k with | true -> KeySet [k] | false -> KeySet []
+        | GreaterThan k -> keys.GreaterThan k
+        | GreaterOrEqual k -> keys.GreaterOrEqual k
+        | LessThan k -> keys.LessThan k
+        | LessOrEqual k -> keys.LessOrEqual k
         | Between (lowerBound, upperBound) -> Set.filter (fun x -> x >= lowerBound && x <= upperBound) keys
-        | In set -> Set.intersect set keys
-        | NotIn set -> Set.difference keys set
-        | Where f -> Set.filter f keys
+        | In set -> keys.Intersect (KeySet set)
+        | NotIn set -> keys.Minus (KeySet set)
+        | Where f -> keys.Filter f
 
     let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
         ((^a) : (static member Sum: ^a -> ^b) k1)
@@ -178,12 +167,12 @@ module TryFind =
 
 
 
-type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:Set<'Key>, tryFind:TryFind<'Key, 'Value>) =
+type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:KeySet<'Key>, tryFind:TryFind<'Key, 'Value>) =
     member this.Keys = keys
     member this.TryFind = tryFind
 
     new (s:seq<'Key * 'Value>) =
-        let keys = s |> Seq.map fst |> Set.ofSeq
+        let keys = s |> Seq.map fst |> KeySet
         let store = TryFind.ofSeq s
         SMap (keys, store)
 

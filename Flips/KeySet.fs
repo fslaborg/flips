@@ -33,6 +33,16 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
         let v = Set.toArray values
         KeySet(comparer, v.AsMemory<'T>())
 
+    new(values: 'T list) =
+        let comparer = LanguagePrimitives.FastGenericComparer<'T>
+        let v = values |> List.distinct |> List.toArray
+        KeySet(comparer, v.AsMemory<'T>())
+
+    new(values:seq<'T>) =
+        let comparer = LanguagePrimitives.FastGenericComparer<'T>
+        let v = values |> Seq.distinct |> Seq.toArray
+        KeySet(comparer, v.AsMemory<'T>())
+
     member internal _.Comparer = comparer
     member internal _.Values = values
 
@@ -41,7 +51,9 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
         if values.IsEmpty then
             empty
         elif values.Length = 1 then
-            if values.Span.[0] > x then
+            let c = comparer.Compare(values.Span.[0], x)
+
+            if c > 0 then
                 KeySet(comparer, values)
             else
                 empty
@@ -53,7 +65,9 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
         if values.IsEmpty then
             empty
         elif values.Length = 1 then
-            if values.Span.[0] > x then
+            let c = comparer.Compare(values.Span.[0], x)
+
+            if c >= 0 then
                 KeySet(comparer, values)
             else
                 empty
@@ -66,7 +80,9 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
         if values.IsEmpty then
             empty
         elif values.Length = 1 then
-            if values.Span.[0] > x then
+            let c = comparer.Compare(values.Span.[0], x)
+
+            if c < 0 then
                 KeySet(comparer, values)
             else
                 empty
@@ -79,13 +95,32 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
         if values.IsEmpty then
             empty
         elif values.Length = 1 then
-            if values.Span.[0] > x then
+            let c = comparer.Compare(values.Span.[0], x)
+
+            if c <= 0 then
                 KeySet(comparer, values)
             else
                 empty
         else
             let idx = findIndexOf comparer 0 x values
             KeySet (comparer, values.Slice(0, idx + 1))
+
+    member _.Between lowerBound upperBound =
+
+        if values.IsEmpty then
+            empty
+        elif values.Length = 1 then
+            let lowerC = comparer.Compare(values.Span.[0], lowerBound)
+            let upperC = comparer.Compare(values.Span.[0], upperBound)
+
+            if lowerC >= 0 && upperC <= 0 then
+                KeySet(comparer, values)
+            else
+                empty
+        else
+            let lowerIdx = findIndexOf comparer 0 lowerBound values
+            let upperIdx = findIndexOf comparer 0 upperBound values
+            KeySet (comparer, values.Slice(lowerIdx, upperIdx - lowerIdx + 1))
 
     member _.Intersect (b:KeySet<'T>) =
         let intersectAux (small:Memory<'T>) (large:Memory<'T>) =
@@ -194,3 +229,26 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
 
         KeySet(comparer, newValues.AsMemory(0, outIdx))
 
+    member _.Contains x =
+        let mutable idx = 0
+        let mutable doesContain = false
+
+        while (idx < values.Length && not doesContain) do
+            let c = comparer.Compare(values.Span.[idx], x)
+            if c = 0 then
+                doesContain <- true
+            idx <- idx + 1
+
+        doesContain
+
+    static member (+) (a:KeySet<'T>, b:KeySet<'T>) =
+        a.Add(b)
+
+    static member (-) (a:KeySet<'T>, b:KeySet<'T>) =
+        a.Minus(b)
+
+
+module KeySet =
+
+    let intersect (a:KeySet<_>) b =
+        a.Intersect b
