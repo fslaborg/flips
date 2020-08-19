@@ -24,6 +24,7 @@
     <Compile Include="Domain.fs" />
     <Compile Include="UnitsOfMeasure.Types.fs" />
     <Compile Include="UnitsOfMeasure.Domain.fs" />
+    <Compile Include="KeySet.fs" />
     <Compile Include="SliceMap.fs" />
     <Compile Include="Solve.fs" />
   </ItemGroup>
