@@ -19,15 +19,15 @@ type SliceType<'a when 'a : comparison> =
 [<AutoOpen>]
 module Utilities =
 
-    let inline internal mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
-        /// The assumption is that the LHS Map has more entries than the RHS Map
-        let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
+    //let inline internal mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
+    //    /// The assumption is that the LHS Map has more entries than the RHS Map
+    //    let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
 
-        lhs
-        |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
-                                  | Some rhsV -> lhsV + rhsV 
-                                  | None -> lhsV)
-        |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
+    //    lhs
+    //    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
+    //                              | Some rhsV -> lhsV + rhsV 
+    //                              | None -> lhsV)
+    //    |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
 
 
     let inline internal filterKeys (f:SliceType<'a>) (keys:KeySet<'a>) : KeySet<'a> =
@@ -38,7 +38,7 @@ module Utilities =
         | GreaterOrEqual k -> keys.GreaterOrEqual k
         | LessThan k -> keys.LessThan k
         | LessOrEqual k -> keys.LessOrEqual k
-        | Between (lowerBound, upperBound) -> Set.filter (fun x -> x >= lowerBound && x <= upperBound) keys
+        | Between (lowerBound, upperBound) -> keys.Between lowerBound upperBound
         | In set -> keys.Intersect (KeySet set)
         | NotIn set -> keys.Minus (KeySet set)
         | Where f -> keys.Filter f
@@ -225,7 +225,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> (keys:KeySe
         SMap(smap.Keys, newValues)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        let newKeys = Set.intersect lhs.Keys rhs.Keys
+        let newKeys = KeySet.intersect lhs.Keys rhs.Keys
         let newValues = TryFind.multiply newKeys lhs.TryFind id rhs.TryFind
         SMap(newKeys, newValues)
 
@@ -277,15 +277,15 @@ module SMap =
         m.ContainsKey k
 
 
-type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:Set<'Key1>, keys2:Set<'Key2>, tryFind:TryFind<('Key1 * 'Key2), 'Value>) =
+type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> (keys1:KeySet<'Key1>, keys2:KeySet<'Key2>, tryFind:TryFind<('Key1 * 'Key2), 'Value>) =
     member this.Keys1 = keys1
     member this.Keys2 = keys2
     member this.PossibleKeys = seq {for k1 in this.Keys1 do for k2 in this.Keys2 -> (k1, k2)}
     member this.TryFind = tryFind
 
     new (s:seq<('Key1 * 'Key2) * 'Value>) =
-        let keys1 = s |> Seq.map (fst >> fst) |> Set.ofSeq
-        let keys2 = s |> Seq.map (fst >> snd) |> Set.ofSeq
+        let keys1 = s |> Seq.map (fst >> fst) |> KeySet
+        let keys2 = s |> Seq.map (fst >> snd) |> KeySet
         let store = TryFind.ofSeq s
         SMap2 (keys1, keys2, store)
 
@@ -352,8 +352,8 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         SMap2(s.Keys1, s.Keys2, newValues)
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
-        let keys1 = Set.intersect lhs.Keys1 rhs.Keys1
-        let keys2 = Set.intersect lhs.Keys2 rhs.Keys2
+        let keys1 = KeySet.intersect lhs.Keys1 rhs.Keys1
+        let keys2 = KeySet.intersect lhs.Keys2 rhs.Keys2
         let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
         let rKeyBuilder = id
         let newValues = TryFind.multiply keySet lhs.TryFind rKeyBuilder rhs.TryFind
@@ -362,7 +362,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
         let keys1 = lhs.Keys1
-        let keys2 = Set.intersect lhs.Keys2 rhs.Keys
+        let keys2 = KeySet.intersect lhs.Keys2 rhs.Keys
         let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
         let keyBuilder = fun (x, y) -> y
         let newValues = TryFind.multiply keySet lhs.TryFind keyBuilder rhs.TryFind
@@ -370,7 +370,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         SMap2(keys1, keys2, newValues)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
-        let keys1 = Set.intersect lhs.Keys rhs.Keys1
+        let keys1 = KeySet.intersect lhs.Keys rhs.Keys1
         let keys2 = rhs.Keys2
         let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
         let keyBuilder = fun (x, y) -> x

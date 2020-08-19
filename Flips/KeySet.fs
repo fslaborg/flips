@@ -43,6 +43,15 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
         let v = values |> Seq.distinct |> Seq.toArray
         KeySet(comparer, v.AsMemory<'T>())
 
+    interface IEnumerable<'T> with
+        member _.GetEnumerator(): IEnumerator<'T> = 
+            let s = seq { for idx in 0..values.Length-1 -> values.Span.[idx] }
+            s.GetEnumerator()
+
+        member _.GetEnumerator(): Collections.IEnumerator = 
+            let s = seq { for idx in 0..values.Length-1 -> values.Span.[idx] }
+            s.GetEnumerator() :> Collections.IEnumerator
+
     member internal _.Comparer = comparer
     member internal _.Values = values
 
