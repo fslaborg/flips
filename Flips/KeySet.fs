@@ -250,6 +250,9 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
 
         doesContain
 
+    member _.Count =
+        values.Length
+
     static member (+) (a:KeySet<'T>, b:KeySet<'T>) =
         a.Add(b)
 
