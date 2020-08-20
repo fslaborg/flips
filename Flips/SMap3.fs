@@ -116,14 +116,13 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
         SMap3(s.Keys1, s.Keys2, s.Keys3, newValues)
 
-    static member inline (.*) (lhs:SMap3<_,_,_,_>, rhs:SMap3<_,_,_,_>) =
-        let keys1 = SliceSet.intersect lhs.Keys1 rhs.Keys1
-        let keys2 = SliceSet.intersect lhs.Keys2 rhs.Keys2
-        let keys3 = SliceSet.intersect lhs.Keys3 rhs.Keys3
+    static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap3<_,_,_,_>) =
+        let keys1 = SliceSet.intersect a.Keys1 b.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys2
+        let keys3 = SliceSet.intersect a.Keys3 b.Keys3
         let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 -> (k1, k2, k3)}
         let rKeyBuilder = id
-        let newValues = TryFind.multiply keySet lhs.TryFind rKeyBuilder rhs.TryFind
-
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
         SMap3(keys1, keys2, keys3, newValues)
 
     static member inline (.*) (a:SMap3<_,_,_,_>, b:SMap2<_,_,_>) =

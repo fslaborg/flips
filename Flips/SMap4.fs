@@ -165,66 +165,95 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
             | None -> raise (KeyNotFoundException("The given key was not present in the slicemap."))
 
     // Operators
-    static member inline (*) (lhs, rhs:SMap4<_,_,_,_,_>) =
-        rhs.Values
-        |> Map.map (fun k v -> lhs * v)
-        |> SMap4
+    static member inline (*) (coef, s:SMap4<_,_,_,_,_>) =
+        let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
+        SMap4(s.Keys1, s.Keys2, s.Keys3, s.Keys4, newValues)
 
-    static member inline (*) (lhs:SMap4<_,_,_,_,_>, rhs) =
-        lhs.Values
-        |> Map.map (fun k v -> rhs * v)
-        |> SMap4
+    static member inline (*) (s:SMap4<_,_,_,_,_>, coef) =
+        let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
+        SMap4(s.Keys1, s.Keys2, s.Keys3, s.Keys4, newValues)
 
-    static member inline (.*) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
-        lhs.Values
-        |> Map.filter (fun k _ -> rhs.ContainsKey k)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * rhs.[k1, k2, k3, k4])
-        |> SMap4
+    static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap4<_,_,_,_,_>) =
+        let keys1 = SliceSet.intersect a.Keys1 b.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys2
+        let keys3 = SliceSet.intersect a.Keys3 b.Keys3
+        let keys4 = SliceSet.intersect a.Keys4 b.Keys4
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let rKeyBuilder = id
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap3<_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k2, k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k2, k3, k4])
-        |> SMap4
+        let keys1 = a.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys1
+        let keys3 = SliceSet.intersect a.Keys3 b.Keys2
+        let keys4 = SliceSet.intersect a.Keys4 b.Keys3
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let rKeyBuilder = fun (k1, k2, k3, k4) -> (k2, k3, k4)
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (.*) (b:SMap3<_,_,_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2, k3))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2, k3])
-        |> SMap4
+        let keys1 = SliceSet.intersect a.Keys1 b.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys2
+        let keys3 = SliceSet.intersect a.Keys3 b.Keys3
+        let keys4 = a.Keys4
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let rKeyBuilder = fun (k1, k2, k3, k4) -> (k1, k2, k3)
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap2<_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k3, k4))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k3, k4])
-        |> SMap4
+        let keys1 = a.Keys1
+        let keys2 = a.Keys2
+        let keys3 = SliceSet.intersect a.Keys3 b.Keys1
+        let keys4 = SliceSet.intersect a.Keys4 b.Keys2
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let rKeyBuilder = fun (k1, k2, k3, k4) -> (k3, k4)
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (.*) (b:SMap2<_,_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey (k1, k2))
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1, k2])
-        |> SMap4
+        let keys1 = SliceSet.intersect a.Keys1 b.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys2
+        let keys3 = a.Keys3
+        let keys4 = a.Keys4
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let rKeyBuilder = fun (k1, k2, k3, k4) -> (k1, k2)
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (.*) (a:SMap4<_,_,_,_,_>, b:SMap<_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k4)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k4])
-        |> SMap4
+        let keys1 = a.Keys1
+        let keys2 = a.Keys2
+        let keys3 = a.Keys3
+        let keys4 = SliceSet.intersect a.Keys4 b.Keys
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let rKeyBuilder = fun (k1, k2, k3, k4) -> (k4)
+        let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (.*) (b:SMap<_,_>, a:SMap4<_,_,_,_,_>) =
-        a.Values
-        |> Map.filter (fun (k1, k2, k3, k4) _ -> b.ContainsKey k1)
-        |> Map.map (fun (k1, k2, k3, k4) v -> v * b.[k1])
-        |> SMap4
+            let keys1 = SliceSet.intersect a.Keys1 b.Keys
+            let keys2 = a.Keys2
+            let keys3 = a.Keys3
+            let keys4 = a.Keys4
+            let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+            let rKeyBuilder = fun (k1, k2, k3, k4) -> (k1)
+            let newValues = TryFind.multiply keySet a.TryFind rKeyBuilder b.TryFind
+            SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline (+) (lhs:SMap4<_,_,_,_,_>, rhs:SMap4<_,_,_,_,_>) =
-        match Map.count lhs.Values > Map.count rhs.Values with
-        | true ->  mergeAddition lhs.Values rhs.Values
-        | false -> mergeAddition rhs.Values lhs.Values
-        |> SMap4
+        let keys1 = lhs.Keys1 + rhs.Keys1
+        let keys2 = lhs.Keys2 + rhs.Keys2
+        let keys3 = lhs.Keys3 + rhs.Keys3
+        let keys4 = lhs.Keys4 + rhs.Keys4
+        let keySet = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 do for k4 in keys4 -> (k1, k2, k3, k4)}
+        let newValues = TryFind.mergeAdd keySet lhs.TryFind rhs.TryFind
+        SMap4(keys1, keys2, keys3, keys4, newValues)
 
     static member inline Sum (m:SMap4<_,_,_,_,_>) =
-        m.Values |> Map.toSeq |> Seq.sumBy snd
+        TryFind.sum m.PossibleKeys m.TryFind
 
 //    static member inline Sum (m:SMap4<_,_,_,_,Flips.Types.Decision>) =
 //        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
@@ -233,34 +262,34 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 //        m.Values |> Map.map (fun _ d -> 1.0 * d) |> Map.toSeq |> Seq.sumBy snd
 
 
-//module SMap4 =
+module SMap4 =
 
-//    let ofMap m =
-//        m |> SMap4
+    let ofSeq m =
+        m |> Map.ofSeq |> SMap4
 
-//    let toMap (m:SMap4<_,_,_,_,_>) =
-//        m.Values
+    let toSeq (m:SMap4<_,_,_,_,_>) =
+        TryFind.toSeq m.PossibleKeys m.TryFind
 
-//    let ofList m =
-//        m |> Map.ofList |> SMap4
+    let ofMap (m:Map<_,_>) =
+        m |> SMap4
 
-//    let toList (m:SMap4<_,_,_,_,_>) =
-//        m.Values |> Map.toList
+    let toMap (m:SMap4<_,_,_,_,_>) =
+        m |> toSeq |> Map.ofSeq
 
-//    let ofSeq m =
-//        m |> Map.ofSeq |> SMap4
+    let ofList m =
+        m |> Map.ofList |> SMap4
 
-//    let toSeq (m:SMap4<_,_,_,_,_>) =
-//        m.Values |> Map.toSeq
+    let toList (m:SMap4<_,_,_,_,_>) =
+        m |> toSeq |> List.ofSeq
 
-//    let ofArray m =
-//        m |> Map.ofArray |> SMap4
+    let ofArray m =
+        m |> Map.ofArray |> SMap4
 
-//    let toArray (m:SMap4<_,_,_,_,_>) =
-//        m.Values |> Map.toArray
+    let toArray (m:SMap4<_,_,_,_,_>) =
+        m |> toSeq |> Array.ofSeq
 
-//    let containsKey k (m:SMap4<_,_,_,_,_>) =
-//        Map.containsKey k m.Values
+    let containsKey k (m:SMap4<_,_,_,_,_>) =
+        m.ContainsKey k
 
-//    let reKey f m =
-//        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
+    let reKey f m =
+        m |> toSeq |> Seq.map (fun (k, v) -> (f k), v) |> ofSeq
