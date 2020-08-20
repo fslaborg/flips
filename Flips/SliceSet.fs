@@ -239,17 +239,12 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
         SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
     member _.Contains x =
-        // TODO Switch this to using Binary Search
-        let mutable idx = 0
-        let mutable doesContain = false
-
-        while (idx < values.Length && not doesContain) do
-            let c = comparer.Compare(values.Span.[idx], x)
-            if c = 0 then
-                doesContain <- true
-            idx <- idx + 1
-
-        doesContain
+        let idx = findIndexOf comparer 0 x values
+        let c = comparer.Compare(values.Span.[idx], x)
+        if c = 0 then
+            true
+        else
+            false
 
     member _.Count =
         values.Length
