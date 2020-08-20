@@ -1,16 +1,16 @@
-﻿namespace Flips.KeySet
+﻿namespace Flips.SliceMap
 
 open System
 open System.Collections.Generic
 
-type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer<'T>, values:Memory<'T>) =
+type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer<'T>, values:Memory<'T>) =
     let comparer = comparer
     let values = values
 
-    static let empty : KeySet<'T> =
+    static let empty : SliceSet<'T> =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
         let m = [||]
-        KeySet<'T>(comparer, m.AsMemory())
+        SliceSet<'T>(comparer, m.AsMemory())
 
     let findIndexOf (comparer:IComparer<'T>) startingLowerBound x (values:Memory<'T>) =
         let mutable lowerBound = startingLowerBound
@@ -31,17 +31,17 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
     new(values:Set<'T>) =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
         let v = Set.toArray values
-        KeySet(comparer, v.AsMemory<'T>())
+        SliceSet(comparer, v.AsMemory<'T>())
 
     new(values: 'T list) =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
         let v = values |> List.distinct |> List.toArray
-        KeySet(comparer, v.AsMemory<'T>())
+        SliceSet(comparer, v.AsMemory<'T>())
 
     new(values:seq<'T>) =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
         let v = values |> Seq.distinct |> Seq.toArray
-        KeySet(comparer, v.AsMemory<'T>())
+        SliceSet(comparer, v.AsMemory<'T>())
 
     interface IEnumerable<'T> with
         member _.GetEnumerator(): IEnumerator<'T> = 
@@ -63,12 +63,12 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             let c = comparer.Compare(values.Span.[0], x)
 
             if c > 0 then
-                KeySet(comparer, values)
+                SliceSet(comparer, values)
             else
                 empty
         else
             let idx = findIndexOf comparer 0 x values
-            KeySet (comparer, values.Slice(idx + 1))
+            SliceSet (comparer, values.Slice(idx + 1))
 
     member _.GreaterOrEqual x =
         if values.IsEmpty then
@@ -77,12 +77,12 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             let c = comparer.Compare(values.Span.[0], x)
 
             if c >= 0 then
-                KeySet(comparer, values)
+                SliceSet(comparer, values)
             else
                 empty
         else
             let idx = findIndexOf comparer 0 x values
-            KeySet (comparer, values.Slice(idx))
+            SliceSet (comparer, values.Slice(idx))
 
     member _.LessThan x =
 
@@ -92,12 +92,12 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             let c = comparer.Compare(values.Span.[0], x)
 
             if c < 0 then
-                KeySet(comparer, values)
+                SliceSet(comparer, values)
             else
                 empty
         else
             let idx = findIndexOf comparer 0 x values
-            KeySet (comparer, values.Slice(0, idx))
+            SliceSet (comparer, values.Slice(0, idx))
 
     member _.LessOrEqual x =
 
@@ -107,12 +107,12 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             let c = comparer.Compare(values.Span.[0], x)
 
             if c <= 0 then
-                KeySet(comparer, values)
+                SliceSet(comparer, values)
             else
                 empty
         else
             let idx = findIndexOf comparer 0 x values
-            KeySet (comparer, values.Slice(0, idx + 1))
+            SliceSet (comparer, values.Slice(0, idx + 1))
 
     member _.Between lowerBound upperBound =
 
@@ -123,15 +123,15 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             let upperC = comparer.Compare(values.Span.[0], upperBound)
 
             if lowerC >= 0 && upperC <= 0 then
-                KeySet(comparer, values)
+                SliceSet(comparer, values)
             else
                 empty
         else
             let lowerIdx = findIndexOf comparer 0 lowerBound values
             let upperIdx = findIndexOf comparer 0 upperBound values
-            KeySet (comparer, values.Slice(lowerIdx, upperIdx - lowerIdx + 1))
+            SliceSet (comparer, values.Slice(lowerIdx, upperIdx - lowerIdx + 1))
 
-    member _.Intersect (b:KeySet<'T>) =
+    member _.Intersect (b:SliceSet<'T>) =
         let intersectAux (small:Memory<'T>) (large:Memory<'T>) =
 
           let newValues = Array.zeroCreate(small.Length)
@@ -151,14 +151,14 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
 
               smallIdx <- smallIdx + 1
 
-          KeySet(comparer, newValues.AsMemory().Slice(0, outIdx))
+          SliceSet(comparer, newValues.AsMemory().Slice(0, outIdx))
 
         if values.Length < b.Values.Length then
           intersectAux values b.Values
         else
           intersectAux b.Values values
 
-    member _.Add (b:KeySet<'T>) =
+    member _.Add (b:SliceSet<'T>) =
         let newValues = Array.zeroCreate(values.Length + b.Values.Length)
 
         let mutable aIdx = 0
@@ -193,9 +193,9 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             bIdx <- bIdx + 1
             outIdx <- outIdx + 1
 
-        KeySet(comparer, newValues.AsMemory(0, outIdx))
+        SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
-    member _.Minus (b:KeySet<'T>) =
+    member _.Minus (b:SliceSet<'T>) =
         let newValues = Array.zeroCreate(values.Length)
 
         let mutable aIdx = 0
@@ -221,7 +221,7 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             aIdx <- aIdx + 1
             outIdx <- outIdx + 1
 
-        KeySet(comparer, newValues.AsMemory(0, outIdx))
+        SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
     member _.Filter f =
         let newValues = Array.zeroCreate(values.Length)
@@ -236,9 +236,10 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
             
             idx <- idx + 1
 
-        KeySet(comparer, newValues.AsMemory(0, outIdx))
+        SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
     member _.Contains x =
+        // TODO Switch this to using Binary Search
         let mutable idx = 0
         let mutable doesContain = false
 
@@ -253,14 +254,14 @@ type KeySet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer
     member _.Count =
         values.Length
 
-    static member (+) (a:KeySet<'T>, b:KeySet<'T>) =
+    static member (+) (a:SliceSet<'T>, b:SliceSet<'T>) =
         a.Add(b)
 
-    static member (-) (a:KeySet<'T>, b:KeySet<'T>) =
+    static member (-) (a:SliceSet<'T>, b:SliceSet<'T>) =
         a.Minus(b)
 
 
-module KeySet =
+module SliceSet =
 
-    let intersect (a:KeySet<_>) b =
+    let intersect (a:SliceSet<_>) b =
         a.Intersect b
