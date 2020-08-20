@@ -27,13 +27,13 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
       let s = m |> Map.toSeq
       SMap5 s
 
-    member internal _.Keys1 = keys1
-    member internal _.Keys2 = keys2
-    member internal _.Keys3 = keys3
-    member internal _.Keys4 = keys4
-    member internal _.Keys5 = keys5
-    member internal _.PossibleKeys = possibleKeys
-    member internal _.TryFind = tryFind
+    member _.Keys1 = keys1
+    member _.Keys2 = keys2
+    member _.Keys3 = keys3
+    member _.Keys4 = keys4
+    member _.Keys5 = keys5
+    member _.PossibleKeys = possibleKeys
+    member _.TryFind = tryFind
 
     static member AsMap (sm:SMap5<_,_,_,_,_,_>) =
         sm.TryFind

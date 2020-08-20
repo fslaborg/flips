@@ -18,24 +18,24 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
       let s = m |> Map.toSeq
       SMap s
 
-    member internal _.Keys = keys
-    member internal _.TryFind = tryFind
+    member _.Keys = keys
+    member _.TryFind = tryFind
 
-    static member AsMap (sm:SMap<_,_>) =
-      sm.TryFind
-      |> TryFind.toMap sm.Keys
+    member _.AsMap () =
+      tryFind
+      |> TryFind.toMap keys
 
     override this.ToString() =
-        sprintf "SMap %O" (SMap<_,_>.AsMap this)
+        sprintf "SMap %O" (this.AsMap ())
 
     override this.Equals(obj) =
         match obj with
         | :? SMap<'Key, 'Value> as s -> 
-            (SMap<_,_>.AsMap this) = (SMap<_,_>.AsMap s)
+            (this.AsMap()) = (s.AsMap())
         | _ -> false
 
     override this.GetHashCode () =
-        hash (SMap<_,_>.AsMap this)
+        hash (this.AsMap())
 
     member _.ContainsKey k =
         match tryFind k with

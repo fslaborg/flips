@@ -25,16 +25,16 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
       let s = m |> Map.toSeq
       SMap4 s
 
-    member internal _.Keys1 = keys1
-    member internal _.Keys2 = keys2
-    member internal _.Keys3 = keys3
-    member internal _.Keys4 = keys4
-    member internal _.PossibleKeys = possibleKeys
-    member internal _.TryFind = tryFind
+    member _.Keys1 = keys1
+    member _.Keys2 = keys2
+    member _.Keys3 = keys3
+    member _.Keys4 = keys4
+    member _.PossibleKeys = possibleKeys
+    member _.TryFind = tryFind
 
-    static member AsMap (sm:SMap4<_,_,_,_,_>) =
-        sm.TryFind
-        |> TryFind.toMap sm.PossibleKeys
+    member _.AsMap () =
+        tryFind
+        |> TryFind.toMap possibleKeys
 
     override this.ToString() =
         sprintf "SMap4 %O" (SMap4<_,_,_,_,_>.AsMap this)

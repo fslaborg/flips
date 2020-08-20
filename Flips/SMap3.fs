@@ -23,27 +23,27 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
       let s = m |> Map.toSeq
       SMap3 s
 
-    member internal _.Keys1 = keys1
-    member internal _.Keys2 = keys2
-    member internal _.Keys3 = keys3
-    member internal _.PossibleKeys = possibleKeys
-    member internal _.TryFind = tryFind
+    member _.Keys1 = keys1
+    member _.Keys2 = keys2
+    member _.Keys3 = keys3
+    member _.PossibleKeys = possibleKeys
+    member _.TryFind = tryFind
 
-    static member AsMap (sm:SMap3<_,_,_,_>) =
-        sm.TryFind
-        |> TryFind.toMap sm.PossibleKeys
+    member _.AsMap () =
+        tryFind
+        |> TryFind.toMap possibleKeys
 
     override this.ToString () = 
-        sprintf "SMap3 %O" (SMap3<_,_,_,_>.AsMap this)
+        sprintf "SMap3 %O" (this.AsMap())
 
     override this.Equals(obj) =
         match obj with
         | :? SMap3<'Key1, 'Key2, 'Key3, 'Value > as s -> 
-          SMap3<_,_,_,_>.AsMap this = SMap3<_,_,_,_>.AsMap s
+          (this.AsMap()) = s.AsMap()
         | _ -> false
 
     override this.GetHashCode () =
-        hash (SMap3<_,_,_,_>.AsMap this)
+        hash (this.AsMap())
 
     member _.ContainsKey k =
         match tryFind k with
