@@ -4,7 +4,7 @@ open System.Collections.Generic
 open Utilities
 
 type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> 
-    internal (keys1:SliceSet<'Key1>, keys2:SliceSet<'Key2>, keys3:SliceSet<'Key3>, tryFind:TryFind<('Key1 * 'Key2 * 'Key3), 'Value>) =
+    (keys1:SliceSet<'Key1>, keys2:SliceSet<'Key2>, keys3:SliceSet<'Key3>, tryFind:TryFind<('Key1 * 'Key2 * 'Key3), 'Value>) =
 
     let keys1 = keys1
     let keys2 = keys2

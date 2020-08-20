@@ -4,7 +4,7 @@ open System.Collections.Generic
 open Utilities
 
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> 
-    internal (keys:SliceSet<'Key>, tryFind:TryFind<'Key, 'Value>) =
+    (keys:SliceSet<'Key>, tryFind:TryFind<'Key, 'Value>) =
 
     let keys = keys
     let tryFind = tryFind

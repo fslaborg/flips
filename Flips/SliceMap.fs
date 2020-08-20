@@ -15,6 +15,18 @@ type SliceType<'a when 'a : comparison> =
     | NotIn of Set<'a>
     | Where of ('a -> bool)
 
+[<AutoOpen>]
+module Sum =
+
+    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
+        ((^a) : (static member Sum: ^a -> ^b) k1)
+
+    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
+                              and ^a: (static member (+): ^a * ^a -> ^a)
+                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
+        let r = Seq.sum k1
+        ((^a) : (static member Sum: ^a -> ^b) r)
+
 
 module internal Utilities =
 
