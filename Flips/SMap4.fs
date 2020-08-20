@@ -37,16 +37,16 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         |> TryFind.toMap possibleKeys
 
     override this.ToString() =
-        sprintf "SMap4 %O" (SMap4<_,_,_,_,_>.AsMap this)
+        sprintf "SMap4 %O" (this.AsMap())
 
     override this.Equals(obj) =
         match obj with
         | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> 
-            SMap4<_,_,_,_,_>.AsMap this = SMap4<_,_,_,_,_>.AsMap s
+            this.AsMap() = s.AsMap()
         | _ -> false
 
     override this.GetHashCode () =
-        hash (SMap4<_,_,_,_,_>.AsMap this)
+        hash (this.AsMap())
 
     member this.ContainsKey k =
         match tryFind k with

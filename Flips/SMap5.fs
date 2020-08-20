@@ -35,21 +35,21 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
     member _.PossibleKeys = possibleKeys
     member _.TryFind = tryFind
 
-    static member AsMap (sm:SMap5<_,_,_,_,_,_>) =
-        sm.TryFind
-        |> TryFind.toMap sm.PossibleKeys
+    member _.AsMap () =
+        tryFind
+        |> TryFind.toMap possibleKeys
 
     override this.ToString() =
-        sprintf "SMap5 %O" (SMap5<_,_,_,_,_,_>.AsMap this)
+        sprintf "SMap5 %O" (this.AsMap())
 
     override this.Equals(obj) =
         match obj with
         | :? SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> as s -> 
-            SMap5<_,_,_,_,_,_>.AsMap this = SMap5<_,_,_,_,_,_>.AsMap s
+            this.AsMap() = s.AsMap()
         | _ -> false
 
     override this.GetHashCode () =
-        hash (SMap5<_,_,_,_,_,_>.AsMap this)
+        hash (this.AsMap())
 
     member this.ContainsKey k =
         match tryFind k with
