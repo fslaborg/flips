@@ -42,8 +42,8 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     override this.GetHashCode () =
         hash (SMap2<_,_,_>.AsMap this)
 
-    member this.ContainsKey k =
-        match this.TryFind k with
+    member _.ContainsKey k =
+        match tryFind k with
         | Some _ -> true
         | None -> false
 
