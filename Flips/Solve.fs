@@ -127,18 +127,20 @@ module internal ORTools =
         addConstraints vars model.Constraints solver
         setObjective vars model.Objective solver
     
-        // Write LP Formulation to file if requested
-        settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
+        Result.Ok ()
+
+        //// Write LP Formulation to file if requested
+        //settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
     
-        let resultStatus = solver.Solve()
+        //let resultStatus = solver.Solve()
     
-        match resultStatus with
-        | Solver.ResultStatus.OPTIMAL -> 
-            buildSolution (Model.getDecisions model) vars solver model.Objective
-            |> SolveResult.Optimal
-        | _ ->
-            "Unable to find optimal solution"
-            |> SolveResult.Suboptimal
+        //match resultStatus with
+        //| Solver.ResultStatus.OPTIMAL -> 
+        //    buildSolution (Model.getDecisions model) vars solver model.Objective
+        //    |> SolveResult.Optimal
+        //| _ ->
+        //    "Unable to find optimal solution"
+        //    |> SolveResult.Suboptimal
 
 
 module internal Optano =
@@ -286,8 +288,8 @@ module Solver =
 
         match settings.SolverType with
         | CBC -> ORTools.solve ORTools.OrToolsSolverType.CBC settings model
-        | GLOP -> ORTools.solve ORTools.OrToolsSolverType.GLOP settings model
-        | Cplex128 -> Optano.solve Optano.OptanoSolverType.Cplex128 settings model
-        | Gurobi900 -> Optano.solve Optano.OptanoSolverType.Gurobi900 settings model
+        //| GLOP -> ORTools.solve ORTools.OrToolsSolverType.GLOP settings model
+        //| Cplex128 -> Optano.solve Optano.OptanoSolverType.Cplex128 settings model
+        //| Gurobi900 -> Optano.solve Optano.OptanoSolverType.Gurobi900 settings model
 
     
