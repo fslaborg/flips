@@ -58,22 +58,34 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
 
     // Operators
     static member inline (*) (coef, smap:SMap<_,_>) =
-        let newStore = TryFind.scale coef smap.Keys smap.TryFind
-        SMap(smap.Keys, newStore)
+        let newTryFind k =
+            smap.TryFind k
+            |> Option.map (fun v -> coef * v)
+        SMap(smap.Keys, newTryFind)
 
     static member inline (*) (smap:SMap<_,_>, coef) =
-        let newValues = TryFind.scale coef smap.Keys smap.TryFind
-        SMap(smap.Keys, newValues)
+        let newTryFind k =
+          smap.TryFind k
+          |> Option.map (fun v -> coef * v)
+        SMap(smap.Keys, newTryFind)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         let newKeys = SliceSet.intersect lhs.Keys rhs.Keys
-        let newValues = TryFind.multiply newKeys lhs.TryFind id rhs.TryFind
-        SMap(newKeys, newValues)
+        //let newTryFind = TryFind.multiply newKeys lhs.TryFind id rhs.TryFind
+        let newTryFind k =
+            match (lhs.TryFind k), (rhs.TryFind k) with
+            | Some lv, Some rv -> Some (lv * rv)
+            | _,_ -> None
+        SMap(newKeys, newTryFind)
 
     static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         let newKeys = lhs.Keys + rhs.Keys
-        let newValues = TryFind.mergeAdd newKeys lhs.TryFind rhs.TryFind
-        SMap(newKeys, newValues)
+        //let newTryFind = TryFind.mergeAdd newKeys lhs.TryFind rhs.TryFind
+        let newTryFind k =
+          match (lhs.TryFind k), (rhs.TryFind k) with
+          | Some lv, Some rv -> Some (lv * rv)
+          | _,_ -> None
+        SMap(newKeys, newTryFind)
 
     static member inline Sum (m:SMap<_,_>) =
         TryFind.sum m.Keys m.TryFind

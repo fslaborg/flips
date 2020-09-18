@@ -77,46 +77,67 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     // Operators
     static member inline (*) (coef, s:SMap2<_,_,_>) =
-        let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
-        SMap2(s.Keys1, s.Keys2, newValues)
+        //let newTryFind = TryFind.scale coef s.PossibleKeys s.TryFind
+        let newTryFind k =
+          s.TryFind k
+          |> Option.map (fun v -> coef * v)
+        SMap2(s.Keys1, s.Keys2, newTryFind)
 
     static member inline (*) (s:SMap2<_,_,_>, coef) =
-        let newValues = TryFind.scale coef s.PossibleKeys s.TryFind
-        SMap2(s.Keys1, s.Keys2, newValues)
+        //let newTryFind = TryFind.scale coef s.PossibleKeys s.TryFind
+        let newTryFind k =
+          s.TryFind k
+          |> Option.map (fun v -> coef * v)
+        SMap2(s.Keys1, s.Keys2, newTryFind)
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         let keys1 = SliceSet.intersect lhs.Keys1 rhs.Keys1
         let keys2 = SliceSet.intersect lhs.Keys2 rhs.Keys2
-        let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-        let rKeyBuilder = id
-        let newValues = TryFind.multiply keySet lhs.TryFind rKeyBuilder rhs.TryFind
-
-        SMap2(keys1, keys2, newValues)
+        //let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+        //let rKeyBuilder = id
+        //let newValues = TryFind.multiply keySet lhs.TryFind rKeyBuilder rhs.TryFind
+        let newTryFind (k1, k2) =
+            match (lhs.TryFind (k1, k2)), (rhs.TryFind (k1, k2)) with
+            | Some lv, Some rv -> Some (lv * rv)
+            | _,_ -> None
+        SMap2(keys1, keys2, newTryFind)
 
     static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
         let keys1 = lhs.Keys1
         let keys2 = SliceSet.intersect lhs.Keys2 rhs.Keys
-        let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-        let keyBuilder = fun (x, y) -> y
-        let newValues = TryFind.multiply keySet lhs.TryFind keyBuilder rhs.TryFind
-
-        SMap2(keys1, keys2, newValues)
+        //let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+        //let keyBuilder = fun (x, y) -> y
+        //let newValues = TryFind.multiply keySet lhs.TryFind keyBuilder rhs.TryFind
+        let newTryFind (k1, k2) =
+          match (lhs.TryFind (k1, k2)), (rhs.TryFind (k1)) with
+          | Some lv, Some rv -> Some (lv * rv)
+          | _,_ -> None
+        SMap2(keys1, keys2, newTryFind)
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
         let keys1 = SliceSet.intersect lhs.Keys rhs.Keys1
         let keys2 = rhs.Keys2
-        let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
-        let keyBuilder = fun (x, y) -> x
-        let newValues = TryFind.multiply keySet rhs.TryFind keyBuilder lhs.TryFind
-
-        SMap2(keys1, keys2, newValues)
+        //let keySet = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+        //let keyBuilder = fun (x, y) -> x
+        //let newValues = TryFind.multiply keySet rhs.TryFind keyBuilder lhs.TryFind
+        let newTryFind (k1, k2) =
+            match (lhs.TryFind (k2)), (rhs.TryFind (k1, k2)) with
+            | Some lv, Some rv -> Some (lv * rv)
+            | _,_ -> None
+        SMap2(keys1, keys2, newTryFind)
 
     static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
         let newKeys1 = lhs.Keys1 + rhs.Keys1
         let newKeys2 = lhs.Keys2 + rhs.Keys2
-        let keySet = seq {for k1 in newKeys1 do for k2 in newKeys2 -> (k1, k2)}
-        let newValues = TryFind.mergeAdd keySet lhs.TryFind rhs.TryFind
-        SMap2(newKeys1, newKeys2, newValues)
+        //let keySet = seq {for k1 in newKeys1 do for k2 in newKeys2 -> (k1, k2)}
+        //let newValues = TryFind.mergeAdd keySet lhs.TryFind rhs.TryFind
+        let newTryFind (k1, k2) =
+            match (lhs.TryFind (k1, k2)), (rhs.TryFind (k1, k2)) with
+            | Some lv, Some rv -> Some (lv * rv)
+            | Some lv, None -> Some lv
+            | None, Some rv -> Some rv
+            | None, None -> None
+        SMap2(newKeys1, newKeys2, newTryFind)
 
     static member inline Sum (m:SMap2<_,_,_>) =
         TryFind.sum m.PossibleKeys m.TryFind
