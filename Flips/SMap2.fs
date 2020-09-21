@@ -8,7 +8,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     let keys1 = keys1
     let keys2 = keys2
-    let possibleKeys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
+    let keys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
     let tryFind = tryFind
 
     new (s:seq<('Key1 * 'Key2) * 'Value>) =
@@ -23,12 +23,12 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     member _.Keys1 = keys1
     member _.Keys2 = keys2
-    member _.PossibleKeys = possibleKeys
+    member _.Keys = keys
     member _.TryFind = tryFind
 
     member _.AsMap () =
         tryFind
-        |> TryFind.toMap possibleKeys
+        |> TryFind.toMap keys
 
     override this.ToString () = 
         sprintf "SMap2 %O" (this.AsMap())
@@ -140,13 +140,15 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         SMap2(newKeys1, newKeys2, newTryFind)
 
     static member inline Sum (m:SMap2<_,_,_>) =
-        TryFind.sum m.PossibleKeys m.TryFind
+        TryFind.sum m.Keys m.TryFind
 
-    //static member inline Sum (m:SMap2<_,_,Flips.Types.Decision>) =
-    //    TryFind.sumDecisions m.PossibleKeys m.TryFind
+    //static member Sum (m:SMap2<_,_,Flips.Types.Decision>) =
+    //    let newTryFind = m.TryFind >> Option.map (fun v -> 1.0 * v)
+    //    TryFind.sum m.Keys newTryFind
 
-    //static member inline Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-    //    TryFind.sumDecisionsWithUnits m.PossibleKeys m.TryFind
+    //static member Sum (m:SMap2<_,_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+    //    let newTryFind = m.TryFind >> Option.map (fun v -> 1.0 * v)
+    //    TryFind.sum m.Keys newTryFind
 
 
 module SMap2 =
@@ -155,7 +157,7 @@ module SMap2 =
         m |> SMap2
 
     let toSeq (m:SMap2<_,_,_>) =
-        TryFind.toSeq m.PossibleKeys m.TryFind
+        TryFind.toSeq m.Keys m.TryFind
 
     let ofMap (m:Map<_,_>) =
         m |> SMap2

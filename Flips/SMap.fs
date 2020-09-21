@@ -87,17 +87,29 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
           | _,_ -> None
         SMap(newKeys, newTryFind)
 
-    static member inline Sum (m:SMap<_,_>) =
-        TryFind.sum m.Keys m.TryFind
+    //static member Sum (m:SMap<_,float>) =
+    //    TryFind.sum m.Keys m.TryFind
 
     //static member Sum (m:SMap<_,Flips.Types.LinearExpression>) =
-    //    TryFind.sumLinearExpressions m.Keys m.TryFind
+    //    TryFind.sum m.Keys m.TryFind
 
-    //static member Sum (m:SMap<_,Flips.Types.Decision>) =
-    //    TryFind.sumDecisions m.Keys m.TryFind
+    //static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) =
+    //  TryFind.sum m.Keys m.TryFind
 
-    //static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-    //    TryFind.sumDecisionsWithUnits m.Keys m.TryFind
+    static member Sum (m:SMap<_,Flips.Types.Decision>) =
+        let newTryFind = m.TryFind >> Option.map (fun v -> 1.0 * v)
+        TryFind.sum m.Keys newTryFind
+
+    static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
+        let newTryFind = m.TryFind >> Option.map (fun v -> 1.0 * v)
+        TryFind.sum m.Keys newTryFind
+
+[<AutoOpen>]
+module SMapExtensions =
+
+    type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> with
+        static member inline Sum (m:SMap<_,_>) =
+            TryFind.sum m.Keys m.TryFind
 
 
 module SMap =

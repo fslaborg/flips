@@ -15,17 +15,17 @@ type SliceType<'a when 'a : comparison> =
     | NotIn of Set<'a>
     | Where of ('a -> bool)
 
-[<AutoOpen>]
-module Sum =
+//[<AutoOpen>]
+//module Sum =
 
-    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
-        ((^a) : (static member Sum: ^a -> ^b) k1)
+//    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (a: ^a) = 
+//        ((^a) : (static member Sum: ^a -> ^b) a)
 
-    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
-                              and ^a: (static member (+): ^a * ^a -> ^a)
-                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
-        let r = Seq.sum k1
-        ((^a) : (static member Sum: ^a -> ^b) r)
+//    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
+//                              and ^a: (static member (+): ^a * ^a -> ^a)
+//                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
+//        let r = Seq.sum k1
+//        ((^a) : (static member Sum: ^a -> ^b) r)
 
 
 module internal Utilities =
@@ -142,39 +142,6 @@ module TryFind =
 
         acc
 
-    let sumLinearExpressions keys (tryFind:TryFind<_,Flips.Types.LinearExpression>) =
-        let mutable acc = LanguagePrimitives.GenericZero
-        
-        for k in keys do
-            match tryFind k with
-            | Some v ->
-                acc <- acc + (1.0 * v)
-            | None -> ()
-
-        acc
-
-    let sumDecisions keys (tryFind:TryFind<_,Flips.Types.Decision>) =
-        let mutable acc = LanguagePrimitives.GenericZero
-        
-        for k in keys do
-            match tryFind k with
-            | Some v ->
-                acc <- acc + (1.0 * v)
-            | None -> ()
-
-        acc
-
-
-    let sumDecisionsWithUnits keys (tryFind:TryFind<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        let mutable acc = LanguagePrimitives.GenericZero
-      
-        for k in keys do
-            match tryFind k with
-            | Some v ->
-                acc <- acc + (1.0 * v)
-            | None -> ()
-
-        acc
 
 
 
