@@ -284,3 +284,6 @@ module SliceSet =
 
     let intersect (a:SliceSet<_>) b =
         a.Intersect b
+
+    let asSeq (a:SliceSet<_>) =
+        seq { for i in 0..a.Count - 1 -> a.Values.Span.[i] }

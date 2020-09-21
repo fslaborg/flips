@@ -3,6 +3,7 @@
 open System.Collections.Generic
 open Utilities
 
+
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> 
     (keys:SliceSet<'Key>, tryFind:TryFind<'Key, 'Value>) =
 
@@ -17,6 +18,10 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
     new (m:Map<'Key, 'Value>) =
       let s = m |> Map.toSeq
       SMap s
+
+    interface ISliceData<'Key, 'Value> with
+        member _.Keys = SliceSet.asSeq keys
+        member _.TryFind = tryFind
 
     member _.Keys = keys
     member _.TryFind = tryFind
@@ -71,7 +76,6 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
 
     static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         let newKeys = SliceSet.intersect lhs.Keys rhs.Keys
-        //let newTryFind = TryFind.multiply newKeys lhs.TryFind id rhs.TryFind
         let newTryFind k =
             match (lhs.TryFind k), (rhs.TryFind k) with
             | Some lv, Some rv -> Some (lv * rv)
@@ -80,36 +84,14 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
 
     static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
         let newKeys = lhs.Keys + rhs.Keys
-        //let newTryFind = TryFind.mergeAdd newKeys lhs.TryFind rhs.TryFind
         let newTryFind k =
           match (lhs.TryFind k), (rhs.TryFind k) with
           | Some lv, Some rv -> Some (lv * rv)
           | _,_ -> None
         SMap(newKeys, newTryFind)
 
-    //static member Sum (m:SMap<_,float>) =
-    //    TryFind.sum m.Keys m.TryFind
-
-    //static member Sum (m:SMap<_,Flips.Types.LinearExpression>) =
-    //    TryFind.sum m.Keys m.TryFind
-
-    //static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) =
-    //  TryFind.sum m.Keys m.TryFind
-
-    static member Sum (m:SMap<_,Flips.Types.Decision>) =
-        let newTryFind = m.TryFind >> Option.map (fun v -> 1.0 * v)
-        TryFind.sum m.Keys newTryFind
-
-    static member Sum (m:SMap<_,Flips.UnitsOfMeasure.Types.Decision<_>>) =
-        let newTryFind = m.TryFind >> Option.map (fun v -> 1.0 * v)
-        TryFind.sum m.Keys newTryFind
-
-[<AutoOpen>]
-module SMapExtensions =
-
-    type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> with
-        static member inline Sum (m:SMap<_,_>) =
-            TryFind.sum m.Keys m.TryFind
+    static member inline Sum (m:SMap<_, _>) =
+        TryFind.sum m.Keys m.TryFind
 
 
 module SMap =

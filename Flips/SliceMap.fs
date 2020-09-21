@@ -15,31 +15,8 @@ type SliceType<'a when 'a : comparison> =
     | NotIn of Set<'a>
     | Where of ('a -> bool)
 
-//[<AutoOpen>]
-//module Sum =
-
-//    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (a: ^a) = 
-//        ((^a) : (static member Sum: ^a -> ^b) a)
-
-//    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
-//                              and ^a: (static member (+): ^a * ^a -> ^a)
-//                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
-//        let r = Seq.sum k1
-//        ((^a) : (static member Sum: ^a -> ^b) r)
-
 
 module internal Utilities =
-
-    //let inline internal mergeAddition (lhs:Map<_,_>) (rhs:Map<_,_>) =
-    //    /// The assumption is that the LHS Map has more entries than the RHS Map
-    //    let newRhsValues = rhs |> Map.filter (fun k _ -> not (lhs.ContainsKey k)) |> Map.toSeq
-
-    //    lhs
-    //    |> Map.map (fun k lhsV -> match Map.tryFind k rhs with 
-    //                              | Some rhsV -> lhsV + rhsV 
-    //                              | None -> lhsV)
-    //    |> fun newLhs -> Seq.fold (fun m (k, v) -> Map.add k v m) newLhs newRhsValues
-
 
     let inline internal filterKeys (f:SliceType<'a>) (keys:SliceSet<'a>) : SliceSet<'a> =
         match f with
@@ -54,16 +31,11 @@ module internal Utilities =
         | NotIn set -> keys.Minus (SliceSet set)
         | Where f -> keys.Filter f
 
-    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (k1: ^a) = 
-        ((^a) : (static member Sum: ^a -> ^b) k1)
-
-    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
-                              and ^a: (static member (+): ^a * ^a -> ^a)
-                              and ^a: (static member Zero: ^a)> (k1: ^a seq) = 
-        let r = Seq.sum k1
-        ((^a) : (static member Sum: ^a -> ^b) r)
 
 type TryFind<'Key, 'Value> = 'Key -> 'Value option
+type ISliceData<'Key, 'Value when 'Key : comparison and 'Value : equality> =
+    abstract member Keys : 'Key seq
+    abstract member TryFind : TryFind<'Key, 'Value>
 
 module TryFind =
 

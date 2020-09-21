@@ -3,8 +3,22 @@
 [<AutoOpen>]
 module Sum =
 
-    let inline sum< ^a, ^b when ^a: (static member Sum: ^a -> ^b)> (a: ^a) = 
-        ((^a) : (static member Sum: ^a -> ^b) a)
+    type internal Summer () =
+
+      static member inline Sum (x:ISliceData<_,_>) : Flips.Types.LinearExpression =
+        TryFind.sum x.Keys x.TryFind
+
+      static member Sum (x:ISliceData<_,Flips.Types.Decision>) : Flips.Types.LinearExpression =
+        let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
+        TryFind.sum x.Keys newTryFind
+
+      static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+        let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
+        TryFind.sum x.Keys newTryFind
+
+
+    let inline sum (x:ISliceData<'Key, 'Value>) =
+        Summer.Sum x
 
     let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> ^b) 
                               and ^a: (static member (+): ^a * ^a -> ^a)
