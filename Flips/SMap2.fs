@@ -82,49 +82,45 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
     // Operators
     static member inline (*) (coef, s:SMap2<_,_,_>) =
-        let newTryFind k =
-          s.TryFind k
-          |> Option.map (fun v -> coef * v)
+        let newTryFind = s.TryFind >> Option.map (fun v -> coef * v)
         SMap2(s.Keys1, s.Keys2, newTryFind)
 
     static member inline (*) (s:SMap2<_,_,_>, coef) =
-        let newTryFind k =
-          s.TryFind k
-          |> Option.map (fun v -> coef * v)
+        let newTryFind = s.TryFind >> Option.map (fun v -> coef * v)
         SMap2(s.Keys1, s.Keys2, newTryFind)
 
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
-        let keys1 = SliceSet.intersect lhs.Keys1 rhs.Keys1
-        let keys2 = SliceSet.intersect lhs.Keys2 rhs.Keys2
+    static member inline (.*) (a:SMap2<_,_,_>, b:SMap2<_,_,_>) =
+        let keys1 = SliceSet.intersect a.Keys1 b.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys2
         let newTryFind (k1, k2) =
-            match (lhs.TryFind (k1, k2)), (rhs.TryFind (k1, k2)) with
+            match (a.TryFind (k1, k2)), (b.TryFind (k1, k2)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap2(keys1, keys2, newTryFind)
 
-    static member inline (.*) (lhs:SMap2<_,_,_>, rhs:SMap<_,_>) =
-        let keys1 = lhs.Keys1
-        let keys2 = SliceSet.intersect lhs.Keys2 rhs.Keys
+    static member inline (.*) (a:SMap2<_,_,_>, b:SMap<_,_>) =
+        let keys1 = a.Keys1
+        let keys2 = SliceSet.intersect a.Keys2 b.Keys
         let newTryFind (k1, k2) =
-          match (lhs.TryFind (k1, k2)), (rhs.TryFind (k1)) with
+          match (a.TryFind (k1, k2)), (b.TryFind (k1)) with
           | Some lv, Some rv -> Some (lv * rv)
           | _,_ -> None
         SMap2(keys1, keys2, newTryFind)
 
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap2<_,_,_>) =
-        let keys1 = SliceSet.intersect lhs.Keys rhs.Keys1
-        let keys2 = rhs.Keys2
+    static member inline (.*) (a:SMap<_,_>, b:SMap2<_,_,_>) =
+        let keys1 = SliceSet.intersect a.Keys b.Keys1
+        let keys2 = b.Keys2
         let newTryFind (k1, k2) =
-            match (lhs.TryFind (k2)), (rhs.TryFind (k1, k2)) with
+            match (a.TryFind (k2)), (b.TryFind (k1, k2)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap2(keys1, keys2, newTryFind)
 
-    static member inline (+) (lhs:SMap2<_,_,_>, rhs:SMap2<_,_,_>) =
-        let newKeys1 = lhs.Keys1 + rhs.Keys1
-        let newKeys2 = lhs.Keys2 + rhs.Keys2
-        let newTryFind (k1, k2) =
-            match (lhs.TryFind (k1, k2)), (rhs.TryFind (k1, k2)) with
+    static member inline (+) (a:SMap2<_,_,_>, b:SMap2<_,_,_>) =
+        let newKeys1 = a.Keys1 + b.Keys1
+        let newKeys2 = a.Keys2 + b.Keys2
+        let newTryFind k =
+            match (a.TryFind k), (b.TryFind k) with
             | Some lv, Some rv -> Some (lv * rv)
             | Some lv, None -> Some lv
             | None, Some rv -> Some rv

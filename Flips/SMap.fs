@@ -74,18 +74,18 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
           |> Option.map (fun v -> coef * v)
         SMap(smap.Keys, newTryFind)
 
-    static member inline (.*) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        let newKeys = SliceSet.intersect lhs.Keys rhs.Keys
+    static member inline (.*) (a:SMap<_,_>, b:SMap<_,_>) =
+        let newKeys = SliceSet.intersect a.Keys b.Keys
         let newTryFind k =
-            match (lhs.TryFind k), (rhs.TryFind k) with
+            match (a.TryFind k), (b.TryFind k) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap(newKeys, newTryFind)
 
-    static member inline (+) (lhs:SMap<_,_>, rhs:SMap<_,_>) =
-        let newKeys = lhs.Keys + rhs.Keys
+    static member inline (+) (a:SMap<_,_>, b:SMap<_,_>) =
+        let newKeys = a.Keys + b.Keys
         let newTryFind k =
-          match (lhs.TryFind k), (rhs.TryFind k) with
+          match (a.TryFind k), (b.TryFind k) with
           | Some lv, Some rv -> Some (lv * rv)
           | _,_ -> None
         SMap(newKeys, newTryFind)
