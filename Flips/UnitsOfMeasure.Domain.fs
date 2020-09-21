@@ -114,3 +114,39 @@ module Builders =
 
         member this.Run(a:seq<_*DecisionType>) = 
             a |> Seq.map (fun (a, b) -> createDecision a b)
+
+
+[<AutoOpen>]
+module Sum =
+
+  open Flips.SliceMap
+
+  type internal Summer () =
+
+    //inherit DefaultSummer ()
+    static member inline Sum (x:ISliceData<_,_>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+      TryFind.sum x.Keys x.TryFind
+
+    //static member Sum (x:ISliceData<_,Flips.Types.LinearExpression>) : Flips.Types.LinearExpression =
+    //  TryFind.sum x.Keys x.TryFind
+
+    //static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+    //  TryFind.sum x.Keys x.TryFind
+
+    static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+      let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
+      TryFind.sum x.Keys newTryFind
+
+    //static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+    //  let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
+    //  TryFind.sum x.Keys newTryFind
+
+
+  let inline sum (x:ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+      TryFind.sum x.Keys x.TryFind
+
+  let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> Flips.Types.LinearExpression) 
+                            and ^a: (static member (+): ^a * ^a -> ^a)
+                            and ^a: (static member Zero: ^a)> (k1: ^a seq) : Flips.Types.LinearExpression = 
+      let r = Seq.sum k1
+      ((^a) : (static member Sum: ^a -> Flips.Types.LinearExpression) r)

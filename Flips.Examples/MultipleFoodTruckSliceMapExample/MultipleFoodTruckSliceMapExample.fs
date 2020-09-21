@@ -43,8 +43,8 @@ let solve () =
     let maxItemConstraints =
         [for item in items do
             let name = sprintf "MaxItemTotal|%s" item
-            let lhs : LinearExpression  = sum (numberOfItem.[All, item])
-            Constraint.create name ((lhs) <== maxIngredients.[item])
+            //let lhs : LinearExpression  = sum (numberOfItem.[All, item])
+            Constraint.create name (sum (numberOfItem.[All, item]) <== maxIngredients.[item])
         ]
 
 
@@ -52,8 +52,8 @@ let solve () =
     let maxWeightConstraints = 
         [for location in locations -> 
             let name = sprintf "MaxTotalWeight|%s" location
-            let lhs = itemWeight .* numberOfItem.[location, All]
-            Constraint.create name (sum lhs <== maxTruckWeight.[location])
+            //let lhs = itemWeight .* numberOfItem.[location, All]
+            Constraint.create name (sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location])
         ]
 
     // Create a Model type and pipe it through the addition of the constraints

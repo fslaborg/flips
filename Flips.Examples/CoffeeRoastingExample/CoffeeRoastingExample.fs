@@ -2,9 +2,8 @@
 
 open Flips
 open Flips.Types
-open Flips.UnitsOfMeasure
-open Flips.UnitsOfMeasure.Types
 open Flips.SliceMap
+open Flips.UnitsOfMeasure
 
 type [<Measure>] USD
 type [<Measure>] ft
@@ -91,6 +90,8 @@ let solve () =
         } |> SMap.ofSeq
 
     let minRoastingCapacityConstraint =
+        let lhs = buildRoaster .* roasterCapacity
+        let s = sum lhs
         Constraint.create "MinRoastingCapacity" (sum (buildRoaster .* roasterCapacity) >== minRoastingCapacity)
 
     let minWarehouseCapacityConstraint =

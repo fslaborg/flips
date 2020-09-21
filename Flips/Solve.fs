@@ -286,8 +286,8 @@ module Solver =
 
         match settings.SolverType with
         | CBC -> ORTools.solve ORTools.OrToolsSolverType.CBC settings model
-        //| GLOP -> ORTools.solve ORTools.OrToolsSolverType.GLOP settings model
-        //| Cplex128 -> Optano.solve Optano.OptanoSolverType.Cplex128 settings model
-        //| Gurobi900 -> Optano.solve Optano.OptanoSolverType.Gurobi900 settings model
+        | GLOP -> ORTools.solve ORTools.OrToolsSolverType.GLOP settings model
+        | Cplex128 -> Optano.solve Optano.OptanoSolverType.Cplex128 settings model
+        | Gurobi900 -> Optano.solve Optano.OptanoSolverType.Gurobi900 settings model
 
     
