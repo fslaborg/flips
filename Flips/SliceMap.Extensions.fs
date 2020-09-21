@@ -3,10 +3,20 @@
 [<AutoOpen>]
 module Sum =
 
+    //type DefaultSummer () =
+    //    static member inline Sum (x:ISliceData<_,_>) =
+    //        TryFind.sum x.Keys x.TryFind
+
     type internal Summer () =
 
-      static member inline Sum (x:ISliceData<_,_>) : Flips.Types.LinearExpression =
+      //inherit DefaultSummer ()
+      static member inline Sum (x:ISliceData<_,_>) =
         TryFind.sum x.Keys x.TryFind
+      //static member inline Sum (x:ISliceData<_,Flips.Types.LinearExpression>) : Flips.Types.LinearExpression =
+      //  TryFind.sum x.Keys x.TryFind
+
+      //static member inline Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+      //  TryFind.sum x.Keys x.TryFind
 
       static member Sum (x:ISliceData<_,Flips.Types.Decision>) : Flips.Types.LinearExpression =
         let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)

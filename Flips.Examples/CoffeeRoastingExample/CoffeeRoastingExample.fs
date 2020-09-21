@@ -102,7 +102,8 @@ let solve () =
                 buildRoaster.[l] <== buildWarehouse.[l]
         }
 
-    let objExpr = sum (buildRoaster .* roasterCost + buildWarehouse .* warehouseCost)
+    let t = buildRoaster .* roasterCost
+    let objExpr = sum (t) + sum (buildWarehouse .* warehouseCost)
     let objective = Objective.create "MinimizeCost" Minimize objExpr
 
     let model = 

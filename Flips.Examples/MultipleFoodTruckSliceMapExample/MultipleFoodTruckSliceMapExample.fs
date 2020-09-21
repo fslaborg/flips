@@ -43,8 +43,8 @@ let solve () =
     let maxItemConstraints =
         [for item in items do
             let name = sprintf "MaxItemTotal|%s" item
-            //let lhs : LinearExpression = sum (numberOfItem.[All, item])
-            Constraint.create name (sum (numberOfItem.[All, item]) <== maxIngredients.[item])
+            let lhs : LinearExpression  = sum (numberOfItem.[All, item])
+            Constraint.create name ((lhs) <== maxIngredients.[item])
         ]
 
 
