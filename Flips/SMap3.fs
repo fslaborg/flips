@@ -1,7 +1,7 @@
 ﻿namespace Flips.SliceMap
 
 open System.Collections.Generic
-open Utilities
+
 
 type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Value : equality> 
     (keys1:SliceSet<'Key1>, keys2:SliceSet<'Key2>, keys3:SliceSet<'Key3>, tryFind:TryFind<('Key1 * 'Key2 * 'Key3), 'Value>) =
@@ -58,49 +58,49 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     // 3D
     member this.Item
         with get (k1f, k2f, k3f) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
             SMap3(keys1, keys2, keys3, tryFind)
 
     // 2D
     member this.Item
         with get (k1, k2f, k3f) =
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
             let newTryFind (k2, k3) = tryFind (k1, k2, k3)
             SMap2 (keys2, keys3, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3f) =
-            let keys1 = filterKeys k1f keys1
-            let keys3 = filterKeys k3f keys3
+            let keys1 = SliceSet.slice k1f keys1
+            let keys3 = SliceSet.slice k3f keys3
             let newTryFind (k1, k3) = tryFind (k1, k2, k3)
             SMap2 (keys1, keys3, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
             let newTryFind (k1, k2) = tryFind (k1, k2, k3)
             SMap2 (keys1, keys2, newTryFind)
 
     // 1D
     member this.Item
         with get (k1, k2, k3f) =
-            let keys3 = filterKeys k3f keys3
+            let keys3 = SliceSet.slice k3f keys3
             let newTryFind (k3) = tryFind (k1, k2, k3)
             SMap (keys3, newTryFind)
 
     member this.Item
         with get (k1, k2f, k3) =
-            let keys2 = filterKeys k2f keys2
+            let keys2 = SliceSet.slice k2f keys2
             let newTryFind (k2) = tryFind (k1, k2, k3)
             SMap (keys2, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3) =
-            let keys1 = filterKeys k1f keys1
+            let keys1 = SliceSet.slice k1f keys1
             let newTryFind (k1) = tryFind (k1, k2, k3)
             SMap (keys1, newTryFind)
 
@@ -186,6 +186,7 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         TryFind.sum m.Keys m.TryFind
 
 
+[<RequireQualifiedAccess>]
 module SMap3 =
 
     let ofSeq m =

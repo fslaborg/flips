@@ -3,6 +3,20 @@
 open System
 open System.Collections.Generic
 
+
+type SliceType<'a when 'a : comparison> =
+  | All
+  | Equals of 'a
+  | GreaterThan of 'a
+  | GreaterOrEqual of 'a
+  | LessThan of 'a
+  | LessOrEqual of 'a
+  | Between of 'a * 'a
+  | In of Set<'a>
+  | NotIn of Set<'a>
+  | Where of ('a -> bool)
+
+
 type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer<'T>, values:Memory<'T>) =
     let comparer = comparer
     let values = values
@@ -287,3 +301,16 @@ module SliceSet =
 
     let asSeq (a:SliceSet<_>) =
         seq { for i in 0..a.Count - 1 -> a.Values.Span.[i] }
+
+    let inline internal slice (f:SliceType<'a>) (keys:SliceSet<'a>) : SliceSet<'a> =
+        match f with
+        | All -> keys
+        | Equals k -> match keys.Contains k with | true -> SliceSet [k] | false -> SliceSet []
+        | GreaterThan k -> keys.GreaterThan k
+        | GreaterOrEqual k -> keys.GreaterOrEqual k
+        | LessThan k -> keys.LessThan k
+        | LessOrEqual k -> keys.LessOrEqual k
+        | Between (lowerBound, upperBound) -> keys.Between lowerBound upperBound
+        | In set -> keys.Intersect (SliceSet set)
+        | NotIn set -> keys.Minus (SliceSet set)
+        | Where f -> keys.Filter f

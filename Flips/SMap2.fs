@@ -1,7 +1,7 @@
 ﻿namespace Flips.SliceMap
 
 open System.Collections.Generic
-open Utilities
+
 
 type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Value : equality> 
     (keys1:SliceSet<'Key1>, keys2:SliceSet<'Key2>, tryFind:TryFind<('Key1 * 'Key2), 'Value>) =
@@ -56,20 +56,20 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     // 2D
     member this.Item
         with get (k1f, k2f) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
             SMap2(keys1, keys2, this.TryFind)
 
     // 1D
     member this.Item
         with get (k1, k2f) =
-            let keys2 = filterKeys k2f this.Keys2
+            let keys2 = SliceSet.slice k2f this.Keys2
             let newTryFind k = tryFind (k1, k)
             SMap (keys2, newTryFind)
 
     member this.Item
         with get (k1f, k2) =
-            let keys1 = filterKeys k1f this.Keys1
+            let keys1 = SliceSet.slice k1f this.Keys1
             let newTryFind k = tryFind (k, k2)
             SMap (keys1, newTryFind)
 
@@ -131,6 +131,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         TryFind.sum m.Keys m.TryFind
 
 
+[<RequireQualifiedAccess>]
 module SMap2 =
 
     let ofSeq (m:seq<_>) =

@@ -23,13 +23,13 @@
     <Compile Include="Types.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="SliceSet.fs" />
-    <Compile Include="SliceMap.fs" />
+    <Compile Include="TryFind.fs" />
+    <Compile Include="ISliceData.fs" />
     <Compile Include="SMap.fs" />
     <Compile Include="SMap2.fs" />
     <Compile Include="SMap3.fs" />
     <Compile Include="SMap4.fs" />
     <Compile Include="SMap5.fs" />
-    <Compile Include="SliceMap.Extensions.fs" />
     <Compile Include="UnitsOfMeasure.Types.fs" />
     <Compile Include="UnitsOfMeasure.Domain.fs" />
     <Compile Include="Solve.fs" />

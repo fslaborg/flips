@@ -1,7 +1,7 @@
 ﻿namespace Flips.SliceMap
 
 open System.Collections.Generic
-open Utilities
+
 
 type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and 'Key2 : comparison and 'Key3 : comparison and 'Key4 : comparison and 'Key5 : comparison and 'Value : equality> 
     (keys1:SliceSet<'Key1>, keys2:SliceSet<'Key2>, keys3:SliceSet<'Key3>, keys4:SliceSet<'Key4>, keys5:SliceSet<'Key5>, tryFind:TryFind<('Key1 * 'Key2 * 'Key3 * 'Key4 * 'Key5), 'Value>) =
@@ -60,56 +60,56 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
     // 5D
     member this.Item
         with get (k1f, k2f, k3f, k4f, k5f) =
-        let keys1 = filterKeys k1f keys1
-        let keys2 = filterKeys k2f keys2
-        let keys3 = filterKeys k3f keys3
-        let keys4 = filterKeys k4f keys4
-        let keys5 = filterKeys k5f keys5
+        let keys1 = SliceSet.slice k1f keys1
+        let keys2 = SliceSet.slice k2f keys2
+        let keys3 = SliceSet.slice k3f keys3
+        let keys4 = SliceSet.slice k4f keys4
+        let keys5 = SliceSet.slice k5f keys5
         SMap5(keys1, keys2, keys3, keys4, keys5, tryFind)
 
     // 4D
     member this.Item
         with get (k1, k2f, k3f, k4f, k5f) =
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k2, k3, k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap4 (keys2, keys3, keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3f, k4f, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k3, k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap4 (keys1, keys3, keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3, k4f, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k2, k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap4 (keys1, keys2, keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3f, k4, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k2, k3, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap4 (keys1, keys2, keys3, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3f, k4f, k5) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k1, k2, k3, k4) = tryFind (k1, k2, k3, k4, k5)
             SMap4 (keys1, keys2, keys3, keys4, newTryFind)
 
@@ -117,81 +117,81 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
     // 3D
     member this.Item
         with get (k1, k2, k3f, k4f, k5f) =
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k3, k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys3, keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1, k2f, k3, k4f, k5f) =
-            let keys2 = filterKeys k2f keys2
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys2 = SliceSet.slice k2f keys2
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k2, k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys2, keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1, k2f, k3f, k4, k5f) =
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
-            let keys5 = filterKeys k5f keys5
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k2, k3, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys2, keys3, keys5, newTryFind)
 
     member this.Item
         with get (k1, k2f, k3f, k4f, k5) =
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k2, k3, k4) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys2, keys3, keys4, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3, k4f, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys1, keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3f, k4, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys3 = filterKeys k3f keys3
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys3 = SliceSet.slice k3f keys3
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k3, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys1, keys3, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3f, k4f, k5) =
-            let keys1 = filterKeys k1f keys1
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
+            let keys1 = SliceSet.slice k1f keys1
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k1, k3, k4) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys1, keys3, keys4, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3, k4, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k2, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys1, keys2, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3, k4f, k5) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys4 = filterKeys k4f keys4
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k1, k2, k4) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys1, keys2, keys4, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3f, k4, k5) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
-            let keys3 = filterKeys k3f keys3
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
+            let keys3 = SliceSet.slice k3f keys3
             let newTryFind (k1, k2, k3) = tryFind (k1, k2, k3, k4, k5)
             SMap3 (keys1, keys2, keys3, newTryFind)
 
@@ -199,74 +199,74 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
     // 2D
     member this.Item
         with get (k1, k2, k3, k4f, k5f) =
-            let keys4 = filterKeys k4f keys4
-            let keys5 = filterKeys k5f keys5
+            let keys4 = SliceSet.slice k4f keys4
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k4, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap2 (keys4, keys5, newTryFind)
 
     member this.Item
         with get (k1, k2, k3f, k4, k5f) =
-            let keys3 = filterKeys k3f keys3
-            let keys5 = filterKeys k5f keys5
+            let keys3 = SliceSet.slice k3f keys3
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k3, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap2 (keys3, keys5, newTryFind)
 
     member this.Item
         with get (k1, k2, k3f, k4f, k5) =
-            let keys3 = filterKeys k3f keys3
-            let keys4 = filterKeys k4f keys4
+            let keys3 = SliceSet.slice k3f keys3
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k3, k4) = tryFind (k1, k2, k3, k4, k5)
             SMap2 (keys3, keys4, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3, k4, k5f) =
-            let keys1 = filterKeys k1f keys1
-            let keys5 = filterKeys k5f keys5
+            let keys1 = SliceSet.slice k1f keys1
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k1, k5) = tryFind (k1, k2, k3, k4, k5)
             SMap2 (keys1, keys5, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3, k4f, k5) =
-            let keys1 = filterKeys k1f keys1
-            let keys4 = filterKeys k4f keys4
+            let keys1 = SliceSet.slice k1f keys1
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k1, k4) = tryFind (k1, k2, k3, k4, k5)
             SMap2 (keys1, keys4, newTryFind)
 
     member this.Item
         with get (k1f, k2f, k3, k4, k5) =
-            let keys1 = filterKeys k1f keys1
-            let keys2 = filterKeys k2f keys2
+            let keys1 = SliceSet.slice k1f keys1
+            let keys2 = SliceSet.slice k2f keys2
             let newTryFind (k1, k2) = tryFind (k1, k2, k3, k4, k5)
             SMap2 (keys1, keys2, newTryFind)
 
     // 1D
     member this.Item
         with get (k1, k2, k3, k4, k5f) =
-            let keys5 = filterKeys k5f keys5
+            let keys5 = SliceSet.slice k5f keys5
             let newTryFind (k5) = tryFind (k1, k2, k3, k4, k5)
             SMap (keys5, newTryFind)
 
     member this.Item
         with get (k1, k2, k3, k4f, k5) =
-            let keys4 = filterKeys k4f keys4
+            let keys4 = SliceSet.slice k4f keys4
             let newTryFind (k4) = tryFind (k1, k2, k3, k4, k5)
             SMap (keys4, newTryFind)
 
     member this.Item
         with get (k1, k2, k3f, k4, k5) =
-            let keys3 = filterKeys k3f keys3
+            let keys3 = SliceSet.slice k3f keys3
             let newTryFind (k3) = tryFind (k1, k2, k3, k4, k5)
             SMap (keys3, newTryFind)
 
     member this.Item
         with get (k1, k2f, k3, k4, k5) =
-            let keys2 = filterKeys k2f keys2
+            let keys2 = SliceSet.slice k2f keys2
             let newTryFind (k2) = tryFind (k1, k2, k3, k4, k5)
             SMap (keys2, newTryFind)
 
     member this.Item
         with get (k1f, k2, k3, k4, k5) =
-            let keys1 = filterKeys k1f keys1
+            let keys1 = SliceSet.slice k1f keys1
             let newTryFind (k1) = tryFind (k1, k2, k3, k4, k5)
             SMap (keys1, newTryFind)
 
@@ -413,6 +413,7 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         TryFind.sum m.Keys m.TryFind
 
 
+[<RequireQualifiedAccess>]
 module SMap5 =
 
     let ofSeq m =

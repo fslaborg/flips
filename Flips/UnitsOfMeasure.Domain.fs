@@ -123,23 +123,12 @@ module Sum =
 
   type internal Summer () =
 
-    //inherit DefaultSummer ()
     static member inline Sum (x:ISliceData<_,_>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
       TryFind.sum x.Keys x.TryFind
-
-    //static member Sum (x:ISliceData<_,Flips.Types.LinearExpression>) : Flips.Types.LinearExpression =
-    //  TryFind.sum x.Keys x.TryFind
-
-    //static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.LinearExpression<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-    //  TryFind.sum x.Keys x.TryFind
 
     static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
       let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
       TryFind.sum x.Keys newTryFind
-
-    //static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-    //  let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
-    //  TryFind.sum x.Keys newTryFind
 
 
   let inline sum (x:ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =

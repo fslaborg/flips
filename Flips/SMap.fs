@@ -1,7 +1,6 @@
 ﻿namespace Flips.SliceMap
 
 open System.Collections.Generic
-open Utilities
 
 
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> 
@@ -51,7 +50,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
     // 1D
     member _.Item
         with get (k1f) =
-            let newKeys = filterKeys k1f keys
+            let newKeys = SliceSet.slice k1f keys
             SMap(newKeys, tryFind)
 
     // 0D (aka GetItem)
@@ -94,6 +93,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         TryFind.sum m.Keys m.TryFind
 
 
+[<RequireQualifiedAccess>]
 module SMap =
 
     let ofSeq (m:seq<_>) =
