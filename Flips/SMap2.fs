@@ -42,11 +42,11 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         match obj with
         | :? SMap2<'Key1, 'Key2, 'Value> as other -> 
             let mutable result = true
-            if this.Keys <> other.Keys then
+            if not (Seq.equals this.Keys other.Keys) then
                 result <- false
 
             if result then
-                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                if not (TryFind.equals this.Keys this.TryFind other.TryFind) then
                     result <- false
 
             result
@@ -110,7 +110,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let keys1 = a.Keys1
         let keys2 = SliceSet.intersect a.Keys2 b.Keys
         let newTryFind (k1, k2) =
-          match (a.TryFind (k1, k2)), (b.TryFind (k1)) with
+          match (a.TryFind (k1, k2)), (b.TryFind (k2)) with
           | Some lv, Some rv -> Some (lv * rv)
           | _,_ -> None
         SMap2(keys1, keys2, newTryFind)
@@ -119,7 +119,7 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
         let keys1 = SliceSet.intersect a.Keys b.Keys1
         let keys2 = b.Keys2
         let newTryFind (k1, k2) =
-            match (a.TryFind (k2)), (b.TryFind (k1, k2)) with
+            match (a.TryFind (k1)), (b.TryFind (k1, k2)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap2(keys1, keys2, newTryFind)

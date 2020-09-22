@@ -25,6 +25,7 @@
     <Compile Include="SliceSet.fs" />
     <Compile Include="TryFind.fs" />
     <Compile Include="ISliceData.fs" />
+    <Compile Include="Seq.fs" />
     <Compile Include="SMap.fs" />
     <Compile Include="SMap2.fs" />
     <Compile Include="SMap3.fs" />

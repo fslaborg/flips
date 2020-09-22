@@ -44,14 +44,15 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         match obj with
         | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as other -> 
             let mutable result = true
-            if this.Keys <> other.Keys then
+            if not (Seq.equals this.Keys other.Keys) then
                 result <- false
 
             if result then
-                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                if not (TryFind.equals this.Keys this.TryFind other.TryFind) then
                     result <- false
 
             result
+                    | _ -> false
         | _ -> false
 
     override this.GetHashCode () =
@@ -143,7 +144,7 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         let keys2 = SliceSet.intersect a.Keys2 b.Keys1
         let keys3 = SliceSet.intersect a.Keys3 b.Keys2
         let newTryFind (k1, k2, k3) =
-          match (a.TryFind (k1, k2, k3)), (b.TryFind (k1, k2)) with
+          match (a.TryFind (k1, k2, k3)), (b.TryFind (k2, k3)) with
           | Some lv, Some rv -> Some (lv * rv)
           | _,_ -> None
         SMap3(keys1, keys2, keys3, newTryFind)
@@ -153,7 +154,7 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         let keys2 = SliceSet.intersect a.Keys2 b.Keys2
         let keys3 = b.Keys3
         let newTryFind (k1, k2, k3) =
-            match (a.TryFind (k2, k3)), (b.TryFind (k1, k2, k3)) with
+            match (a.TryFind (k1, k2)), (b.TryFind (k1, k2, k3)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap3(keys1, keys2, keys3, newTryFind)
@@ -163,7 +164,7 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         let keys2 = a.Keys2
         let keys3 = SliceSet.intersect a.Keys3 b.Keys
         let newTryFind (k1, k2, k3) =
-            match (a.TryFind (k1, k2, k3)), (b.TryFind (k1)) with
+            match (a.TryFind (k1, k2, k3)), (b.TryFind (k3)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap3(keys1, keys2, keys3, newTryFind)

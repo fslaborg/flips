@@ -33,7 +33,9 @@ module TryFind =
         let mutable result = true
 
         for k in keys do
-            if (a k) <> (b k) then
+            let aValue = a k
+            let bValue = b k
+            if aValue <> bValue then
                 result <- false
 
         result

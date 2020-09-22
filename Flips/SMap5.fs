@@ -46,15 +46,15 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         match obj with
         | :? SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value> as other -> 
             let mutable result = true
-            if this.Keys <> other.Keys then
+            if not (Seq.equals this.Keys other.Keys) then
                 result <- false
 
             if result then
-                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                if not (TryFind.equals this.Keys this.TryFind other.TryFind) then
                     result <- false
 
             result
-        | _ -> false
+                    | _ -> false
 
     override this.GetHashCode () =
         hash (this.AsMap())

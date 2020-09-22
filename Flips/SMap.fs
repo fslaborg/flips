@@ -36,11 +36,11 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         match obj with
         | :? SMap<'Key, 'Value> as other -> 
             let mutable result = true
-            if this.Keys <> other.Keys then
+            if not (Seq.equals this.Keys other.Keys) then
                 result <- false
 
             if result then
-                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                if not (TryFind.equals this.Keys this.TryFind other.TryFind) then
                     result <- false
 
             result
@@ -92,9 +92,11 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
     static member inline (+) (a:SMap<_,_>, b:SMap<_,_>) =
         let newKeys = a.Keys + b.Keys
         let newTryFind k =
-          match (a.TryFind k), (b.TryFind k) with
-          | Some lv, Some rv -> Some (lv * rv)
-          | _,_ -> None
+            match (a.TryFind k), (b.TryFind k) with
+            | Some lv, Some rv -> Some (lv * rv)
+            | Some lv, None -> Some lv
+            | None, Some rv -> Some rv
+            | None, None -> None
         SMap(newKeys, newTryFind)
 
     static member inline Sum (m:SMap<_, _>) =

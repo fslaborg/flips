@@ -43,20 +43,20 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
         idx
 
-    new(values:Set<'T>) =
-        let comparer = LanguagePrimitives.FastGenericComparer<'T>
-        let v = Set.toArray values
-        SliceSet(comparer, v.AsMemory<'T>())
-
-    new(values: 'T list) =
-        let comparer = LanguagePrimitives.FastGenericComparer<'T>
-        let v = values |> List.distinct |> List.toArray
-        SliceSet(comparer, v.AsMemory<'T>())
-
     new(values:seq<'T>) =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
-        let v = values |> Seq.distinct |> Seq.toArray
+        let v = values |> Seq.sortDescending |> Seq.distinct |> Seq.toArray |> Array.sort
         SliceSet(comparer, v.AsMemory<'T>())
+
+    //new(values:Set<'T>) =
+    //    let comparer = LanguagePrimitives.FastGenericComparer<'T>
+    //    let v = Set.toArray values
+    //    SliceSet(comparer, v.AsMemory<'T>())
+
+    //new(values: 'T list) =
+    //    let comparer = LanguagePrimitives.FastGenericComparer<'T>
+    //    let v = values |> List.distinct |> List.toArray
+    //    SliceSet(comparer, v.AsMemory<'T>())
 
     member _.Item
         with get (idx) =
@@ -173,40 +173,19 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
             SliceSet (comparer, values.Slice(lowerIdx, upperIdx - lowerIdx + 1))
 
     member _.Intersect (b:SliceSet<'T>) =
+
         let intersectAux (small:Memory<'T>) (large:Memory<'T>) =
-
             let newValues = Array.zeroCreate(small.Length)
 
             let mutable smallIdx = 0
-            let mutable largeLowerIdx = 0
-            let mutable outIdx = 0
-
-            while (smallIdx < small.Length) do
-                largeLowerIdx <- findIndexOf comparer largeLowerIdx (small.Span.[smallIdx]) large
-
-                let c = comparer.Compare(small.Span.[smallIdx], large.Span.[largeLowerIdx])
-
-                if c = 0 then
-                    newValues.[outIdx] <- small.Span.[smallIdx]
-                    outIdx <- outIdx + 1
-
-                smallIdx <- smallIdx + 1
-
-            SliceSet(comparer, newValues.AsMemory().Slice(0, outIdx))
-
-        let mergeIntersect (small:Memory<'T>) (large:Memory<'T>) =
-            let newValues = Array.zeroCreate(small.Length)
-
-            let mutable smallIdx = 0
-            let mutable largeIdx = findIndexOf comparer 0 (small.Span.[smallIdx]) large
-            //let mutable largeIdx = 0
+            let mutable largeIdx = 0
             let mutable outIdx = 0
 
             while (smallIdx < small.Length && largeIdx < large.Length) do
-                let c = comparer.Compare(values.Span.[smallIdx], large.Span.[largeIdx])
+                let c = comparer.Compare(small.Span.[smallIdx], large.Span.[largeIdx])
 
                 if c = 0 then
-                    newValues.[outIdx] <- values.Span.[smallIdx]
+                    newValues.[outIdx] <- small.Span.[smallIdx]
                     smallIdx <- smallIdx + 1
                     largeIdx <- largeIdx + 1
                     outIdx <- outIdx + 1
@@ -219,9 +198,9 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
 
         if values.Length < b.Values.Length then
-          mergeIntersect values b.Values
+          intersectAux values b.Values
         else
-          mergeIntersect b.Values values
+          intersectAux b.Values values
 
     member _.Add (b:SliceSet<'T>) =
         let newValues = Array.zeroCreate(values.Length + b.Values.Length)

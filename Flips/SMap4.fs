@@ -43,11 +43,11 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         match obj with
         | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as other -> 
             let mutable result = true
-            if this.Keys <> other.Keys then
+            if not (Seq.equals this.Keys other.Keys) then
                 result <- false
 
             if result then
-                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                if not (TryFind.equals this.Keys this.TryFind other.TryFind) then
                     result <- false
 
             result
@@ -198,7 +198,7 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         let keys3 = SliceSet.intersect a.Keys3 b.Keys2
         let keys4 = SliceSet.intersect a.Keys4 b.Keys3
         let newTryFind (k1, k2, k3, k4) =
-            match (a.TryFind (k1, k2, k3, k4)), (b.TryFind (k1, k2, k3)) with
+            match (a.TryFind (k1, k2, k3, k4)), (b.TryFind (k2, k3, k4)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap4(keys1, keys2, keys3, keys4, newTryFind)
@@ -220,7 +220,7 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         let keys3 = SliceSet.intersect a.Keys3 b.Keys1
         let keys4 = SliceSet.intersect a.Keys4 b.Keys2
         let newTryFind (k1, k2, k3, k4) =
-            match (a.TryFind (k1, k2, k3, k4)), (b.TryFind (k1, k2)) with
+            match (a.TryFind (k1, k2, k3, k4)), (b.TryFind (k3, k4)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap4(keys1, keys2, keys3, keys4, newTryFind)
@@ -231,7 +231,7 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         let keys3 = b.Keys3
         let keys4 = b.Keys4
         let newTryFind (k1, k2, k3, k4) =
-            match (a.TryFind (k3, k4)), (b.TryFind (k1, k2, k3, k4)) with
+            match (a.TryFind (k1, k2)), (b.TryFind (k1, k2, k3, k4)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap4(keys1, keys2, keys3, keys4, newTryFind)
@@ -242,7 +242,7 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
         let keys3 = a.Keys3
         let keys4 = SliceSet.intersect a.Keys4 b.Keys
         let newTryFind (k1, k2, k3, k4) =
-            match (a.TryFind (k1, k2, k3, k4)), (b.TryFind (k1)) with
+            match (a.TryFind (k1, k2, k3, k4)), (b.TryFind (k4)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap4(keys1, keys2, keys3, keys4, newTryFind)
