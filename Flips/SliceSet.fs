@@ -18,7 +18,6 @@ type SliceType<'a when 'a : comparison> =
 
 
 [<NoComparison>]
-[<CustomEquality>]
 type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer<'T>, values:Memory<'T>) =
     let comparer = comparer
     let values = values
@@ -81,6 +80,9 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
             result
 
         | _ -> false
+
+    override _.GetHashCode () =
+        hash values
 
     interface IEnumerable<'T> with
         member _.GetEnumerator(): IEnumerator<'T> = 
