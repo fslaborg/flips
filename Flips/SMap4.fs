@@ -41,8 +41,16 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
 
     override this.Equals(obj) =
         match obj with
-        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as s -> 
-            this.AsMap() = s.AsMap()
+        | :? SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value> as other -> 
+            let mutable result = true
+            if this.Keys <> other.Keys then
+                result <- false
+
+            if result then
+                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                    result <- false
+
+            result
         | _ -> false
 
     override this.GetHashCode () =

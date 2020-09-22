@@ -29,6 +29,16 @@ module TryFind =
     let toMap keys (s:TryFind<_,_>) =
         s |> (toSeq keys) |> Map.ofSeq
 
+    let equals keys (a:TryFind<_,_>) (b:TryFind<_,_>) =
+        let mutable result = true
+
+        for k in keys do
+            if (a k) <> (b k) then
+                result <- false
+
+        result
+
+
     let inline sum keys (tryFind:TryFind<_,_>) =
         let mutable acc = LanguagePrimitives.GenericZero
 

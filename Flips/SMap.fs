@@ -2,7 +2,7 @@
 
 open System.Collections.Generic
 
-
+[<NoComparison>]
 type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality> 
     (keys:SliceSet<'Key>, tryFind:TryFind<'Key, 'Value>) =
 
@@ -34,8 +34,16 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
 
     override this.Equals(obj) =
         match obj with
-        | :? SMap<'Key, 'Value> as s -> 
-            (this.AsMap()) = (s.AsMap())
+        | :? SMap<'Key, 'Value> as other -> 
+            let mutable result = true
+            if this.Keys <> other.Keys then
+                result <- false
+
+            if result then
+                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                    result <- false
+
+            result
         | _ -> false
 
     override this.GetHashCode () =

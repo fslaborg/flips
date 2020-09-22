@@ -17,6 +17,8 @@ type SliceType<'a when 'a : comparison> =
   | Where of ('a -> bool)
 
 
+[<NoComparison>]
+[<CustomEquality>]
 type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer<'T>, values:Memory<'T>) =
     let comparer = comparer
     let values = values
@@ -56,6 +58,29 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
         let v = values |> Seq.distinct |> Seq.toArray
         SliceSet(comparer, v.AsMemory<'T>())
+
+    member _.Item
+        with get (idx) =
+            values.Span.[idx]
+
+    override this.Equals(obj) =
+        match obj with
+        | :? SliceSet<'T> as other ->
+            let mutable result = true
+            let mutable idx = 0
+            if this.Count <> other.Count then
+                result <- false
+
+            while result && (idx < this.Count) do
+
+                if this.[idx] <> other.[idx] then
+                    result <- false
+
+                idx <- idx + 1
+
+            result
+
+        | _ -> false
 
     interface IEnumerable<'T> with
         member _.GetEnumerator(): IEnumerator<'T> = 

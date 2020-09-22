@@ -42,8 +42,16 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
 
     override this.Equals(obj) =
         match obj with
-        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value > as s -> 
-          (this.AsMap()) = s.AsMap()
+        | :? SMap3<'Key1, 'Key2, 'Key3, 'Value> as other -> 
+            let mutable result = true
+            if this.Keys <> other.Keys then
+                result <- false
+
+            if result then
+                if TryFind.equals this.Keys this.TryFind other.TryFind then
+                    result <- false
+
+            result
         | _ -> false
 
     override this.GetHashCode () =
