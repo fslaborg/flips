@@ -52,7 +52,6 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
                     result <- false
 
             result
-                    | _ -> false
         | _ -> false
 
     override this.GetHashCode () =

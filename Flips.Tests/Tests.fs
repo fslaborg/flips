@@ -416,6 +416,8 @@ module Types =
 
         [<Property>]
         let ``SMap3 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let s2 = Map.ofList v2 |> SMap3
             let r1 = s1 + s2
@@ -424,6 +426,9 @@ module Types =
     
         [<Property>]
         let ``SMap3 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
+            let v3 = v3.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let s2 = Map.ofList v2 |> SMap3
             let s3 = Map.ofList v3 |> SMap3
@@ -433,6 +438,8 @@ module Types =
 
         [<Property>]
         let ``SMap3 element-wise multiplication is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let s2 = Map.ofList v2 |> SMap3
             let r1 = s1 .* s2
@@ -441,6 +448,9 @@ module Types =
     
         [<Property>]
         let ``SMap3 element-wise multiplication is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
+            let v3 = v3.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let s2 = Map.ofList v2 |> SMap3
             let s3 = Map.ofList v3 |> SMap3
@@ -450,12 +460,14 @@ module Types =
 
         [<Property>]
         let ``Multiply SMap3 by 1 yields same SMap3`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let s = Map.ofList v |> SMap3
             let r = 1.0 * s
             Assert.StrictEqual(s, r)
 
         [<Property>]
         let ``Multiply SMap3 by its inverse then itself yields original `` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let s = Map.ofList v |> SMap3
             let inverse = v |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap3.ofList
             let r = s .* inverse .* s
@@ -463,6 +475,7 @@ module Types =
 
         [<Property>]
         let ``Adding empty SMap3 yields same SMap3`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let s = Map.ofList v |> SMap3
             let empty = Map.empty |> SMap3
             let r = s + empty
@@ -470,6 +483,7 @@ module Types =
 
         [<Property>]
         let ``Multiply SMap3 by X then 1/X yields same SMap3`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let x = randomFloat rng
             let s = Map.ofList v |> SMap3
             let r1 = x * s
@@ -478,6 +492,7 @@ module Types =
 
         [<Property>]
         let ``Multiplication of SMap3 by SMap then 1/SMap yields initial`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> k3, v) |> List.distinctBy fst
             let s2 = v2 |> SMap.ofList
@@ -487,6 +502,7 @@ module Types =
 
         [<Property>]
         let ``Multiplication of SMap3 by SMap2 then 1/SMap2 yields initial`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> (k2, k3), v) |> List.distinctBy fst
             let s2 = v2 |> SMap2.ofList
@@ -496,6 +512,7 @@ module Types =
 
         [<Property>]
         let ``Elementwise-multiplication of SMap by 1/SMap then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> k1, v) |> List.distinctBy fst
             let s2 = v2 |> SMap.ofList
@@ -505,6 +522,7 @@ module Types =
 
         [<Property>]
         let ``Elementwise-multiplication of SMap2 by 1/SMap2 then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> (k1, k2), v) |> List.distinctBy fst
             let s2 = v2 |> SMap2.ofList
@@ -520,6 +538,9 @@ module Types =
 
         [<Property>]
         let ``SMap4 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
+            let v1 = if v1.Length > 1 then v1.[..0] else v1
             let s1 = Map.ofList v1 |> SMap4
             let s2 = Map.ofList v2 |> SMap4
             let r1 = s1 + s2
@@ -528,6 +549,9 @@ module Types =
 
         [<Property>]
         let ``SMap4 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
+            let v3 = v3.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let s2 = Map.ofList v2 |> SMap4
             let s3 = Map.ofList v3 |> SMap4
@@ -537,6 +561,8 @@ module Types =
 
         [<Property>]
         let ``SMap4 element-wise multiplication is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let s2 = Map.ofList v2 |> SMap4
             let r1 = s1 .* s2
@@ -545,6 +571,8 @@ module Types =
 
         [<Property>]
         let ``SMap4 element-wise multiplication is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
+            let v2 = v2.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let s2 = Map.ofList v2 |> SMap4
             let s3 = Map.ofList v3 |> SMap4
@@ -554,12 +582,14 @@ module Types =
 
         [<Property>]
         let ``Multiply SMap4 by 1 yields same SMap4`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let s = Map.ofList v |> SMap4
             let r = 1.0 * s
             Assert.StrictEqual(s, r)
 
         [<Property>]
         let ``Multiply SMap4 by its inverse then itself yields original `` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let s = Map.ofList v |> SMap4
             let inverse = v |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap4.ofList
             let r = s .* inverse .* s
@@ -567,6 +597,7 @@ module Types =
 
         [<Property>]
         let ``Adding empty SMap4 yields same SMap4`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let s = Map.ofList v |> SMap4
             let empty = Map.empty |> SMap4
             let r = s + empty
@@ -574,6 +605,7 @@ module Types =
 
         [<Property>]
         let ``Multiply SMap4 by X then 1/X yields same SMap4`` (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..9]
             let x = randomFloat rng
             let s = Map.ofList v |> SMap4
             let r1 = x * s
@@ -582,6 +614,7 @@ module Types =
 
         [<Property>]
         let ``Multiplication of SMap4 by SMap then 1/SMap yields initial`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> k4, v) |> List.distinctBy fst
             let s2 = v2 |> SMap.ofList
@@ -591,6 +624,7 @@ module Types =
 
         [<Property>]
         let ``Multiplication of SMap4 by SMap2 then 1/SMap2 yields initial`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k3, k4), v) |> List.distinctBy fst
             let s2 = v2 |> SMap2.ofList
@@ -600,6 +634,7 @@ module Types =
 
         [<Property>]
         let ``Multiplication of SMap4 by SMap3 then 1/SMap3 yields initial`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k2, k3, k4), v) |> List.distinctBy fst
             let s2 = v2 |> SMap3.ofList
@@ -609,6 +644,7 @@ module Types =
 
         [<Property>]
         let ``Elementwise-multiplication of SMap by 1/SMap then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> k1, v) |> List.distinctBy fst
             let s2 = v2 |> SMap.ofList
@@ -618,6 +654,7 @@ module Types =
 
         [<Property>]
         let ``Elementwise-multiplication of SMap2 by 1/SMap2 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) |> List.distinctBy fst
             let s2 = v2 |> SMap2.ofList
@@ -627,6 +664,7 @@ module Types =
 
         [<Property>]
         let ``Elementwise-multiplication of SMap3 by 1/SMap3 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) |> List.distinctBy fst
             let s2 = v2 |> SMap3.ofList

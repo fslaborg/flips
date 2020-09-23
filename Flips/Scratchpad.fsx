@@ -6,24 +6,24 @@
 #load "Types.fs"
 #load "Domain.fs"
 #load "UnitsOfMeasure.Types.fs"
-#load "UnitsOfMeasure.Domain.fs"
-#load "SliceMap.fs"
+//#load "UnitsOfMeasure.Domain.fs"
+//#load "SliceMap.fs"
 
-open Flips
-open Flips.Types
-open Flips.SliceMap
-open Flips.UnitsOfMeasure
-open Flips.UnitsOfMeasure.Types
-
-type [<Measure>] Item
-
-let decs = 
-    DecisionBuilder<Item> "test" {
-        for i in 1..5 ->
-            Boolean
-    } |> SMap.ofSeq
-
-let e = sum (decs)
+//open Flips
+//open Flips.Types
+//open Flips.SliceMap
+//open Flips.UnitsOfMeasure
+//open Flips.UnitsOfMeasure.Types
+//
+//type [<Measure>] Item
+//
+//let decs = 
+//    DecisionBuilder<Item> "test" {
+//        for i in 1..5 ->
+//            Boolean
+//    } |> SMap.ofSeq
+//
+//let e = sum (decs)
 
 //type [<Measure>] sec
 
