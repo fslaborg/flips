@@ -48,16 +48,6 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
         let v = values |> Seq.sortDescending |> Seq.distinct |> Seq.toArray |> Array.sort
         SliceSet(comparer, v.AsMemory<'T>())
 
-    //new(values:Set<'T>) =
-    //    let comparer = LanguagePrimitives.FastGenericComparer<'T>
-    //    let v = Set.toArray values
-    //    SliceSet(comparer, v.AsMemory<'T>())
-
-    //new(values: 'T list) =
-    //    let comparer = LanguagePrimitives.FastGenericComparer<'T>
-    //    let v = values |> List.distinct |> List.toArray
-    //    SliceSet(comparer, v.AsMemory<'T>())
-
     member _.Item
         with get (idx) =
             values.Span.[idx]
@@ -202,7 +192,7 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
         else
           intersectAux b.Values values
 
-    member _.Add (b:SliceSet<'T>) =
+    member _.Union (b:SliceSet<'T>) =
         let newValues = Array.zeroCreate(values.Length + b.Values.Length)
 
         let mutable aIdx = 0
@@ -294,21 +284,28 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
         values.Length
 
     static member (+) (a:SliceSet<'T>, b:SliceSet<'T>) =
-        a.Add(b)
+        a.Union(b)
 
     static member (-) (a:SliceSet<'T>, b:SliceSet<'T>) =
         a.Minus(b)
 
 
+[<RequireQualifiedAccess>]
 module SliceSet =
 
     let intersect (a:SliceSet<_>) b =
         a.Intersect b
 
-    let asSeq (a:SliceSet<_>) =
+    let toSeq (a:SliceSet<_>) =
         seq { for i in 0..a.Count - 1 -> a.Values.Span.[i] }
 
-    let inline internal slice (f:SliceType<'a>) (keys:SliceSet<'a>) : SliceSet<'a> =
+    let toList (a:SliceSet<_>) =
+        a |> toSeq |> List.ofSeq
+
+    let union (a:SliceSet<_>) (b:SliceSet<_>) =
+        a.Union b
+
+    let slice (f:SliceType<_>) (keys:SliceSet<_>) =
         match f with
         | All -> keys
         | Equals k -> match keys.Contains k with | true -> SliceSet [k] | false -> SliceSet []

@@ -19,7 +19,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
       SMap s
 
     interface ISliceData<'Key, 'Value> with
-        member _.Keys = SliceSet.asSeq keys
+        member _.Keys = SliceSet.toSeq keys
         member _.TryFind = tryFind
 
     member _.Keys = keys
@@ -82,7 +82,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         SMap(smap.Keys, newTryFind)
 
     static member inline (.*) (a:SMap<_,_>, b:SMap<_,_>) =
-        let newKeys = SliceSet.intersect a.Keys b.Keys
+        let newKeys = a.Keys + b.Keys
         let newTryFind k =
             match (a.TryFind k), (b.TryFind k) with
             | Some lv, Some rv -> Some (lv * rv)
@@ -90,7 +90,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         SMap(newKeys, newTryFind)
 
     static member inline (+) (a:SMap<_,_>, b:SMap<_,_>) =
-        let newKeys = a.Keys + b.Keys
+        let newKeys = SliceSet.union a.Keys b.Keys
         let newTryFind k =
             match (a.TryFind k), (b.TryFind k) with
             | Some lv, Some rv -> Some (lv * rv)

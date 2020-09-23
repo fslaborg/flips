@@ -255,6 +255,59 @@ module Types =
 
           ()
 
+    [<Properties(Arbitrary = [| typeof<Types> |] )>]
+    module SlicetSetTests =
+        open Flips.SliceMap
+
+
+        [<Property>]
+        let ``SliceSet has only distinct values`` (v:List<NonEmptyString>) =
+            let s = SliceSet v
+            let distinctCount = s |> SliceSet.toList |> List.distinct
+
+            Assert.True(s.Count = distinctCount.Length)
+
+        [<Property>]
+        let ``SliceSet GreaterThan filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
+            let s = SliceSet v
+            let subset = s.GreaterThan a
+
+            for v in subset do
+                Assert.True(v > a)
+
+        [<Property>]
+        let ``SliceSet GreaterOrEqual filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
+            let s = SliceSet v
+            let subset = s.GreaterOrEqual a
+
+            for v in subset do
+                Assert.True(v >= a)
+
+        [<Property>]
+        let ``SliceSet LessThan filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
+            let s = SliceSet v
+            let subset = s.LessThan a
+
+            for v in subset do
+                Assert.True(v < a)
+
+        [<Property>]
+        let ``SliceSet LessOrEqual filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
+            let s = SliceSet v
+            let subset = s.LessOrEqual a
+
+            for v in subset do
+                Assert.True(v <= a)
+
+        [<Property>]
+        let ``SliceSet Between filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) (b:NonEmptyString) =
+            let s = SliceSet v
+            let (a, b) = if a < b then (a, b) else (b, a)
+            let subset = s.Between a b
+
+            for v in subset do
+                Assert.True(v >= a && v <= b)
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMapTests =
