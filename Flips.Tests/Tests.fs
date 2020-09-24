@@ -267,46 +267,172 @@ module Types =
 
             Assert.True(s.Count = distinctCount.Length)
 
-        [<Property>]
-        let ``SliceSet GreaterThan filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
-            let s = SliceSet v
-            let subset = s.GreaterThan a
-
-            for v in subset do
-                Assert.True(v > a)
 
         [<Property>]
-        let ``SliceSet GreaterOrEqual filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
-            let s = SliceSet v
-            let subset = s.GreaterOrEqual a
+        let ``SliceSet GreaterThan includes matches and excludes non-matches`` (v:Set<NonEmptyString>) (a:NonEmptyString) =
+            let testSet = Set.add a v
+            let s = SliceSet testSet
+            let result = s.GreaterThan a
 
-            for v in subset do
-                Assert.True(v >= a)
+            let matches = testSet |> Set.filter (fun x -> x > a)
+            let nonMatches = testSet - matches
 
-        [<Property>]
-        let ``SliceSet LessThan filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
-            let s = SliceSet v
-            let subset = s.LessThan a
+            for m in matches do
+                Assert.True(result.Contains m)
 
-            for v in subset do
-                Assert.True(v < a)
+            for x in nonMatches do
+                Assert.True(not (result.Contains x))
 
-        [<Property>]
-        let ``SliceSet LessOrEqual filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) =
-            let s = SliceSet v
-            let subset = s.LessOrEqual a
-
-            for v in subset do
-                Assert.True(v <= a)
 
         [<Property>]
-        let ``SliceSet Between filter works`` (v:List<NonEmptyString>) (a:NonEmptyString) (b:NonEmptyString) =
-            let s = SliceSet v
+        let ``SliceSet GreaterOrEqual includes matches and excludes non-matches`` (v:Set<NonEmptyString>) (a:NonEmptyString) =
+            let testSet = Set.add a v
+            let s = SliceSet testSet
+            let result = s.GreaterOrEqual a
+
+            let matches = testSet |> Set.filter (fun x -> x >= a)
+            let nonMatches = testSet - matches
+
+            for m in matches do
+                Assert.True(result.Contains m)
+
+            for x in nonMatches do
+                Assert.True(not (result.Contains x))
+
+
+        [<Property>]
+        let ``SliceSet LessThan includes matches and excludes non-matches`` (v:Set<NonEmptyString>) (a:NonEmptyString) =
+            let testSet = Set.add a v
+            let s = SliceSet testSet
+            let result = s.LessThan a
+
+            let matches = testSet |> Set.filter (fun x -> x < a)
+            let nonMatches = testSet - matches
+
+            for m in matches do
+                Assert.True(result.Contains m)
+
+            for x in nonMatches do
+                Assert.True(not (result.Contains x))
+
+
+        [<Property>]
+        let ``SliceSet LessOrEqual includes matches and excludes non-matches`` (v:Set<NonEmptyString>) (a:NonEmptyString) =
+            let testSet = Set.add a v
+            let s = SliceSet testSet
+            let result = s.LessOrEqual a
+
+            let matches = testSet |> Set.filter (fun x -> x <= a)
+            let nonMatches = testSet - matches
+
+            for m in matches do
+                Assert.True(result.Contains m)
+
+            for x in nonMatches do
+                Assert.True(not (result.Contains x))
+
+
+        [<Property>]
+        let ``SliceSet Between includes matches and excludes non-matches`` (v:List<NonEmptyString>) (a:NonEmptyString) (b:NonEmptyString) =
             let (a, b) = if a < b then (a, b) else (b, a)
-            let subset = s.Between a b
+            let testSet = [a; b] @ v |> Set.ofList
+            let s = SliceSet testSet
+            let result = s.Between a b
 
-            for v in subset do
-                Assert.True(v >= a && v <= b)
+            let matches = testSet |> Set.filter (fun x -> x >= a && x <= b)
+            let nonMatches = testSet - matches
+
+            for m in matches do
+                Assert.True(result.Contains m)
+
+            for x in nonMatches do
+                Assert.True(not (result.Contains x))
+
+        [<Property>]
+        let ``SliceSet Intersect only includes overlap`` (v1:Set<NonEmptyString>) (v2:Set<NonEmptyString>) (a:NonEmptyString) =
+            let v1 = Set.add a v1
+            let v2 = Set.add a v2
+            let s1 = SliceSet v1
+            let s2 = SliceSet v2
+            let result = s1.Intersect s2
+
+            let intersectValues = Set.intersect v1 v2
+
+            // All expected values are in result
+            for x in intersectValues do
+                Assert.True(result.Contains x)
+
+            // No unexpected values are in result
+            for x in result do
+                Assert.True(Set.contains x intersectValues)
+
+        [<Property>]
+        let ``SliceSet Union includes all values and no others`` (v1:Set<NonEmptyString>) (v2:Set<NonEmptyString>) =
+            let s1 = SliceSet v1
+            let s2 = SliceSet v2
+            let result = s1.Union s2
+
+            let allValues = v1 + v2
+
+            // All expected values are in result
+            for x in allValues do
+                Assert.True(result.Contains x)
+
+            // No unexpected values are in result
+            for x in result do
+                Assert.True(Set.contains x allValues)
+
+        [<Property>]
+        let ``SliceSet Contains returns true for values it contains`` (v:Set<NonEmptyString>) =
+            let s = SliceSet v
+
+            // All expected values are in result
+            for x in v do
+                Assert.True(s.Contains x)
+
+        [<Property>]
+        let ``SliceSet Contains returns false for values it does not contain`` (v1:Set<NonEmptyString>) (v2:Set<NonEmptyString>) =
+            let v1 = v1 - v2
+            let s = SliceSet v1 // Have the SliceSet populated with values sometimes
+
+            // All expected values are in result
+            for x in v2 do
+                Assert.True(not (s.Contains x))
+
+        [<Property>]
+        let ``SliceSet Filter returns matching results`` (v:Set<NonEmptyString>) (a:NonEmptyString) =
+            let v = Set.add a v
+            let s = SliceSet v
+            let f = fun x -> x = a
+            let result = s.Filter f
+            
+            let nonMatches = v |> Set.filter (f >> not)
+
+            // All expected values are in result
+            for x in result do
+                Assert.True(f x)
+
+            // All non-matches are not in result
+            for x in nonMatches do
+                Assert.True(not (result.Contains x))
+
+        [<Property>]
+        let ``SliceSet Minus removes correct elements`` (v1:Set<NonEmptyString>) (v2:Set<NonEmptyString>) =
+            let v = v1 + v2
+            let minusS = SliceSet v1
+            let s = SliceSet v 
+            let result = s.Minus minusS
+
+            let expected = v - v1
+
+            // All expected values are in result
+            for x in expected do
+                Assert.True(s.Contains x)
+
+            // Non unexpected values are in result
+            for x in result do
+                Assert.True(Set.contains x expected)
+
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]

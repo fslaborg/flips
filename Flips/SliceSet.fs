@@ -16,6 +16,11 @@ type SliceType<'a when 'a : comparison> =
   | NotIn of Set<'a>
   | Where of ('a -> bool)
 
+[<RequireQualifiedAccess>]
+type RankResult =
+    | Exact of int
+    | Closest of int
+    | Empty
 
 [<NoComparison>]
 type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:IComparer<'T>, values:Memory<'T>) =
@@ -27,21 +32,43 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
         let m = [||]
         SliceSet<'T>(comparer, m.AsMemory())
 
-    let findIndexOf (comparer:IComparer<'T>) startingLowerBound x (values:Memory<'T>) =
+
+    let findIndex (values:Memory<_>) startingLowerBound lookup : Option<int> =
         let mutable lowerBound = startingLowerBound
         let mutable upperBound = values.Length - 1
-        let mutable idx = (lowerBound + upperBound) / 2
+        let mutable idx = 0
+        let mutable result = None
 
-        while lowerBound <= upperBound do
-            let x = comparer.Compare(values.Span.[idx], x)
-            if x <= 0 then
+        if values.Length > 0 then
+
+          while lowerBound <= upperBound && result = None do
+              idx <- lowerBound + (upperBound - lowerBound) / 2 // int math defaults to Floor for rounding
+              let x = comparer.Compare(values.Span.[idx], lookup)
+              if x < 0 then
+                  lowerBound <- idx + 1
+              elif x > 0 then
+                  upperBound <- idx - 1
+              else
+                  result <- Some idx
+
+        result
+
+
+    let rank (values:Memory<_>) lookup : int =
+        let mutable lowerBound = 0
+        let mutable upperBound = values.Length
+        let mutable idx = 0
+
+        while (lowerBound < upperBound) do
+            idx <- lowerBound + (upperBound - lowerBound) / 2 // int math defaults to Floor for rounding
+            let x = comparer.Compare(values.Span.[idx], lookup)
+            if x < 0 then
                 lowerBound <- idx + 1
-                idx <- (lowerBound + upperBound) / 2
             else
-                upperBound <- idx - 1
-                idx <- (lowerBound + upperBound) / 2
+                upperBound <- idx
 
-        idx
+        lowerBound
+
 
     new(values:seq<'T>) =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
@@ -88,79 +115,77 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
     member _.GreaterThan x =
 
-        if values.IsEmpty then
+        if values.Length = 0 then
             empty
-        elif values.Length = 1 then
-            let c = comparer.Compare(values.Span.[0], x)
-
-            if c > 0 then
-                SliceSet(comparer, values)
-            else
-                empty
         else
-            let idx = findIndexOf comparer 0 x values
-            SliceSet (comparer, values.Slice(idx + 1))
+            let r = rank values x
+            if r = values.Length then
+                empty
+            elif (comparer.Compare (values.Span.[r], x) = 0) then
+                SliceSet (comparer, values.Slice(r + 1))
+            else
+                SliceSet (comparer, values.Slice(r))
+
 
     member _.GreaterOrEqual x =
-        if values.IsEmpty then
-            empty
-        elif values.Length = 1 then
-            let c = comparer.Compare(values.Span.[0], x)
 
-            if c >= 0 then
-                SliceSet(comparer, values)
+        if values.Length = 0 then
+            empty
+        else
+            let r = rank values x
+            if r < values.Length then
+                SliceSet (comparer, values.Slice(r))
             else
                 empty
-        else
-            let idx = findIndexOf comparer 0 x values
-            SliceSet (comparer, values.Slice(idx))
+
 
     member _.LessThan x =
 
-        if values.IsEmpty then
-            empty
-        elif values.Length = 1 then
-            let c = comparer.Compare(values.Span.[0], x)
+        let r = rank values x
+        SliceSet (comparer, values.Slice(0, r))
 
-            if c < 0 then
-                SliceSet(comparer, values)
-            else
-                empty
-        else
-            let idx = findIndexOf comparer 0 x values
-            SliceSet (comparer, values.Slice(0, idx))
 
     member _.LessOrEqual x =
 
-        if values.IsEmpty then
+        if values.Length = 0 then
             empty
-        elif values.Length = 1 then
-            let c = comparer.Compare(values.Span.[0], x)
-
-            if c <= 0 then
-                SliceSet(comparer, values)
-            else
-                empty
         else
-            let idx = findIndexOf comparer 0 x values
-            SliceSet (comparer, values.Slice(0, idx + 1))
+            let r = rank values x
+            if (r < values.Length) && (comparer.Compare (values.Span.[r], x) = 0) then
+                SliceSet (comparer, values.Slice(0, r + 1))
+            else
+                SliceSet (comparer, values.Slice(0, r))
+
 
     member _.Between lowerBound upperBound =
 
-        if values.IsEmpty then
+        // If there are no values, return empty
+        if values.Length = 0 then 
             empty
+        // If there is only 1 element, check if it is within the bound
         elif values.Length = 1 then
-            let lowerC = comparer.Compare(values.Span.[0], lowerBound)
-            let upperC = comparer.Compare(values.Span.[0], upperBound)
-
-            if lowerC >= 0 && upperC <= 0 then
-                SliceSet(comparer, values)
+            if values.Span.[0] >= lowerBound && values.Span.[0] <= upperBound then
+                SliceSet (comparer, values)
             else
                 empty
-        else
-            let lowerIdx = findIndexOf comparer 0 lowerBound values
-            let upperIdx = findIndexOf comparer 0 upperBound values
+        // At this point we know there are at least 2 elements in values
+        else 
+            let lowerRank = rank values lowerBound
+            let upperRank = rank values upperBound
+
+            let lowerIdx = 
+              match (comparer.Compare (values.Span.[lowerRank], lowerBound) = 0) with
+              | true -> lowerRank
+              | false -> lowerRank + 1
+
+            let upperIdx =
+                match (comparer.Compare (values.Span.[upperRank], upperBound) = 0) with
+                | true -> upperRank
+                | false -> upperRank - 1
+
             SliceSet (comparer, values.Slice(lowerIdx, upperIdx - lowerIdx + 1))
+                  
+
 
     member _.Intersect (b:SliceSet<'T>) =
 
@@ -191,6 +216,7 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
           intersectAux values b.Values
         else
           intersectAux b.Values values
+
 
     member _.Union (b:SliceSet<'T>) =
         let newValues = Array.zeroCreate(values.Length + b.Values.Length)
@@ -229,6 +255,7 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
         SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
+
     member _.Minus (b:SliceSet<'T>) =
         let newValues = Array.zeroCreate(values.Length)
 
@@ -257,6 +284,7 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
         SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
+
     member _.Filter f =
         let newValues = Array.zeroCreate(values.Length)
 
@@ -272,19 +300,26 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
         SliceSet(comparer, newValues.AsMemory(0, outIdx))
 
+
     member _.Contains x =
-        let idx = findIndexOf comparer 0 x values
-        let c = comparer.Compare(values.Span.[idx], x)
-        if c = 0 then
-            true
-        else
-            false
+        let result = findIndex values 0 x
+        match result with
+        | Some idx -> 
+          let c = comparer.Compare(values.Span.[idx], x)
+          if c = 0 then
+              true
+          else
+              false
+        | None -> false
+
 
     member _.Count =
         values.Length
 
+
     static member (+) (a:SliceSet<'T>, b:SliceSet<'T>) =
         a.Union(b)
+
 
     static member (-) (a:SliceSet<'T>, b:SliceSet<'T>) =
         a.Minus(b)
