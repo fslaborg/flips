@@ -81,7 +81,7 @@ module Gens =
 
     let LinearExpressionGen =
         gen {
-            let! offsetValue = Arb.generate<float>
+            let! (SmallFloat offsetValue) = SmallFloatGen
             let! offset = Gen.elements [None; Some offsetValue]
             let! decisionElements = DecisionExpressionGen.ListOf 100
             let decisionExpr = decisionElements |> Seq.sum

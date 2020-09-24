@@ -27,6 +27,10 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
       let s = m |> Map.toSeq
       SMap5 s
 
+    interface ISliceData<('Key1 * 'Key2 * 'Key3 * 'Key4 * 'Key5), 'Value> with
+        member _.Keys = keys
+        member _.TryFind = tryFind
+
     member _.Keys1 = keys1
     member _.Keys2 = keys2
     member _.Keys3 = keys3
@@ -311,9 +315,9 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         let keys2 = SliceSet.intersect a.Keys2 b.Keys1
         let keys3 = SliceSet.intersect a.Keys3 b.Keys2
         let keys4 = SliceSet.intersect a.Keys4 b.Keys3
-        let keys5 = SliceSet.intersect a.Keys1 b.Keys4
+        let keys5 = SliceSet.intersect a.Keys5 b.Keys4
         let newTryFind (k1, k2, k3, k4, k5) =
-            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k1, k2, k3, k4)) with
+            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k2, k3, k4, k5)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap5(keys1, keys2, keys3, keys4, keys5, newTryFind)
@@ -335,9 +339,9 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         let keys2 = a.Keys2
         let keys3 = SliceSet.intersect a.Keys3 b.Keys1
         let keys4 = SliceSet.intersect a.Keys4 b.Keys2
-        let keys5 = SliceSet.intersect a.Keys1 b.Keys3
+        let keys5 = SliceSet.intersect a.Keys5 b.Keys3
         let newTryFind (k1, k2, k3, k4, k5) =
-            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k1, k2, k3)) with
+            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k3, k4, k5)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap5(keys1, keys2, keys3, keys4, keys5, newTryFind)
@@ -359,9 +363,9 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         let keys2 = a.Keys2
         let keys3 = a.Keys3
         let keys4 = SliceSet.intersect a.Keys4 b.Keys1
-        let keys5 = SliceSet.intersect a.Keys1 b.Keys2
+        let keys5 = SliceSet.intersect a.Keys5 b.Keys2
         let newTryFind (k1, k2, k3, k4, k5) =
-            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k1, k2)) with
+            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k4, k5)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap5(keys1, keys2, keys3, keys4, keys5, newTryFind)
@@ -383,9 +387,9 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         let keys2 = a.Keys2
         let keys3 = a.Keys3
         let keys4 = a.Keys4
-        let keys5 = SliceSet.intersect a.Keys1 b.Keys
+        let keys5 = SliceSet.intersect a.Keys5 b.Keys
         let newTryFind (k1, k2, k3, k4, k5) =
-            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k1)) with
+            match (a.TryFind (k1, k2, k3, k4, k5)), (b.TryFind (k5)) with
             | Some lv, Some rv -> Some (lv * rv)
             | _,_ -> None
         SMap5(keys1, keys2, keys3, keys4, keys5, newTryFind)

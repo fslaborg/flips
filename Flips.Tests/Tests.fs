@@ -580,7 +580,7 @@ module Types =
             Assert.StrictEqual(r, s1)
 
         [<Property>]
-        let ``Elementwise-multiplication of SMap by 1/SMap then by SMap2 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+        let ``Hadamard-Product of SMap by 1/SMap then by SMap2 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
             let s1 = Map.ofList v1 |> SMap2
             let v2 = v1 |> List.map (fun ((k1, k2), v) -> k1, v) |> List.distinctBy fst
             let s2 = v2 |> SMap.ofList
@@ -690,7 +690,7 @@ module Types =
             Assert.StrictEqual(r, s1)
 
         [<Property>]
-        let ``Elementwise-multiplication of SMap by 1/SMap then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let ``Hadamard-Product of SMap by 1/SMap then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
             let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> k1, v) |> List.distinctBy fst
@@ -700,7 +700,7 @@ module Types =
             Assert.StrictEqual(r, s1)
 
         [<Property>]
-        let ``Elementwise-multiplication of SMap2 by 1/SMap2 then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let ``Hadamard-Product of SMap2 by 1/SMap2 then by SMap3 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
             let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap3
             let v2 = v1 |> List.map (fun ((k1, k2, k3), v) -> (k1, k2), v) |> List.distinctBy fst
@@ -719,7 +719,6 @@ module Types =
         let ``SMap4 addition is commutative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
             let v1 = v1.[..9]
             let v2 = v2.[..9]
-            let v1 = if v1.Length > 1 then v1.[..0] else v1
             let s1 = Map.ofList v1 |> SMap4
             let s2 = Map.ofList v2 |> SMap4
             let r1 = s1 + s2
@@ -728,9 +727,9 @@ module Types =
 
         [<Property>]
         let ``SMap4 addition is associative`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
-            let v1 = v1.[..9]
-            let v2 = v2.[..9]
-            let v3 = v3.[..9]
+            let v1 = v1.[..3]
+            let v2 = v2.[..3]
+            let v3 = v3.[..3]
             let s1 = Map.ofList v1 |> SMap4
             let s2 = Map.ofList v2 |> SMap4
             let s3 = Map.ofList v3 |> SMap4
@@ -822,7 +821,7 @@ module Types =
             Assert.StrictEqual(r, s1)
 
         [<Property>]
-        let ``Elementwise-multiplication of SMap by 1/SMap then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let ``Hadamard-Product of SMap by 1/SMap then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
             let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> k1, v) |> List.distinctBy fst
@@ -832,7 +831,7 @@ module Types =
             Assert.StrictEqual(r, s1)
 
         [<Property>]
-        let ``Elementwise-multiplication of SMap2 by 1/SMap2 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let ``Hadamard-Product of SMap2 by 1/SMap2 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
             let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2), v) |> List.distinctBy fst
@@ -842,7 +841,7 @@ module Types =
             Assert.StrictEqual(r, s1)
 
         [<Property>]
-        let ``Elementwise-multiplication of SMap3 by 1/SMap3 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+        let ``Hadamard-Product of SMap3 by 1/SMap3 then by SMap4 yields initial SMap2`` (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
             let v1 = v1.[..9]
             let s1 = Map.ofList v1 |> SMap4
             let v2 = v1 |> List.map (fun ((k1, k2, k3, k4), v) -> (k1, k2, k3), v) |> List.distinctBy fst
@@ -850,6 +849,273 @@ module Types =
             let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap3.ofList
             let r = s2 .* (s2Inverse .* s1)
             Assert.StrictEqual(r, s1)
+
+    [<Properties(Arbitrary = [| typeof<Types> |] )>]
+    module SliceMap5Tests =
+        open Flips.SliceMap
+
+        [<Property>]
+        let ``SMap5 addition is commutative`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) 
+            (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..3]
+            let v2 = v2.[..3]
+            let s1 = Map.ofList v1 |> SMap5
+            let s2 = Map.ofList v2 |> SMap5
+            let r1 = s1 + s2
+            let r2 = s2 + s1
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``SMap5 addition is associative`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) 
+            (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) 
+            (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..2]
+            let v2 = v2.[..2]
+            let v3 = v3.[..2]
+            let s1 = Map.ofList v1 |> SMap5
+            let s2 = Map.ofList v2 |> SMap5
+            let s3 = Map.ofList v3 |> SMap5
+            let r1 = (s1 + s2) + s3
+            let r2 = s1 + (s2 + s3)
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``SMap5 element-wise multiplication is commutative`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) 
+            (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let v2 = v2.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let s2 = Map.ofList v2 |> SMap5
+            let r1 = s1 .* s2
+            let r2 = s2 .* s1
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``SMap5 element-wise multiplication is associative`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) 
+            (v2:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) 
+            (v3:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let v2 = v2.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let s2 = Map.ofList v2 |> SMap5
+            let s3 = Map.ofList v3 |> SMap5
+            let r1 = (s1 .* s2) .* s3
+            let r2 = s1 .* (s2 .* s3)
+            Assert.StrictEqual(r1, r2)
+
+        [<Property>]
+        let ``Multiply SMap5 by 1 yields same SMap5`` 
+            (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..5]
+            let s = Map.ofList v |> SMap5
+            let r = 1.0 * s
+            Assert.StrictEqual(s, r)
+
+        [<Property>]
+        let ``Multiply SMap5 by its inverse then itself yields original `` 
+            (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..5]
+            let s = Map.ofList v |> SMap5
+            let inverse = v |> List.map (fun (k, v) -> k, 1.0 / v) |> SMap5.ofList
+            let r = s .* inverse .* s
+            Assert.StrictEqual(s, r)
+
+        [<Property>]
+        let ``Adding empty SMap4 yields same SMap5`` 
+            (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..5]
+            let s = Map.ofList v |> SMap5
+            let empty = Map.empty |> SMap5
+            let r = s + empty
+            Assert.StrictEqual(s, r)
+
+        [<Property>]
+        let ``Multiply SMap5 by X then 1/X yields same SMap5`` 
+            (v:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)=
+            let v = v.[..5]
+            let x = randomFloat rng
+            let s = Map.ofList v |> SMap5
+            let r1 = x * s
+            let r2 = (1.0 / x) * r1
+            Assert.StrictEqual(s, r2)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap5 by SMap then 1/SMap yields initial`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> k5, v) |> List.distinctBy fst
+            let s2 = v2 |> SMap.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
+            let r = s1 .* s2 .* s2Inverse
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap5 by SMap2 then 1/SMap2 yields initial`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> (k4, k5), v) |> List.distinctBy fst
+            let s2 = v2 |> SMap2.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
+            let r = s1 .* s2 .* s2Inverse
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap5 by SMap3 then 1/SMap3 yields initial`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> (k3, k4, k5), v) |> List.distinctBy fst
+            let s2 = v2 |> SMap3.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap3.ofList
+            let r = s1 .* s2 .* s2Inverse
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap5 by SMap4 then 1/SMap4 yields initial`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> (k2, k3, k4, k5), v) |> List.distinctBy fst
+            let s2 = v2 |> SMap4.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap4.ofList
+            let r = s1 .* s2 .* s2Inverse
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap by 1/SMap then by SMap5 yields initial SMap5`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> k1, v) |> List.distinctBy fst
+            let s2 = v2 |> SMap.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
+            let r = s2 .* (s2Inverse .* s1)
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap2 by 1/SMap2 then by SMap5 yields initial SMap5`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2), v) |> List.distinctBy fst
+            let s2 = v2 |> SMap2.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap2.ofList
+            let r = s2 .* (s2Inverse .* s1)
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap3 by 1/SMap3 then by SMap5 yields initial SMap5`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3), v) |> List.distinctBy fst
+            let s2 = v2 |> SMap3.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap3.ofList
+            let r = s2 .* (s2Inverse .* s1)
+            Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``Hadamard-Product of SMap4 by 1/SMap4 then by SMap5 yields initial SMap5`` 
+            (v1:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let v1 = v1.[..5]
+            let s1 = Map.ofList v1 |> SMap5
+            let v2 = v1 |> List.map (fun ((k1, k2, k3, k4, k5), v) -> (k1, k2, k3, k4), v) |> List.distinctBy fst
+            let s2 = v2 |> SMap4.ofList
+            let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap4.ofList
+            let r = s2 .* (s2Inverse .* s1)
+            Assert.StrictEqual(r, s1)
+
+
+    [<Properties(Arbitrary = [| typeof<Types> |] )>]
+    module SumTests =
+        
+        open Flips.SliceMap
+
+        [<Property>]
+        let ``Sum of SMap works`` (indices:List<NonEmptyString>) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+
+            let v = 
+                indices
+                |> List.distinct
+                |> List.map (fun idx -> idx, randomExpressionFromDecisions rng decisions)
+            let sm = SMap.ofList v
+
+            let result = sum (sm)
+            let expected = v |> List.sumBy snd
+
+            Assert.StrictEqual(expected, result)
+
+        [<Property>]
+        let ``Sum of SMap2 works`` (indices:List<NonEmptyString * NonEmptyString>) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+
+            let v = 
+                indices.[..3]
+                |> List.distinct
+                |> List.map (fun idx -> idx, randomExpressionFromDecisions rng decisions)
+            let sm = SMap2.ofList v
+
+            let result = sum (sm)
+            let expected = v |> List.sumBy snd
+
+            Assert.StrictEqual(expected, result)
+
+        [<Property>]
+        let ``Sum of SMap3 works`` (indices:List<NonEmptyString * NonEmptyString * NonEmptyString>) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+
+            let v = 
+                indices.[..3]
+                |> List.distinct
+                |> List.map (fun idx -> idx, randomExpressionFromDecisions rng decisions)
+            let sm = SMap3.ofList v
+
+            let result = sum (sm)
+            let expected = v |> List.sumBy snd
+
+            Assert.StrictEqual(expected, result)
+
+        [<Property>]
+        let ``Sum of SMap4 works`` (indices:List<NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString>) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+
+            let v = 
+                indices.[..3]
+                |> List.distinct
+                |> List.map (fun idx -> idx, randomExpressionFromDecisions rng decisions)
+            let sm = SMap4.ofList v
+
+            let result = sum (sm)
+            let expected = v |> List.sumBy snd
+
+            Assert.StrictEqual(expected, result)
+
+        [<Property>]
+        let ``Sum of SMap5 works`` (indices:List<NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString>) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+
+            let v = 
+                indices.[..3]
+                |> List.distinct
+                |> List.map (fun idx -> idx, randomExpressionFromDecisions rng decisions)
+            let sm = SMap5.ofList v
+
+            let result = sum (sm)
+            let expected = v |> List.sumBy snd
+
+            Assert.StrictEqual(expected, result)
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]

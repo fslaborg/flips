@@ -25,6 +25,10 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
       let s = m |> Map.toSeq
       SMap4 s
 
+    interface ISliceData<('Key1 * 'Key2 * 'Key3 * 'Key4), 'Value> with
+        member _.Keys = keys
+        member _.TryFind = tryFind
+
     member _.Keys1 = keys1
     member _.Keys2 = keys2
     member _.Keys3 = keys3
