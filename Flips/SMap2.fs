@@ -11,6 +11,9 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     let keys = seq {for k1 in keys1 do for k2 in keys2 -> (k1, k2)}
     let tryFind = tryFind
 
+    let keyInRange (k1, k2) =
+        keys1.Contains k1 && keys2.Contains k2
+
     new (s:seq<('Key1 * 'Key2) * 'Value>) =
         let keys1 = s |> Seq.map (fst >> fst) |> SliceSet
         let keys2 = s |> Seq.map (fst >> snd) |> SliceSet
@@ -55,13 +58,20 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     override this.GetHashCode () =
         hash (this.AsMap())
 
-    member _.ContainsKey (k1, k2) =
-        if keys1.Contains k1 && keys2.Contains k2 then
-            match tryFind (k1, k2) with
+    member _.ContainsKey k =
+        if keyInRange k then
+            match tryFind k with
             | Some _ -> true
             | None -> false
         else
             false
+
+
+    member this.Item
+        with get(k) =
+            match (keyInRange k), (tryFind k) with
+            | true, Some v -> v
+            | _, _ -> raise (KeyNotFoundException("The given key was not present in the SliceMap."))
 
     // Slices
     // 2D

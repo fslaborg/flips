@@ -12,6 +12,9 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     let keys = seq {for k1 in keys1 do for k2 in keys2 do for k3 in keys3 -> (k1, k2, k3)}
     let tryFind = tryFind
 
+    let keyInRange (k1, k2, k3) =
+        keys1.Contains k1 && keys2.Contains k2 && keys3.Contains k3
+
     new (s:seq<('Key1 * 'Key2 * 'Key3) * 'Value>) =
         let keys1 = s |> Seq.map (fun ((x, y, z), v) -> x) |> SliceSet
         let keys2 = s |> Seq.map (fun ((x, y, z), v) -> y) |> SliceSet
@@ -57,13 +60,20 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     override this.GetHashCode () =
         hash (this.AsMap())
 
-    member _.ContainsKey (k1, k2, k3) =
-        if keys1.Contains k1 && keys2.Contains k2 && keys3.Contains k3 then
-            match tryFind (k1, k2, k3) with
+    member _.ContainsKey k =
+        if keyInRange k then
+            match tryFind k with
             | Some _ -> true
             | None -> false
         else
             false
+
+
+    member this.Item
+        with get(k) =
+            match (keyInRange k), (tryFind k) with
+            | true, Some v -> v
+            | _, _ -> raise (KeyNotFoundException("The given key was not present in the SliceMap."))
 
     // Slices
     // 3D

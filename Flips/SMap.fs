@@ -9,6 +9,9 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
     let keys = keys
     let tryFind = tryFind
 
+    let keyInRange k =
+        keys.Contains k
+
     new (s:seq<'Key * 'Value>) =
         let keys = s |> Seq.map fst |> SliceSet
         let store = TryFind.ofSeq s
@@ -50,12 +53,19 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         hash (this.AsMap())
 
     member _.ContainsKey k =
-        if keys.Contains k then
+        if keyInRange k then
             match tryFind k with
             | Some _ -> true
             | None -> false
         else
             false
+
+
+    member this.Item
+        with get(k) =
+            match (keyInRange k), (tryFind k) with
+            | true, Some v -> v
+            | _, _ -> raise (KeyNotFoundException("The given key was not present in the SliceMap."))
 
     // Slices
     // 1D
@@ -63,13 +73,6 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         with get (k1f) =
             let newKeys = SliceSet.slice k1f keys
             SMap(newKeys, tryFind)
-
-    // 0D (aka GetItem)
-    member _.Item
-        with get(k) =
-            match tryFind k with
-            | Some v -> v
-            | None -> raise (KeyNotFoundException("The given key was not present in the slicemap."))
 
     // Operators
     static member inline (*) (coef, smap:SMap<_,_>) =
