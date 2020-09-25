@@ -13,12 +13,17 @@
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
+    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <FileVersion>2.2.0.0</FileVersion>
     <PackageReleaseNotes>Speed improvement for SliceMaps</PackageReleaseNotes>
+    <PackageIcon>Favicon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Favicon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="Scratchpad.fsx" />
     <Compile Include="Types.fs" />
     <Compile Include="Domain.fs" />
