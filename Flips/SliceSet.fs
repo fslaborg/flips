@@ -72,7 +72,7 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
 
     new(values:seq<'T>) =
         let comparer = LanguagePrimitives.FastGenericComparer<'T>
-        let v = values |> Seq.sortDescending |> Seq.distinct |> Seq.toArray |> Array.sort
+        let v = values |> Seq.distinct |> Seq.toArray |> Array.sort
         SliceSet(comparer, v.AsMemory<'T>())
 
     member _.Item

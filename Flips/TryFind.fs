@@ -15,10 +15,12 @@ module TryFind =
           | false, _ -> None
 
     let ofSeq (s:seq<'Key * 'Value>) : TryFind<'Key, 'Value> =
-        s 
-        |> Seq.map (fun (k, v) -> KeyValuePair(k, v)) 
-        |> Dictionary
-        |> ofDictionary
+        let d = Dictionary ()
+        
+        for (k, v) in s do
+                d.[k] <- v
+
+        ofDictionary d
 
     let toSeq (keys:seq<_>) (s:TryFind<_,_>) =
         let lookup k = s k |> Option.map (fun v -> k, v)
