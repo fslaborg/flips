@@ -5,7 +5,12 @@ open Flips.Types
 
 [<RequireQualifiedAccess>]
 module Decision =
-
+    
+    /// <summary>Create a Decision with a given Name and Type</summary>
+    /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
+    /// <param name="decisionName">The unique identifier for the Decision</param>
+    /// <param name="decitionType">The type of the decision</param>
+    /// <returns>A new Decision with the given DecisionType</returns
     let create decisionName decisionType =
         if System.String.IsNullOrEmpty(decisionName) then
             invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
@@ -14,6 +19,10 @@ module Decision =
             Type = decisionType
         }
 
+    /// <summary>Create a Boolean type of decision</summary>
+    /// <remarks>These types of decisions are meant to represent True/False, Yes/No types of decisions. They map to 0.0 and 1.0 in the mathematical representation.</remarks>
+    /// <param name="decisionName">The unique identifier for the decision</param>
+    /// <returns>A new Decision with a type of Boolean</returns
     let createBoolean decisionName =
         if System.String.IsNullOrEmpty(decisionName) then
             invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
@@ -22,6 +31,12 @@ module Decision =
             Type = DecisionType.Boolean
         }
 
+    /// <summary>Create an Integer type of decision</summary>
+    /// <remarks>These types of decisions will take on whole values and are bounded by the Lower and Upper bounds, inclusive.</remarks>
+    /// <param name="decisionName">The unique identifier for the decision</param>
+    /// <param name="lowerBound">The smallest value the decision is allowed to take on</param>
+    /// <param name="upperBound">The largest value the decision is allowed to take on</param>
+    /// <returns>A new Decision with a type of Integer</returns
     let createInteger decisionName lowerBound upperBound =
         if System.String.IsNullOrEmpty(decisionName) then
                 invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
@@ -32,6 +47,12 @@ module Decision =
             Type = DecisionType.Integer (lowerBound, upperBound)
         }
 
+    /// <summary>Create an Continuous type of decision</summary>
+    /// <remarks>These types of decisions will take on any value within the Lower and Upper bounds, inclusive.</remarks>
+    /// <param name="decisionName">The unique identifier for the decision</param>
+    /// <param name="lowerBound">The smallest value the decision is allowed to take on</param>
+    /// <param name="upperBound">The largest value the decision is allowed to take on</param>
+    /// <returns>A new Decision with a type of Continuous</returns
     let createContinuous decisionName lowerBound upperBound =
         if System.String.IsNullOrEmpty(decisionName) then
                 invalidArg "decisionName" "Cannot have Name of Decision that is null or empty"
@@ -53,13 +74,16 @@ module Constraint =
             let rhsDecisions = LinearExpression.GetDecisions rhs
             lhsDecisions + rhsDecisions
         
-
-    let create (constraintName:string) (cExpr:ConstraintExpression) =
+    /// <summary>Create a Constraint</summary>
+    /// <param name="constraintName">The unique identifier for the Constraint</param>
+    /// <param name="constraintExpr">The Constraint Expression for the Constraint</param>
+    /// <returns>A new Constraint</returns
+    let create (constraintName:string) (constraintExpr:ConstraintExpression) =
         if System.String.IsNullOrEmpty(constraintName) then
             invalidArg "ConstraintName" "Cannot have Name of Constraint that is null or empty"
         {
             Name = ConstraintName constraintName
-            Expression = cExpr
+            Expression = constraintExpr
         }
 
 
@@ -69,19 +93,26 @@ module Objective =
     let internal getDecisions (objective:Objective) =
         LinearExpression.GetDecisions objective.Expression
 
-    let create objectiveName sense expression =
+    /// <summary>Create an Objective for an optimization model</summary>
+    /// <param name="objectiveName">The name which describes the goal of the objective function</param>
+    /// <param name="objectiveSense">The goal of the objective: Maximize or Minimize</param>
+    /// <param name="objectiveExpression">The Linear Expression which describes the goal of the model</param>
+    /// <returns>A new Objective</returns
+    let create objectiveName objectiveSense objectiveExpression =
         if System.String.IsNullOrEmpty(objectiveName) then
             invalidArg "ObjectiveName" "Cannot have Name of Decision that is null or empty"
         {
             Name = ObjectiveName objectiveName
-            Sense = sense
-            Expression = expression
+            Sense = objectiveSense
+            Expression = objectiveExpression
         }
 
 
 [<RequireQualifiedAccess>]
 module Model =
 
+    /// A type which represents the optimization model. It contains an Objective which represents the
+    /// goal of the model and a collection of Constraints which the model must obey.
     type Model = private {
         _Objective : Objective
         _Constraints : List<Constraint>
@@ -96,6 +127,9 @@ module Model =
         (objectiveDecisions, m.Constraints)
         ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
 
+    /// <summary>Create a Model with the given objective</summary>
+    /// <param name="objective">The objective for the model</param>
+    /// <returns>A new Model with an Objective but no constraints</returns
     let create objective =
 
         {
@@ -103,10 +137,18 @@ module Model =
             _Constraints = []
         }
 
+    /// <summary>Adds a Constraint to a Model and returns a new Model</summary>
+    /// <param name="c">The constraint to be added to the model</param>
+    /// <param name="model">The model to add the constraint to</param>
+    /// <returns>A new Model with the constraint added</returns
     let addConstraint c (model:Model) =
 
         { model with _Constraints = [c] @ model.Constraints }
 
+    /// <summary>Adds a sequence of Constraints to a Model and returns a new Model</summary>
+    /// <param name="constraints">The constraints to be added to the model</param>
+    /// <param name="model">The model to add the constraint to</param>
+    /// <returns>A new Model with the constraints added</returns
     let addConstraints constraints model =
         (model, constraints) ||> Seq.fold (fun model c -> addConstraint c model)
 
@@ -114,12 +156,16 @@ module Model =
 [<RequireQualifiedAccess>]
 module Solution =
 
-    let getValues (s:Solution) (m:Map<_,Decision>) =
+    /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
+    /// <param name="solution">The solution that is used to look up the solver values</param>
+    /// <param name="decisions">A Map<'Key, Decision> that will be used for the lookups</param>
+    /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
+    let getValues (solution:Solution) (decisions:Map<_,Decision>) =
         let getWithDefault _ d =
-            match Map.tryFind d s.DecisionResults with
+            match Map.tryFind d solution.DecisionResults with
             | Some v -> v
             | None -> 0.0
-        m |> Map.map getWithDefault
+        decisions |> Map.map getWithDefault
 
 
 [<AutoOpen>]
@@ -152,6 +198,9 @@ module Builders =
         |> (sprintf "%s|%s" prefix)
 
 
+    /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
+    /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
+    /// <returns>A sequence of Constraints whith the given prefix and a unique name for each constraint</returns
     type ConstraintBuilder (constraintSetPrefix:string) =
 
         member this.Yield (cExpr:ConstraintExpression) =
@@ -168,6 +217,9 @@ module Builders =
             source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
 
 
+    /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
+    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+    /// <returns>A seq of type ('Key * Decision). The result is typically used to create a Map or SliceMap</returns
     type DecisionBuilder (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =

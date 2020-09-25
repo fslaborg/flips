@@ -2,9 +2,8 @@
 
 open Flips
 open Flips.Types
-open Flips.UnitsOfMeasure
-open Flips.UnitsOfMeasure.Types
 open Flips.SliceMap
+open Flips.UnitsOfMeasure
 
 type [<Measure>] USD
 type [<Measure>] ft
@@ -91,6 +90,8 @@ let solve () =
         } |> SMap.ofSeq
 
     let minRoastingCapacityConstraint =
+        let lhs = buildRoaster .* roasterCapacity
+        let s = sum lhs
         Constraint.create "MinRoastingCapacity" (sum (buildRoaster .* roasterCapacity) >== minRoastingCapacity)
 
     let minWarehouseCapacityConstraint =
@@ -102,7 +103,8 @@ let solve () =
                 buildRoaster.[l] <== buildWarehouse.[l]
         }
 
-    let objExpr = sum (buildRoaster .* roasterCost + buildWarehouse .* warehouseCost)
+    let t = buildRoaster .* roasterCost
+    let objExpr = sum (t) + sum (buildWarehouse .* warehouseCost)
     let objective = Objective.create "MinimizeCost" Minimize objExpr
 
     let model = 
@@ -131,8 +133,8 @@ let solve () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        let roasterValues = Solution.getValues solution buildRoaster.AsMap
-        let warehouseValues = Solution.getValues solution buildWarehouse.AsMap
+        let roasterValues = Solution.getValues solution (SMap.toMap buildRoaster)
+        let warehouseValues = Solution.getValues solution (SMap.toMap buildWarehouse)
 
         printfn "Plan Cost: $%.2f" solution.ObjectiveResult
 

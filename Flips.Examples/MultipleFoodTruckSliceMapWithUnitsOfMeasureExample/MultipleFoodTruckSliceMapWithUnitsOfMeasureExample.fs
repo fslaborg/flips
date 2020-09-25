@@ -2,9 +2,8 @@
 
 open Flips
 open Flips.Types
-open Flips.UnitsOfMeasure
-open Flips.UnitsOfMeasure.Types
 open Flips.SliceMap
+open Flips.UnitsOfMeasure
 
 type [<Measure>] USD
 type [<Measure>] Item
@@ -84,7 +83,7 @@ let solve () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        let values = Solution.getValues solution numberOfItem.AsMap
+        let values = Solution.getValues solution (numberOfItem.AsMap())
 
         for ((location, item), value) in values |> Map.toSeq do
             printfn "Item: %s\tLocation: %s\tValue: %f" item location value

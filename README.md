@@ -1,3 +1,5 @@
+![Flips Banner](GitHubBanner.png)
+
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
 > Full Documenation can be found [here](http://matthewcrews.com/flips/#/)

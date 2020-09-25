@@ -1,6 +1,14 @@
 ﻿namespace Flips
 
+open System.Collections.Generic
 open Flips.Types
+
+module internal Dictionary =
+
+    let tryFind k (d:Dictionary<_,_>) =
+        match d.TryGetValue k with
+        | true, v -> Some v
+        | false, _ -> None
 
 
 module internal ORTools =
@@ -10,28 +18,32 @@ module internal ORTools =
         | CBC
         | GLOP
 
-
-    let private buildExpression (varMap:Map<DecisionName,Variable>) (expr:LinearExpression) =
-        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
-        
-        let decisionExpr =
-            reducedExpr.Coefficients
-            |> Map.toSeq
-            |> Seq.map (fun (decisionName, coefficient) -> coefficient * varMap.[decisionName])
-            |> fun x -> 
-                match Seq.isEmpty x with 
-                | true -> LinearExpr() 
-                | false -> Seq.reduce (+) x
-        
-        let resultExpr = reducedExpr.Offset + decisionExpr
-        resultExpr
-
-
     let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
         match decisionType with
         | Boolean -> solver.MakeBoolVar(name)
         | Integer (lb, ub) -> solver.MakeIntVar(float lb, float ub, name)
         | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, name)
+
+
+    let addVariable (solver:Solver) decisionName (decisionType:DecisionType) (vars:Dictionary<DecisionName, Variable>) =
+        if not (vars.ContainsKey(decisionName)) then
+            let var = createVariable solver decisionName decisionType
+            vars.[decisionName] <- var
+
+    let private buildExpression solver (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
+        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
+        
+        let decisionExpr =
+            reducedExpr.Coefficients
+            |> Seq.map (fun kvp -> 
+                          addVariable solver kvp.Key reducedExpr.DecisionTypes.[kvp.Key] vars
+                          kvp.Value * vars.[kvp.Key])
+            |> Array.ofSeq
+
+        let offsetExpr = LinearExpr() + reducedExpr.Offset
+        let resultExpr = decisionExpr.Sum() + offsetExpr
+        resultExpr
+
 
 
     let private createVariableMap (solver:Solver) (decisions:seq<Decision>) =
@@ -41,24 +53,24 @@ module internal ORTools =
         |> Map.map (fun name decisionType -> createVariable solver name decisionType)
 
 
-    let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
-        let expr = buildExpression varMap objective.Expression
+    let private setObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
+        let expr = buildExpression solver vars objective.Expression
 
         match objective.Sense with
         | Minimize -> solver.Minimize(expr)
         | Maximize -> solver.Maximize(expr)
 
 
-    let private addEqualityConstraint (varMap:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
-        let lhsExpr = buildExpression varMap lhs
-        let rhsExpr = buildExpression varMap rhs
+    let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
+        let lhsExpr = buildExpression solver vars lhs
+        let rhsExpr = buildExpression solver vars rhs
         let c = Google.OrTools.LinearSolver.Equality(lhsExpr, rhsExpr, true)
         solver.Add(c)
 
 
-    let private addInequalityConstraint (varMap:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
-        let lhsExpr = buildExpression varMap lhs
-        let rhsExpr = buildExpression varMap rhs
+    let private addInequalityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
+        let lhsExpr = buildExpression solver vars lhs
+        let rhsExpr = buildExpression solver vars rhs
         let constraintExpr = lhsExpr - rhsExpr
 
         match inequality with
@@ -70,22 +82,22 @@ module internal ORTools =
             solver.Add(c)
 
 
-    let private addConstraint (varMap:Map<DecisionName, Variable>) (c:Types.Constraint) (solver:Solver) =
+    let private addConstraint (vars:Dictionary<DecisionName, Variable>) (c:Types.Constraint) (solver:Solver) =
         match c.Expression with
-        | Equality (lhs, rhs) -> addEqualityConstraint varMap c.Name lhs rhs solver
-        | Inequality (lhs, inequality, rhs) -> addInequalityConstraint varMap c.Name lhs rhs inequality solver
+        | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs solver
+        | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality solver
 
 
-    let private addConstraints (varMap:Map<DecisionName, Variable>) (constraints:List<Types.Constraint>) (solver:Solver) =
+    let private addConstraints (varMap:Dictionary<DecisionName, Variable>) (constraints:FSharp.Collections.List<Types.Constraint>) (solver:Solver) =
         for c in constraints do
             addConstraint varMap c solver |> ignore
 
 
-    let private buildSolution (decisions:seq<Decision>) (varMap:Map<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
+    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
         let decisionMap =
             decisions
             |> Seq.map (fun d -> 
-                            match Map.tryFind d.Name varMap with 
+                            match Dictionary.tryFind d.Name vars with 
                             | Some var -> d, var.SolutionValue() 
                             | None -> d, 0.0)
             |> Map.ofSeq
@@ -111,7 +123,7 @@ module internal ORTools =
         solver.SetTimeLimit(settings.MaxDuration)
         solver.EnableOutput()
     
-        let vars = createVariableMap solver (Model.getDecisions model)
+        let vars = Dictionary()
         addConstraints vars model.Constraints solver
         setObjective vars model.Objective solver
     
@@ -137,14 +149,13 @@ module internal Optano =
         | Gurobi900
 
 
-    let private buildExpression (varMap:Map<DecisionName, Variable>) (expr:LinearExpression) =
+    let private buildExpression (vars:Dictionary<DecisionName, Variable>) (expr:LinearExpression) =
         let reducedExpr = Flips.Types.LinearExpression.Reduce expr
 
         let constant = Expression.Sum([reducedExpr.Offset])
         let variables =
             reducedExpr.Coefficients
-            |> Map.toSeq
-            |> Seq.map (fun (decisionName, coefficient) -> coefficient * varMap.[decisionName])
+            |> Seq.map (fun kvp -> kvp.Value * vars.[kvp.Key])
             |> (fun terms -> Expression.Sum(terms))
 
         constant + variables
@@ -165,9 +176,9 @@ module internal Optano =
         |> Map.map (fun _ d -> createVariable d)
 
 
-    let private setObjective (varMap:Map<DecisionName, Variable>) (objective:Flips.Types.Objective) (optanoModel:Model) =
+    let private setObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (optanoModel:Model) =
         let (ObjectiveName name) = objective.Name
-        let expr = buildExpression varMap objective.Expression
+        let expr = buildExpression vars objective.Expression
 
         let sense = 
             match objective.Sense with
@@ -178,16 +189,16 @@ module internal Optano =
         optanoModel.AddObjective(optanoObjective)
 
 
-    let private addEqualityConstraint (varMap:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (optanoModel:Model) =
-        let lhsExpr = buildExpression varMap lhs
-        let rhsExpr = buildExpression varMap rhs
+    let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (optanoModel:Model) =
+        let lhsExpr = buildExpression vars lhs
+        let rhsExpr = buildExpression vars rhs
         let c = Constraint.Equals(lhsExpr, rhsExpr)
         optanoModel.AddConstraint(c, n)
 
 
-    let private addInequalityConstraint (varMap:Map<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (optanoModel:Model) =
-        let lhsExpr = buildExpression varMap lhs
-        let rhsExpr = buildExpression varMap rhs
+    let private addInequalityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (optanoModel:Model) =
+        let lhsExpr = buildExpression vars lhs
+        let rhsExpr = buildExpression vars rhs
 
         let c = 
             match inequality with
@@ -199,22 +210,22 @@ module internal Optano =
         optanoModel.AddConstraint(c, n)
 
 
-    let private addConstraint (varMap:Map<DecisionName, Variable>) (c:Types.Constraint) (optanoModel:Model) =
+    let private addConstraint (vars:Dictionary<DecisionName, Variable>) (c:Types.Constraint) (optanoModel:Model) =
         match c.Expression with
-        | Equality (lhs, rhs) -> addEqualityConstraint varMap c.Name lhs rhs optanoModel
-        | Inequality (lhs, inequality, rhs) -> addInequalityConstraint varMap c.Name lhs rhs inequality optanoModel
+        | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs optanoModel
+        | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality optanoModel
 
 
-    let private addConstraints (vars:Map<DecisionName, Variable>) (constraints:List<Types.Constraint>) (optanoModel:Model) =
+    let private addConstraints (vars:Dictionary<DecisionName, Variable>) (constraints:FSharp.Collections.List<Types.Constraint>) (optanoModel:Model) =
         for c in constraints do
             addConstraint vars c optanoModel |> ignore
 
 
-    let private buildSolution (decisions:seq<Decision>) (varMap:Map<DecisionName, Variable>) (optanoSolution:Solution) =
+    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (optanoSolution:Solution) =
         let decisionMap =
             decisions
             |> Seq.map (fun d -> 
-                            match Map.tryFind d.Name varMap with 
+                            match Dictionary.tryFind d.Name vars with 
                             | Some var -> d, var.Value 
                             | None -> d, 0.0)
             |> Map.ofSeq
@@ -248,9 +259,9 @@ module internal Optano =
     let internal solve (solverType:OptanoSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
         
         let optanoModel = new Model()
-        let varMap = createVariableMap (Model.getDecisions model)
-        addConstraints varMap model.Constraints optanoModel
-        setObjective varMap model.Objective optanoModel
+        let vars = Dictionary()
+        addConstraints vars model.Constraints optanoModel
+        setObjective vars model.Objective optanoModel
 
         let optanoSolution = 
             match solverType with
@@ -263,7 +274,7 @@ module internal Optano =
         | Solver.ModelStatus.Unbounded, _ -> Suboptimal "Model is unbounded"
         | Solver.ModelStatus.Unknown, _ -> Suboptimal "Model status is unknown"
         | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) -> 
-            let solution = buildSolution (Model.getDecisions model) varMap optanoSolution
+            let solution = buildSolution (Model.getDecisions model) vars optanoSolution
             Optimal solution
         | _ -> Suboptimal "Model state is undetermined"
 
@@ -271,6 +282,10 @@ module internal Optano =
 [<RequireQualifiedAccess>]
 module Solver =
 
+    /// <summary>The function used to call the underlying solver with the model</summary>
+    /// <param name="settings">The settings for the solver to use</param>
+    /// <param name="model">A model which represents the problem</param>
+    /// <returns>A solution which contains results if successful or a message in case of an error</returns
     let solve (settings:SolverSettings) (model:Flips.Model.Model) =
 
         match settings.SolverType with

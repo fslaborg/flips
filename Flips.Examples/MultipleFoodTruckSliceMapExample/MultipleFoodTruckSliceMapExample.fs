@@ -33,7 +33,7 @@ let solve () =
         |> SMap2.ofList
 
     // Create the Linear Expression for the objective
-    let objectiveExpression = sum (profit .* numberOfItem)
+    let objectiveExpression = sum (numberOfItem)
 
     // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
     // the Objective Expression
@@ -43,7 +43,8 @@ let solve () =
     let maxItemConstraints =
         [for item in items do
             let name = sprintf "MaxItemTotal|%s" item
-            Constraint.create name (sum (1.0 * numberOfItem.[All, item]) <== maxIngredients.[item])
+            //let lhs : LinearExpression  = sum (numberOfItem.[All, item])
+            Constraint.create name (sum (numberOfItem.[All, item]) <== maxIngredients.[item])
         ]
 
 
@@ -51,6 +52,7 @@ let solve () =
     let maxWeightConstraints = 
         [for location in locations -> 
             let name = sprintf "MaxTotalWeight|%s" location
+            //let lhs = itemWeight .* numberOfItem.[location, All]
             Constraint.create name (sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location])
         ]
 

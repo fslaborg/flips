@@ -1,20 +1,36 @@
 ﻿namespace Flips.Types
 
+open System.Collections.Generic
+open System
+open System.Collections
 
+/// Comparer used for the reduction of LinearExpression due to float addition
+type SignInsenstiveComparer () =
+  interface IComparer<float> with 
+    member this.Compare (a:float, b:float) =
+      Math.Abs(a).CompareTo(Math.Abs(b))
 
+/// Represents the types of Decisions that can be made
+/// A Boolean maps to a 0 or 1 value
+/// An Integer type can take on any discrete value between the Upper and Lower Bound (inclusive)
+/// A Continuous type can take on any value between the Upper and Lower bound (inclusive)
 type DecisionType =
     | Boolean
     | Integer of LowerBound:float * UpperBound:float
     | Continuous of LowerBound:float * UpperBound:float
 
+/// A Name which uniquely identifies the Decision
 type DecisionName = DecisionName of string
 
+/// Used for the reduction of a LinearExpression to a form used for mapping to 
+/// underlying solvers.
 type internal ReduceAccumulator = {
-    DecisionTypes : Map<DecisionName, DecisionType>
-    Coefficients : Map<DecisionName, List<float>>
+    DecisionTypes : Dictionary<DecisionName, DecisionType>
+    Coefficients : Dictionary<DecisionName, List<float>>
     Offsets : List<float>
 }
 
+/// Represents a decision that must be made
 type Decision = {
     Name : DecisionName
     Type : DecisionType
@@ -73,11 +89,13 @@ with
         LinearExpression.OfDecision decision >== rhsDecision
 
 
-and [<NoComparison>][<CustomEquality>] 
+and 
+    /// A type used for mapping a LinearExpression to a form which a Solver can use
+    [<NoComparison>][<CustomEquality>] 
     internal ReducedLinearExpression =
     {
-        DecisionTypes : Map<DecisionName, DecisionType>
-        Coefficients : Map<DecisionName, float>
+        DecisionTypes : Dictionary<DecisionName, DecisionType>
+        Coefficients : Dictionary<DecisionName, float>
         Offset : float
     } with
     static member private NearlyEquals (a:float) (b:float) : bool =
@@ -96,10 +114,18 @@ and [<NoComparison>][<CustomEquality>]
         | :? ReducedLinearExpression as otherExpr ->
             let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
 
+            let asMap (d:Dictionary<_,_>) =
+              d
+              |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
+              |> Map.ofSeq
+
+            let thisCoefficients = asMap this.Coefficients
+            let otherCoefficients = asMap otherExpr.Coefficients
+
             let leftMatchesRight =
-                (true, this.Coefficients)
+                (true, thisCoefficients)
                 ||> Map.fold (fun b k thisCoef -> 
-                                match Map.tryFind k otherExpr.Coefficients with
+                                match Map.tryFind k otherCoefficients with
                                 | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
                                 | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
 
@@ -111,7 +137,7 @@ and [<NoComparison>][<CustomEquality>]
                     b && essentiallyZero
 
             let rightNonMatchesAreZero =
-                (true, otherExpr.Coefficients)
+                (true, otherCoefficients)
                 ||> Map.fold evaluateRightElement
 
             let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
@@ -119,10 +145,13 @@ and [<NoComparison>][<CustomEquality>]
         | _ -> false
 
     static member internal OfReduceAccumulator (acc:ReduceAccumulator) =
-        let offset = acc.Offsets |> List.sortBy System.Math.Abs |> List.sum
-        let coefficients =
-            acc.Coefficients
-            |> Map.map (fun _ coefficients -> coefficients |> List.sortBy System.Math.Abs |> List.sum)
+        let offset = acc.Offsets |> Seq.sortBy Math.Abs |> Seq.sum
+        
+        let coefficients = Dictionary()
+        for elem in acc.Coefficients do
+            elem.Value.Sort(SignInsenstiveComparer())
+            let coefficient = Seq.sum elem.Value
+            coefficients.Add(elem.Key, coefficient)
 
         {
             DecisionTypes = acc.DecisionTypes
@@ -131,7 +160,9 @@ and [<NoComparison>][<CustomEquality>]
         }
         
 
-and [<NoComparison>][<CustomEquality>] LinearExpression =
+and 
+    /// Represents a linear collection of Decisions, Coefficients, and an Offset
+    [<NoComparison>][<CustomEquality>] LinearExpression =
     | Empty
     | AddFloat of float * LinearExpression
     | AddDecision of (float * Decision) * LinearExpression
@@ -139,61 +170,65 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
     | AddLinearExpression of LinearExpression * LinearExpression
 
 
+
     static member internal Reduce (expr:LinearExpression) : ReducedLinearExpression =
         let initialState = {
-            DecisionTypes = Map.empty
-            Coefficients = Map.empty
-            Offsets = []
+            DecisionTypes = Dictionary()
+            Coefficients = Dictionary()
+            Offsets = ResizeArray()
         }
 
-        let rec evaluateNode (multiplier:float, state:ReduceAccumulator) (node:LinearExpression) : float * ReduceAccumulator =
+        let tryFind k (d:Dictionary<_,_>) =
+          match d.TryGetValue(k) with
+          | (true, v) -> Some v
+          | (false, _) -> None
+
+        let rec evaluateNode (multiplier:float, state:ReduceAccumulator) (node:LinearExpression) cont =
             match node with
-            | Empty -> multiplier, state
+            | Empty -> cont (multiplier, state)
             | AddFloat (addToOffset, nodeExpr) -> 
-                let newState = {state with Offsets = [multiplier * addToOffset] @ state.Offsets}
-                evaluateNode (multiplier, newState) nodeExpr
+                state.Offsets.Add(multiplier * addToOffset)
+                evaluateNode (multiplier, state) nodeExpr cont
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
-                match Map.tryFind nodeDecision.Name state.DecisionTypes with
+                match tryFind nodeDecision.Name state.DecisionTypes with
                 | Some existingType ->
                     if existingType <> nodeDecision.Type then
                         invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
                     else
-                        let newCoefficients = Map.add nodeDecision.Name ([nodeCoef * multiplier] @ state.Coefficients.[nodeDecision.Name]) state.Coefficients
-                        let newState = {state with Coefficients = newCoefficients}
-                        evaluateNode (multiplier, newState) nodeExpr
+                        state.Coefficients.[nodeDecision.Name].Add(nodeCoef * multiplier)
+                        evaluateNode (multiplier, state) nodeExpr cont
                 | None ->
-                    let newDecisionTypes = Map.add nodeDecision.Name nodeDecision.Type state.DecisionTypes
-                    let newCoefficient = Map.add nodeDecision.Name [multiplier * nodeCoef] state.Coefficients
-                    let newState = {state with DecisionTypes = newDecisionTypes; Coefficients = newCoefficient}
-                    evaluateNode (multiplier, newState) nodeExpr
+                    let newCoefArray = ResizeArray()
+                    newCoefArray.Add(multiplier * nodeCoef)
+                    state.DecisionTypes.Add(nodeDecision.Name, nodeDecision.Type)
+                    state.Coefficients.Add(nodeDecision.Name, newCoefArray)
+                    evaluateNode (multiplier, state) nodeExpr cont
             | Multiply (nodeMultiplier, nodeExpr) ->
                 let newMultiplier = multiplier * nodeMultiplier
-                evaluateNode (newMultiplier, state) nodeExpr
+                evaluateNode (newMultiplier, state) nodeExpr cont
             | AddLinearExpression (lExpr, rExpr) ->
-                let (_, leftState) = evaluateNode (multiplier, state) lExpr
-                let (_,rightState) = evaluateNode (multiplier, leftState) rExpr
-                multiplier, rightState
+                evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
 
-        let (_,reduceResult) = evaluateNode (1.0, initialState) expr
+        let (_,reduceResult) = evaluateNode (1.0, initialState) expr (fun x -> x)
 
         ReducedLinearExpression.OfReduceAccumulator reduceResult
 
     static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
 
-        let rec evaluateNode (decisions:Set<Decision>) (node:LinearExpression) : Set<Decision> =
+        let rec evaluateNode (decisions:Set<Decision>) (node:LinearExpression) cont : Set<Decision> =
             match node with
-            | Empty -> decisions
-            | AddFloat (_, nodeExpr) -> evaluateNode decisions nodeExpr
-            | Multiply (_, nodeExpr) -> evaluateNode decisions nodeExpr
+            | Empty -> cont decisions
+            | AddFloat (_, nodeExpr) -> 
+              evaluateNode decisions nodeExpr cont
+            | Multiply (_, nodeExpr) -> 
+              evaluateNode decisions nodeExpr cont
             | AddDecision ((_, nodeDecision), nodeExpr) ->
                 let newDecisions = decisions.Add nodeDecision
-                evaluateNode newDecisions nodeExpr
+                evaluateNode newDecisions nodeExpr cont
             | AddLinearExpression (lExpr, rExpr) ->
-                let leftDecisions = evaluateNode decisions lExpr
-                let rightDecisions = evaluateNode leftDecisions rExpr
-                rightDecisions
+                evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
 
-        evaluateNode (Set.empty) expr
+        evaluateNode (Set.empty) expr (fun x -> x)
 
 
     override this.GetHashCode () =
@@ -229,7 +264,7 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
         LinearExpression.Multiply (f, expr)
 
     static member (*) (f:float, expr:LinearExpression) =
-        expr * f
+        LinearExpression.Multiply (f, expr)
 
     static member (-) (expr:LinearExpression, f:float) =
         expr + (-1.0 * f)
@@ -298,40 +333,50 @@ and [<NoComparison>][<CustomEquality>] LinearExpression =
         Inequality (lhs, GreaterOrEqual, rhs)
 
 
-
-
-and Inequality =
+and 
+    /// Represents the type of comparison between two LinearExpression
+    Inequality =
     | LessOrEqual
     | GreaterOrEqual
 
-and ConstraintExpression = 
+and 
+    /// The representation of how two LinearExpressions must relate to one another
+    ConstraintExpression = 
     | Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
     | Equality of LHS:LinearExpression * RHS:LinearExpression
 
+/// A unique identified for a Constraint
 type ConstraintName = ConstraintName of string
 
+/// Represents a constraint for the model
 type Constraint = {
     Name : ConstraintName
     Expression : ConstraintExpression
 }
 
+/// The goal of the optimization. Minimize will try to minimize the Objective Function
+/// Maximize will try to maximize the Objective Function
 type ObjectiveSense =
     | Minimize
     | Maximize
 
+/// A name for the Objective to document what the function is meant to represent
 type ObjectiveName = ObjectiveName of string
 
+/// The goal of the optimization model
 type Objective = {
     Name : ObjectiveName
     Sense : ObjectiveSense
     Expression : LinearExpression
 }
 
+/// The results of the optimization if it was successful
 type Solution = {
     DecisionResults : Map<Decision,float>
     ObjectiveResult : float
 }
 
+/// The type of underlying solver to use
 type SolverType = 
     | CBC
     | GLOP
@@ -339,12 +384,16 @@ type SolverType =
     | Gurobi900
 
 
+/// Parameters for the solver
 type SolverSettings = {
     SolverType : SolverType
     MaxDuration : int64
     WriteLPFile : Option<string>
 }
 
+/// The result of calling the solve function. If the solve was successful, the Optimal
+/// case will hold a Solution type. If it was not successful, the Supoptimal case will
+/// be returned with a string reporting what the solver returned.
 type SolveResult =
     | Optimal of Solution
     | Suboptimal of string
