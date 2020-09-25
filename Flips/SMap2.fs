@@ -94,12 +94,6 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
             let newTryFind k = tryFind (k, k2)
             SMap (keys1, newTryFind)
 
-    // 0D (aka GetItem)
-    member this.Item
-        with get(k1, k2) =
-            match tryFind (k1, k2) with
-            | Some v -> v
-            | None -> raise (KeyNotFoundException("The given key was not present in the slicemap."))
 
     // Operators
     static member inline (*) (coef, s:SMap2<_,_,_>) =

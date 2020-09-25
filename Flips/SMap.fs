@@ -60,7 +60,6 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         else
             false
 
-
     member this.Item
         with get(k) =
             match (keyInRange k), (tryFind k) with
