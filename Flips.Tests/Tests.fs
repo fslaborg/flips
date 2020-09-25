@@ -1876,6 +1876,28 @@ module Types =
                 Assert.True(k1 >= x1)
 
 
+        [<Property>]
+        let ``SMap5 contains keys`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let keys = d |> List.map fst
+            let sm = d |> SMap5
+
+            for k in keys do
+                Assert.True(sm.ContainsKey k)
+
+
+        [<Property>]
+        let ``SMap5 contains correct values`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let valueMap = d |> Map.ofList
+            let sm = d |> SMap5
+
+            for (k, v) in Map.toSeq valueMap do
+                Assert.StrictEqual (v, sm.[k])
+
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SumTests =
