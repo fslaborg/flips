@@ -1031,6 +1031,474 @@ module Types =
             let r = s2 .* (s2Inverse .* s1)
             Assert.StrictEqual(r, s1)
 
+        [<Property>]
+        let ``SMap5 1, 2, 3, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k1, k2, k3, k4, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+        
+        [<Property>]
+        let ``SMap5 2, 3, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, GreaterOrEqual x2, GreaterOrEqual x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k2, k3, k4, k5) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+        
+        [<Property>]
+        let ``SMap5 1, 3, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k1, k3, k4, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+        [<Property>]
+        let ``SMap5 1, 2, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k1, k2, k4, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 1, 2, 3, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3, x4, GreaterOrEqual x5]
+
+            for (k1, k2, k3, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k5 >= x5)
+
+        
+        [<Property>]
+        let ``SMap5 1, 2, 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3, GreaterOrEqual x4, x5]
+
+            for (k1, k2, k3, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap5 3, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, GreaterOrEqual x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k3, k4, k5) in r.Keys do
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+        [<Property>]
+        let ``SMap5 2, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, GreaterOrEqual x2, x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k2, k4, k5) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 2, 3, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, GreaterOrEqual x2, GreaterOrEqual x3, x4, GreaterOrEqual x5]
+
+            for (k2, k3, k5) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 2, 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, GreaterOrEqual x2, GreaterOrEqual x3, GreaterOrEqual x4, x5]
+
+            for (k2, k3, k4) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+        [<Property>]
+        let ``SMap5 1, 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k1, k4, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+        [<Property>]
+        let ``SMap5 1, 3, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3, x4, GreaterOrEqual x5]
+
+            for (k1, k3, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k3 >= x3)
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 1, 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3, GreaterOrEqual x4, x5]
+
+            for (k1, k3, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap5 1, 2, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, x3, x4, GreaterOrEqual x5]
+
+            for (k1, k2, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 1, 2, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, x3, GreaterOrEqual x4, x5]
+
+            for (k1, k2, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap5 1, 2, 3 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3, x4, x5]
+
+            for (k1, k2, k3) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+
+
+        [<Property>]
+        let ``SMap5 4, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, x3, GreaterOrEqual x4, GreaterOrEqual x5]
+
+            for (k4, k5) in r.Keys do
+                Assert.True(k4 >= x4)
+                Assert.True(k5 >= x5)
+
+        [<Property>]
+        let ``SMap5 3, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, GreaterOrEqual x3, x4, GreaterOrEqual x5]
+
+            for (k3, k5) in r.Keys do
+                Assert.True(k3 >= x3)
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, GreaterOrEqual x3, GreaterOrEqual x4, x5]
+
+            for (k3, k4) in r.Keys do
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap5 1, 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, x3, x4, GreaterOrEqual x5]
+
+            for (k1, k5) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k5 >= x5)
+
+        [<Property>]
+        let ``SMap5 1, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, x3, GreaterOrEqual x4, x5]
+
+            for (k1, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap5 1, 2 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, x3, x4, x5]
+
+            for (k1, k2) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+
+        [<Property>]
+        let ``SMap5 5 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, x3, x4, GreaterOrEqual x5]
+
+            for (k5) in r.Keys do
+                Assert.True(k5 >= x5)
+
+
+        [<Property>]
+        let ``SMap5 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, x3, GreaterOrEqual x4, x5]
+
+            for (k4) in r.Keys do
+                Assert.True(k4 >= x4)
+
+        [<Property>]
+        let ``SMap5 3 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, x2, GreaterOrEqual x3, x4, x5]
+
+            for (k3) in r.Keys do
+                Assert.True(k3 >= x3)
+
+        [<Property>]
+        let ``SMap5 2 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[x1, GreaterOrEqual x2, x3, x4, x5]
+
+            for (k2) in r.Keys do
+                Assert.True(k2 >= x2)
+
+
+        [<Property>]
+        let ``SMap5 1 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString)
+            (x5:NonEmptyString) =
+
+            let sm = d |> SMap5
+            let r = sm.[GreaterOrEqual x1, x2, x3, x4, x5]
+
+            for (k1) in r.Keys do
+                Assert.True(k1 >= x1)
+
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SumTests =
