@@ -282,6 +282,10 @@ module internal Optano =
 [<RequireQualifiedAccess>]
 module Solver =
 
+    /// <summary>The function used to call the underlying solver with the model</summary>
+    /// <param name="settings">The settings for the solver to use</param>
+    /// <param name="model">A model which represents the problem</param>
+    /// <returns>A solution which contains results if successful or a message in case of an error</returns
     let solve (settings:SolverSettings) (model:Flips.Model.Model) =
 
         match settings.SolverType with

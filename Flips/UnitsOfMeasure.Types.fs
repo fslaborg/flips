@@ -5,6 +5,7 @@ module Types =
 
   open Flips
 
+  /// A Decision with a UnitOfMeasure
   type Decision<[<Measure>] 'Measure> =
       | Value of Types.Decision
   with
@@ -65,7 +66,9 @@ module Types =
           l >== r
 
 
-  and LinearExpression<[<Measure>] 'Measure> =
+  and 
+      /// A LinearExpression with a UnitOfMeausre
+      LinearExpression<[<Measure>] 'Measure> =
       | Value of Types.LinearExpression
       with
 
@@ -154,6 +157,7 @@ module Types =
               l >== r
 
 
+  /// A DecisionType with a UnitOfMeasure
   type DecisionType<[<Measure>] 'Measure> =
       | Boolean
       | Integer of LowerBound:float<'Measure> * UpperBound:float<'Measure>
