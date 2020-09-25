@@ -55,10 +55,13 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
     override this.GetHashCode () =
         hash (this.AsMap())
 
-    member _.ContainsKey k =
-        match tryFind k with
-        | Some _ -> true
-        | None -> false
+    member _.ContainsKey (k1, k2) =
+        if keys1.Contains k1 && keys2.Contains k2 then
+            match tryFind (k1, k2) with
+            | Some _ -> true
+            | None -> false
+        else
+            false
 
     // Slices
     // 2D

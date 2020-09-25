@@ -63,10 +63,13 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
     override this.GetHashCode () =
         hash (this.AsMap())
 
-    member this.ContainsKey k =
-        match tryFind k with
-        | Some _ -> true
-        | None -> false
+    member this.ContainsKey (k1, k2, k3, k4, k5) =
+        if keys1.Contains k1 && keys2.Contains k2 && keys3.Contains k3 && keys4.Contains k4 && keys5.Contains k5 then
+            match tryFind (k1, k2, k3, k4, k5) with
+            | Some _ -> true
+            | None -> false
+        else
+            false
 
     // Slices
     // 5D

@@ -57,10 +57,13 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
     override this.GetHashCode () =
         hash (this.AsMap())
 
-    member _.ContainsKey k =
-        match tryFind k with
-        | Some _ -> true
-        | None -> false
+    member _.ContainsKey (k1, k2, k3) =
+        if keys1.Contains k1 && keys2.Contains k2 && keys3.Contains k3 then
+            match tryFind (k1, k2, k3) with
+            | Some _ -> true
+            | None -> false
+        else
+            false
 
     // Slices
     // 3D

@@ -50,9 +50,12 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         hash (this.AsMap())
 
     member _.ContainsKey k =
-        match tryFind k with
-        | Some _ -> true
-        | None -> false
+        if keys.Contains k then
+            match tryFind k with
+            | Some _ -> true
+            | None -> false
+        else
+            false
 
     // Slices
     // 1D
