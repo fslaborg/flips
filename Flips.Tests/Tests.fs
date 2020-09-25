@@ -502,6 +502,17 @@ module Types =
             let r2 = (1.0 / x) * r1
             Assert.StrictEqual(s, r2)
 
+        [<Property>]
+        let ``SMap 1 dimension filters work`` 
+            (d:List<NonEmptyString * Scalar>)
+            (x1:NonEmptyString) =
+
+            let sm = d |> SMap
+            let r = sm.[GreaterOrEqual x1]
+
+            for (k1) in r.Keys do
+                Assert.True(k1 >= x1)
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMap2Tests =
@@ -587,6 +598,45 @@ module Types =
             let s2Inverse = v2 |> List.map (fun (idx, x) -> idx, (Value 1.0) / x) |> SMap.ofList
             let r = s2 .* (s2Inverse .* s1)
             Assert.StrictEqual(r, s1)
+
+        [<Property>]
+        let ``SMap2 1, 2 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString ) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString) =
+
+            let sm = d |> SMap2
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2]
+
+            for (k1, k2) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+
+
+        [<Property>]
+        let ``SMap2 2 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString ) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString) =
+
+            let sm = d |> SMap2
+            let r = sm.[x1, GreaterOrEqual x2]
+
+            for (k2) in r.Keys do
+                Assert.True(k2 >= x2)
+
+
+        [<Property>]
+        let ``SMap2 1 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString ) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString) =
+
+            let sm = d |> SMap2
+            let r = sm.[GreaterOrEqual x1, x2]
+
+            for (k1) in r.Keys do
+                Assert.True(k1 >= x1)
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -715,8 +765,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3]
@@ -732,8 +781,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[x1, GreaterOrEqual x2, GreaterOrEqual x3]
@@ -747,8 +795,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3]
@@ -763,8 +810,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3]
@@ -779,8 +825,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[x1, x2, GreaterOrEqual x3]
@@ -794,8 +839,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[x1, GreaterOrEqual x2, x3]
@@ -809,8 +853,7 @@ module Types =
             (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
             (x1:NonEmptyString)
             (x2:NonEmptyString)
-            (x3:NonEmptyString)
-            (x4:NonEmptyString) =
+            (x3:NonEmptyString) =
 
             let sm = d |> SMap3
             let r = sm.[GreaterOrEqual x1, x2, x3]
