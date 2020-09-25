@@ -850,6 +850,232 @@ module Types =
             let r = s2 .* (s2Inverse .* s1)
             Assert.StrictEqual(r, s1)
 
+        [<Property>]
+        let ``SMap4 1, 2, 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3, GreaterOrEqual x4]
+
+            for (k1, k2, k3, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 2, 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, GreaterOrEqual x2, GreaterOrEqual x3, GreaterOrEqual x4]
+
+            for (k2, k3, k4) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 1, 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3, GreaterOrEqual x4]
+
+            for (k1, k3, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 1, 2, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, x3, GreaterOrEqual x4]
+
+            for (k1, k2, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 1, 2, 3 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, GreaterOrEqual x3, x4]
+
+            for (k1, k2, k3) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+
+
+        [<Property>]
+        let ``SMap4 3, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, x2, GreaterOrEqual x3, GreaterOrEqual x4]
+
+            for (k3, k4) in r.Keys do
+                Assert.True(k3 >= x3)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 2, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, GreaterOrEqual x2, x3, GreaterOrEqual x4]
+
+            for (k2, k4) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 2, 3 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, GreaterOrEqual x2, GreaterOrEqual x3, x4]
+
+            for (k2, k3) in r.Keys do
+                Assert.True(k2 >= x2)
+                Assert.True(k3 >= x3)
+
+
+        [<Property>]
+        let ``SMap4 1, 3 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, x2, GreaterOrEqual x3, x4]
+
+            for (k1, k3) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k3 >= x3)
+
+
+        [<Property>]
+        let ``SMap4 1, 2 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, GreaterOrEqual x2, x3, x4]
+
+            for (k1, k2) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k2 >= x2)
+
+
+        [<Property>]
+        let ``SMap4 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, x2, x3, GreaterOrEqual x4]
+
+            for (k4) in r.Keys do
+                Assert.True(k4 >= x4)
+
+
+        [<Property>]
+        let ``SMap4 3 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, x2, GreaterOrEqual x3, x4]
+
+            for (k3) in r.Keys do
+                Assert.True(k3 >= x3)
+
+
+        [<Property>]
+        let ``SMap4 2 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[x1, GreaterOrEqual x2, x3, x4]
+
+            for (k2) in r.Keys do
+                Assert.True(k2 >= x2)
+
+
+        [<Property>]
+        let ``SMap4 1 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, x2, x3, x4]
+
+            for (k1) in r.Keys do
+                Assert.True(k1 >= x1)
+
+
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMap5Tests =
         open Flips.SliceMap
