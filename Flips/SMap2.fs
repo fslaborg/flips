@@ -68,6 +68,13 @@ type SMap2<'Key1, 'Key2, 'Value when 'Key1 : comparison and 'Key2 : comparison a
 
 
     member this.Item
+        with get(k) =
+            match (keyInRange k), (tryFind k) with
+            | true, Some v -> v
+            | _, _ -> raise (KeyNotFoundException("The given key was not present in the SliceMap."))
+
+
+    member this.Item
         with get(k1, k2) =
             match (keyInRange (k1, k2)), (tryFind (k1, k2)) with
             | true, Some v -> v

@@ -514,6 +514,28 @@ module Types =
                 Assert.True(k1 >= x1)
 
 
+        [<Property>]
+        let ``SMap contains keys`` 
+            (d:List<(NonEmptyString * Scalar)>) =
+
+            let keys = d |> List.map fst
+            let sm = d |> SMap
+
+            for k in keys do
+                Assert.True(sm.ContainsKey k)
+
+
+        [<Property>]
+        let ``SMap contains correct values`` 
+            (d:List<(NonEmptyString * Scalar)>) =
+
+            let valueMap = d |> Map.ofList
+            let sm = d |> SMap
+            
+            for (k, v) in Map.toSeq valueMap do
+                Assert.StrictEqual (v, sm.[k])
+
+
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMap2Tests =
         open Flips.SliceMap
@@ -637,6 +659,28 @@ module Types =
 
             for (k1) in r.Keys do
                 Assert.True(k1 >= x1)
+
+
+        [<Property>]
+        let ``SMap2 contains keys`` 
+            (d:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let keys = d |> List.map fst
+            let sm = d |> SMap2
+
+            for k in keys do
+                Assert.True(sm.ContainsKey k)
+
+
+        [<Property>]
+        let ``SMap2 contains correct values`` 
+            (d:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let valueMap = d |> Map.ofList
+            let sm = d |> SMap2
+            
+            for (k, v) in Map.toSeq valueMap do
+                Assert.StrictEqual (v, sm.[k])
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -860,6 +904,28 @@ module Types =
 
             for (k1) in r.Keys do
                 Assert.True(k1 >= x1)
+
+
+        [<Property>]
+        let ``SMap3 contains keys`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let keys = d |> List.map fst
+            let sm = d |> SMap3
+
+            for k in keys do
+                Assert.True(sm.ContainsKey k)
+
+
+        [<Property>]
+        let ``SMap3 contains correct values`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let valueMap = d |> Map.ofList
+            let sm = d |> SMap3
+            
+            for (k, v) in Map.toSeq valueMap do
+                Assert.StrictEqual (v, sm.[k])
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -1225,6 +1291,28 @@ module Types =
 
             for (k1) in r.Keys do
                 Assert.True(k1 >= x1)
+
+
+        [<Property>]
+        let ``SMap4 contains keys`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let keys = d |> List.map fst
+            let sm = d |> SMap4
+
+            for k in keys do
+                Assert.True(sm.ContainsKey k)
+
+
+        [<Property>]
+        let ``SMap4 contains correct values`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+
+            let valueMap = d |> Map.ofList
+            let sm = d |> SMap4
+            
+            for (k, v) in Map.toSeq valueMap do
+                Assert.StrictEqual (v, sm.[k])
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -1893,7 +1981,7 @@ module Types =
 
             let valueMap = d |> Map.ofList
             let sm = d |> SMap5
-
+            
             for (k, v) in Map.toSeq valueMap do
                 Assert.StrictEqual (v, sm.[k])
 
