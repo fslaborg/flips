@@ -114,15 +114,17 @@ module Model =
     /// A type which represents the optimization model. It contains an Objective which represents the
     /// goal of the model and a collection of Constraints which the model must obey.
     type Model = private {
-        _Objective : Objective
-        _Constraints : List<Constraint>
+        _Objectives : Objective list
+        _Constraints : Constraint list
     } 
     with
-        member public this.Objective = this._Objective
+        member public this.Objectives = this._Objectives
         member public this.Constraints = this._Constraints
 
     let internal getDecisions (m:Model) =
-        let objectiveDecisions = Objective.getDecisions m.Objective
+        let objectiveDecisions = 
+            (Set.empty, m.Objectives)
+            ||> List.fold (fun decs objective -> decs + (Objective.getDecisions objective))
 
         (objectiveDecisions, m.Constraints)
         ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
@@ -133,9 +135,16 @@ module Model =
     let create objective =
 
         {
-            _Objective = objective
+            _Objectives = [objective]
             _Constraints = []
         }
+
+    /// <summary>Add an Objective to a Model</summary>
+    /// <param name="objective">The objective to be added to the model</param>
+    /// <returns>A new Model with the Objective added</returns
+    let addObjective objective model =
+
+        { model with _Objectives = [objective] @ model.Objectives }
 
     /// <summary>Adds a Constraint to a Model and returns a new Model</summary>
     /// <param name="c">The constraint to be added to the model</param>
