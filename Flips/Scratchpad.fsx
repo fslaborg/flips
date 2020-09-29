@@ -42,3 +42,8 @@
 //let x1 = Scalar<sec>.Value (Domain.Scalar.Value 1.5)
 //x1 * 1.0<1/sec> + (Domain.Scalar.Value 1.5)
 //let x2 = x1 * (Domain.Scalar.Value 1.5)
+
+type map<'a, 'b, 'M> = ('a -> 'b) -> ('M<'a> -> 'M<'b>)
+List.map
+
+type bind = ('a -> M<'b>) -> (M<'a> -> 'M<'b>)

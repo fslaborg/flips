@@ -207,18 +207,27 @@ module internal Optano =
         |> Map.map (fun _ d -> createVariable d)
 
 
-    let private setObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (optanoModel:Model) =
-        for objective in objectives do
-            let (ObjectiveName name) = objective.Name
-            let expr = buildExpression vars objective.Expression
+    let private addObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) priority (optanoModel:Model) =
+        let (ObjectiveName name) = objective.Name
+        let expr = buildExpression vars objective.Expression
 
-            let sense = 
-                match objective.Sense with
-                | Minimize -> Enums.ObjectiveSense.Minimize
-                | Maximize -> Enums.ObjectiveSense.Maximize
+        let sense = 
+            match objective.Sense with
+            | Minimize -> Enums.ObjectiveSense.Minimize
+            | Maximize -> Enums.ObjectiveSense.Maximize
 
-            let optanoObjective = new Objective(expr, name, sense)
-            optanoModel.AddObjective(optanoObjective)
+        let optanoObjective = new Objective(expr, name, sense, priority)
+        optanoModel.AddObjective(optanoObjective)
+
+    let private addObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (optanoModel:Model) =
+        let numOfObjectives = objectives.Length
+        
+        objectives
+        // The order of the objectives is the priority order
+        // OPTANO sorts objectives by PriorityLevel desc
+        |> List.iteri (fun i objective -> addObjective vars objective (numOfObjectives - i) optanoModel)
+
+        optanoModel
 
 
     let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (optanoModel:Model) =
@@ -293,7 +302,7 @@ module internal Optano =
         let optanoModel = new Model()
         let vars = Dictionary()
         addConstraints vars model.Constraints optanoModel
-        setObjectives vars (List.rev model.Objectives) optanoModel
+        addObjectives vars (List.rev model.Objectives) optanoModel
 
         let optanoSolution = 
             match solverType with
