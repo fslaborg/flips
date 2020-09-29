@@ -135,7 +135,7 @@ module Builders =
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
             d |> Seq.collect (fun (d, e) ->
-            e |> Seq.collect (fun (r, f) ->
+            e |> Seq.collect (fun (e, f) ->
             f |> Seq.map (fun (f, g) -> createDecision (a,b,c,d,e,f) g))))))
 
         member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>) =
