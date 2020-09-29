@@ -8,12 +8,12 @@ type Job = Job of int
 type Machine = Machine of int
 
 let solve () =
-    let rng = System.Random()
+    let rng = System.Random(123)
     // Declare the parameters for our model
     let maxAssignments = 5.0
     let maxMachineAssignments = 2.0
     let jobs = [1..9] |> List.map Job
-    let machines = [1..4] |> List.map Machine
+    let machines = [1..5] |> List.map Machine
     let jobRevenue =
         jobs
         |> List.map (fun j -> j, float (rng.Next(5, 10)))
@@ -90,7 +90,11 @@ let solve () =
     match result with
     | Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
     | Optimal solution ->
-        printfn "Objective Value: %f" solution.ObjectiveResult
+        let revenueResult = Solution.evaluate solution revenueExpr
+
+        printfn "Revenue: %f" revenueResult
+        
+        printfn "Waste: %f" solution.ObjectiveResult
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
             printfn "Decision: %A\tValue: %f" decision.Name value

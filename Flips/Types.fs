@@ -230,6 +230,32 @@ and
 
         evaluateNode (Set.empty) expr (fun x -> x)
 
+    static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
+
+        let rec evaluateNode (multiplier:float, state:ResizeArray<float>) (node:LinearExpression) cont =
+            match node with
+            | Empty -> cont (multiplier, state)
+            | AddFloat (f, nodeExpr) ->
+                state.Add(multiplier * f)
+                let newState = (multiplier, state) 
+                evaluateNode newState nodeExpr cont
+            | AddDecision ((nodeCoef, nodeDecision), nodeExpr) ->
+                state.Add(multiplier * nodeCoef * decisionMap.[nodeDecision])
+                let newState = (multiplier, state)
+                evaluateNode newState nodeExpr cont
+            | Multiply (nodeMultiplier, nodeExpr) ->
+                let newState = (multiplier * nodeMultiplier, state)
+                evaluateNode newState nodeExpr cont
+            | AddLinearExpression (lExpr, rExpr) ->
+                evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
+            
+
+        let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
+
+        reduceResult.Sort(SignInsenstiveComparer())
+        let total = Seq.sum reduceResult
+        total
+
 
     override this.GetHashCode () =
         hash this

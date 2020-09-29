@@ -142,31 +142,13 @@ module internal ORTools =
 
         match objectives with
         | [] -> 
-            failwith "Model without Objective"
+            failwith "Model without Objective" // Argument should be a special type
         | objective :: [] ->
             solveForObjective vars objective solver
         | objective :: remaining ->
             solveForObjective vars objective solver
             |> Result.map (fun solver -> addObjectiveAsConstraint vars objective (solver.Objective().BestBound()) solver)
             |> Result.bind (solveForObjectives vars remaining)
-
-
-        //let (finalObjective, otherObjectives) =
-        //    match objectives with
-        //    | f :: [] -> failwith "Model without Objective"
-        //    | f :: others -> f, others
-        //    | [] -> failwith "Model without Objective"
-
-        //let solve (s:Result<Solver,string>) (ob:Flips.Types.Objective) : Result<Solver,string> =
-        //    s
-        //    |> Result.bind (solveForObjective vars ob)
-        //    |> Result.map (addObjectiveAsConstraint vars ob)
-
-
-        //(Ok solver, otherObjectives)
-        //||> List.fold solve
-        //|> Result.bind (solveForObjective vars finalObjective)
-        //|> Result.map snd
 
 
     let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =

@@ -177,6 +177,10 @@ module Solution =
         decisions |> Map.map getWithDefault
 
 
+    let evaluate (solution:Solution) (expression:LinearExpression) =
+        LinearExpression.Evaluate solution.DecisionResults expression
+
+
 [<AutoOpen>]
 module Builders =
 
