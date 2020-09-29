@@ -177,6 +177,10 @@ module Solution =
         decisions |> Map.map getWithDefault
 
 
+    /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
+    /// <param name="solution">The solution used for lookup up the results of Decisions</param>
+    /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
+    /// <returns>A float which is the simplification of the LinearExpression</returns>
     let evaluate (solution:Solution) (expression:LinearExpression) =
         LinearExpression.Evaluate solution.DecisionResults expression
 
