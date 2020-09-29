@@ -113,6 +113,39 @@ module internal ORTools =
         System.IO.File.WriteAllText(filePath, lpFile)
 
 
+    let internal solveForObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
+        setObjective vars objective solver
+
+        let resultStatus = solver.Solve()
+
+        match resultStatus with
+        | Solver.ResultStatus.OPTIMAL -> 
+            Result.Ok (solver.Objective().BestBound(), solver)
+        | _ ->
+            // TODO: Put better error reporting here!
+            Result.Error "Unable to find optimal solution"
+
+    let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float, solver:Solver) =
+        let objectiveAsConstraint =
+            let (ObjectiveName name) = objective.Name
+            Constraint.create name (objective.Expression == objectiveValue)
+
+        // The underlying API is mutable :/
+        addConstraint vars objectiveAsConstraint solver |> ignore
+        solver
+
+    let internal solveForObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (solver:Solver) =
+
+        let solve (s:Result<Solver,string>) (ob:Flips.Types.Objective) : Result<Solver,string> =
+            s
+            |> Result.bind (solveForObjective vars ob)
+            |> Result.map (addObjectiveAsConstraint vars ob)
+
+        (Ok solver, objectives)
+        ||> List.fold solve
+
+
+
     let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
 
         let solver = 
@@ -125,20 +158,18 @@ module internal ORTools =
     
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
-        setObjective vars model.Objective solver
     
         // Write LP Formulation to file if requested
         settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
     
-        let resultStatus = solver.Solve()
+        let solveResult = solveForObjectives vars (List.rev model.Objectives) solver
     
-        match resultStatus with
-        | Solver.ResultStatus.OPTIMAL -> 
-            buildSolution (Model.getDecisions model) vars solver model.Objective
+        match solveResult with
+        | Result.Ok solver -> 
+            buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
             |> SolveResult.Optimal
-        | _ ->
-            "Unable to find optimal solution"
-            |> SolveResult.Suboptimal
+        | Result.Error msg ->
+            SolveResult.Suboptimal msg
 
 
 module internal Optano =
@@ -176,17 +207,18 @@ module internal Optano =
         |> Map.map (fun _ d -> createVariable d)
 
 
-    let private setObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (optanoModel:Model) =
-        let (ObjectiveName name) = objective.Name
-        let expr = buildExpression vars objective.Expression
+    let private setObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (optanoModel:Model) =
+        for objective in objectives do
+            let (ObjectiveName name) = objective.Name
+            let expr = buildExpression vars objective.Expression
 
-        let sense = 
-            match objective.Sense with
-            | Minimize -> Enums.ObjectiveSense.Minimize
-            | Maximize -> Enums.ObjectiveSense.Maximize
+            let sense = 
+                match objective.Sense with
+                | Minimize -> Enums.ObjectiveSense.Minimize
+                | Maximize -> Enums.ObjectiveSense.Maximize
 
-        let optanoObjective = new Objective(expr, name, sense)
-        optanoModel.AddObjective(optanoObjective)
+            let optanoObjective = new Objective(expr, name, sense)
+            optanoModel.AddObjective(optanoObjective)
 
 
     let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (optanoModel:Model) =
@@ -261,7 +293,7 @@ module internal Optano =
         let optanoModel = new Model()
         let vars = Dictionary()
         addConstraints vars model.Constraints optanoModel
-        setObjective vars model.Objective optanoModel
+        setObjectives vars (List.rev model.Objectives) optanoModel
 
         let optanoSolution = 
             match solverType with
