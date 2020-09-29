@@ -121,9 +121,15 @@ module internal ORTools =
         match resultStatus with
         | Solver.ResultStatus.OPTIMAL -> 
             Result.Ok solver
-        | _ ->
+        | Solver.ResultStatus.ABNORMAL ->
             // TODO: Put better error reporting here!
-            Result.Error "Unable to find optimal solution"
+            Result.Error "Model was found to be Abnormal"
+        | Solver.ResultStatus.INFEASIBLE ->
+            Result.Error "Model was found to be Infeasible"
+        | Solver.ResultStatus.UNBOUNDED ->
+            Result.Error "Model was found to be Unbounded"
+
+            
 
     let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float) (solver:Solver) =
         let objectiveAsConstraint =

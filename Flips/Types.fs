@@ -422,4 +422,6 @@ type SolverSettings = {
 /// be returned with a string reporting what the solver returned.
 type SolveResult =
     | Optimal of Solution
-    | Suboptimal of string
+    | Infeasible of string
+    | Unbounded of string
+    | Unknown of string
