@@ -120,30 +120,53 @@ module internal ORTools =
 
         match resultStatus with
         | Solver.ResultStatus.OPTIMAL -> 
-            Result.Ok (solver.Objective().BestBound(), solver)
+            Result.Ok solver
         | _ ->
             // TODO: Put better error reporting here!
             Result.Error "Unable to find optimal solution"
 
-    let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float, solver:Solver) =
+    let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float) (solver:Solver) =
         let objectiveAsConstraint =
             let (ObjectiveName name) = objective.Name
-            Constraint.create name (objective.Expression == objectiveValue)
+            match objective.Sense with
+            | Maximize ->
+                Constraint.create name (objective.Expression >== objectiveValue)
+            | Minimize ->
+                Constraint.create name (objective.Expression <== objectiveValue)
 
         // The underlying API is mutable :/
         addConstraint vars objectiveAsConstraint solver |> ignore
         solver
 
-    let internal solveForObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (solver:Solver) =
+    let rec internal solveForObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (solver:Solver) =
 
-        let solve (s:Result<Solver,string>) (ob:Flips.Types.Objective) : Result<Solver,string> =
-            s
-            |> Result.bind (solveForObjective vars ob)
-            |> Result.map (addObjectiveAsConstraint vars ob)
+        match objectives with
+        | [] -> 
+            failwith "Model without Objective"
+        | objective :: [] ->
+            solveForObjective vars objective solver
+        | objective :: remaining ->
+            solveForObjective vars objective solver
+            |> Result.map (fun solver -> addObjectiveAsConstraint vars objective (solver.Objective().BestBound()) solver)
+            |> Result.bind (solveForObjectives vars remaining)
 
-        (Ok solver, objectives)
-        ||> List.fold solve
 
+        //let (finalObjective, otherObjectives) =
+        //    match objectives with
+        //    | f :: [] -> failwith "Model without Objective"
+        //    | f :: others -> f, others
+        //    | [] -> failwith "Model without Objective"
+
+        //let solve (s:Result<Solver,string>) (ob:Flips.Types.Objective) : Result<Solver,string> =
+        //    s
+        //    |> Result.bind (solveForObjective vars ob)
+        //    |> Result.map (addObjectiveAsConstraint vars ob)
+
+
+        //(Ok solver, otherObjectives)
+        //||> List.fold solve
+        //|> Result.bind (solveForObjective vars finalObjective)
+        //|> Result.map snd
 
 
     let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
@@ -302,7 +325,7 @@ module internal Optano =
         let optanoModel = new Model()
         let vars = Dictionary()
         addConstraints vars model.Constraints optanoModel
-        addObjectives vars (List.rev model.Objectives) optanoModel
+        addObjectives vars (List.rev model.Objectives) optanoModel |> ignore
 
         let optanoSolution = 
             match solverType with
