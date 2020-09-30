@@ -121,13 +121,8 @@ module internal ORTools =
         match resultStatus with
         | Solver.ResultStatus.OPTIMAL -> 
             Result.Ok solver
-        | Solver.ResultStatus.ABNORMAL ->
-            // TODO: Put better error reporting here!
-            Result.Error "Model was found to be Abnormal"
-        | Solver.ResultStatus.INFEASIBLE ->
-            Result.Error "Model was found to be Infeasible"
-        | Solver.ResultStatus.UNBOUNDED ->
-            Result.Error "Model was found to be Unbounded"
+        | _ ->
+            Result.Error resultStatus
 
             
 
@@ -173,14 +168,20 @@ module internal ORTools =
         // Write LP Formulation to file if requested
         settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
     
-        let solveResult = solveForObjectives vars (List.rev model.Objectives) solver
+        let result = solveForObjectives vars (List.rev model.Objectives) solver
     
-        match solveResult with
+        match result with
         | Result.Ok solver -> 
             buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
             |> SolveResult.Optimal
-        | Result.Error msg ->
-            SolveResult.Suboptimal msg
+        | Result.Error errorStatus ->
+            match errorStatus with
+            | Solver.ResultStatus.INFEASIBLE ->
+                SolveResult.Infeasible "The model was found to be infeasible"
+            | Solver.ResultStatus.UNBOUNDED ->
+                SolveResult.Unbounded "The model was found to be unbounded"
+            | _ ->
+                SolveResult.Unknown "The model status is unknown. Unable to solve."
 
 
 module internal Optano =
@@ -321,14 +322,15 @@ module internal Optano =
             | Gurobi900 -> gurobi900Solve settings optanoModel
 
         match optanoSolution.ModelStatus, optanoSolution.Status with
-        | Solver.ModelStatus.Infeasible, _ -> Suboptimal "Model is infeasible"
-        | Solver.ModelStatus.InfOrUnbd, _ -> Suboptimal "Model is infeasible or unbounded"
-        | Solver.ModelStatus.Unbounded, _ -> Suboptimal "Model is unbounded"
-        | Solver.ModelStatus.Unknown, _ -> Suboptimal "Model status is unknown"
         | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) -> 
             let solution = buildSolution (Model.getDecisions model) vars optanoSolution
             Optimal solution
-        | _ -> Suboptimal "Model state is undetermined"
+        | Solver.ModelStatus.Infeasible, _ -> 
+            SolveResult.Infeasible "The model was found to be infeasible"
+        | Solver.ModelStatus.Unbounded, _ -> 
+            SolveResult.Unbounded "The model was found to be unbounded"
+        | _ -> 
+            SolveResult.Unknown "The model status is unknown. Unable to solve."
 
 
 [<RequireQualifiedAccess>]
