@@ -129,7 +129,6 @@ let solve () =
     // If the model could be solved, it will print the value of the Objective Function and the
     // values for the Decision Variables
     match result with
-    | Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
@@ -143,5 +142,5 @@ let solve () =
         for location in locations do
             let (Location l) = location
             printfn "%-12s\t%12A\t%12A" l roasterValues.[location] warehouseValues.[location]
-
-    ()
+    | errorCase -> 
+        printfn "Unable to solve. Error: %A" errorCase

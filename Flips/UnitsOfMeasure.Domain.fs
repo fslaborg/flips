@@ -76,6 +76,15 @@ module Solution =
 
         m |> Map.map getWithDefault
 
+    /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
+    /// <param name="solution">The solution used for lookup up the results of Decisions</param>
+    /// <param name="expression">The LinearExpression with a Unit of Measure to evaluate the resulting value for</param>
+    /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
+    let evaluate (solution:Types.Solution) (Value expression:LinearExpression<'Measure>) =
+        Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
+        |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
+
+
 [<AutoOpen>]
 module Builders =
     
@@ -126,7 +135,7 @@ module Builders =
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
             d |> Seq.collect (fun (d, e) ->
-            e |> Seq.collect (fun (r, f) ->
+            e |> Seq.collect (fun (e, f) ->
             f |> Seq.map (fun (f, g) -> createDecision (a,b,c,d,e,f) g))))))
 
         member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>) =

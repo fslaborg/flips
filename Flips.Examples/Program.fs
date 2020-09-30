@@ -20,6 +20,7 @@ let main argv =
     BinaryProgrammingExample.solve ()
     StocksExample.solve ()
     CoffeeRoastingExample.solve ()
+    MultiObjective.solve()
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
     0 // return an integer exit code

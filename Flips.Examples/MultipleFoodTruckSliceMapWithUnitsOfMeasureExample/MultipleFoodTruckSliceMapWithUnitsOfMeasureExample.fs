@@ -79,7 +79,6 @@ let solve () =
     // If the model could be solved, it will print the value of the Objective Function and the
     // values for the Decision Variables
     match result with
-    | Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
@@ -87,3 +86,5 @@ let solve () =
 
         for ((location, item), value) in values |> Map.toSeq do
             printfn "Item: %s\tLocation: %s\tValue: %f" item location value
+    | errorCase -> 
+        printfn "Unable to solve. Error: %A" errorCase

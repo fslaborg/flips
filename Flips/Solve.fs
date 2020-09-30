@@ -113,6 +113,45 @@ module internal ORTools =
         System.IO.File.WriteAllText(filePath, lpFile)
 
 
+    let internal solveForObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
+        setObjective vars objective solver
+
+        let resultStatus = solver.Solve()
+
+        match resultStatus with
+        | Solver.ResultStatus.OPTIMAL -> 
+            Result.Ok solver
+        | _ ->
+            Result.Error resultStatus
+
+            
+
+    let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float) (solver:Solver) =
+        let objectiveAsConstraint =
+            let (ObjectiveName name) = objective.Name
+            match objective.Sense with
+            | Maximize ->
+                Constraint.create name (objective.Expression >== objectiveValue)
+            | Minimize ->
+                Constraint.create name (objective.Expression <== objectiveValue)
+
+        // The underlying API is mutable :/
+        addConstraint vars objectiveAsConstraint solver |> ignore
+        solver
+
+    let rec internal solveForObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (solver:Solver) =
+
+        match objectives with
+        | [] -> 
+            failwith "Model without Objective" // Argument should be a special type
+        | objective :: [] ->
+            solveForObjective vars objective solver
+        | objective :: remaining ->
+            solveForObjective vars objective solver
+            |> Result.map (fun solver -> addObjectiveAsConstraint vars objective (solver.Objective().BestBound()) solver)
+            |> Result.bind (solveForObjectives vars remaining)
+
+
     let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
 
         let solver = 
@@ -125,20 +164,24 @@ module internal ORTools =
     
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
-        setObjective vars model.Objective solver
     
         // Write LP Formulation to file if requested
         settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
     
-        let resultStatus = solver.Solve()
+        let result = solveForObjectives vars (List.rev model.Objectives) solver
     
-        match resultStatus with
-        | Solver.ResultStatus.OPTIMAL -> 
-            buildSolution (Model.getDecisions model) vars solver model.Objective
+        match result with
+        | Result.Ok solver -> 
+            buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
             |> SolveResult.Optimal
-        | _ ->
-            "Unable to find optimal solution"
-            |> SolveResult.Suboptimal
+        | Result.Error errorStatus ->
+            match errorStatus with
+            | Solver.ResultStatus.INFEASIBLE ->
+                SolveResult.Infeasible "The model was found to be infeasible"
+            | Solver.ResultStatus.UNBOUNDED ->
+                SolveResult.Unbounded "The model was found to be unbounded"
+            | _ ->
+                SolveResult.Unknown "The model status is unknown. Unable to solve."
 
 
 module internal Optano =
@@ -176,7 +219,7 @@ module internal Optano =
         |> Map.map (fun _ d -> createVariable d)
 
 
-    let private setObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (optanoModel:Model) =
+    let private addObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) priority (optanoModel:Model) =
         let (ObjectiveName name) = objective.Name
         let expr = buildExpression vars objective.Expression
 
@@ -185,8 +228,18 @@ module internal Optano =
             | Minimize -> Enums.ObjectiveSense.Minimize
             | Maximize -> Enums.ObjectiveSense.Maximize
 
-        let optanoObjective = new Objective(expr, name, sense)
+        let optanoObjective = new Objective(expr, name, sense, priority)
         optanoModel.AddObjective(optanoObjective)
+
+    let private addObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (optanoModel:Model) =
+        let numOfObjectives = objectives.Length
+        
+        objectives
+        // The order of the objectives is the priority order
+        // OPTANO sorts objectives by PriorityLevel desc
+        |> List.iteri (fun i objective -> addObjective vars objective (numOfObjectives - i) optanoModel)
+
+        optanoModel
 
 
     let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (optanoModel:Model) =
@@ -261,7 +314,7 @@ module internal Optano =
         let optanoModel = new Model()
         let vars = Dictionary()
         addConstraints vars model.Constraints optanoModel
-        setObjective vars model.Objective optanoModel
+        addObjectives vars (List.rev model.Objectives) optanoModel |> ignore
 
         let optanoSolution = 
             match solverType with
@@ -269,14 +322,15 @@ module internal Optano =
             | Gurobi900 -> gurobi900Solve settings optanoModel
 
         match optanoSolution.ModelStatus, optanoSolution.Status with
-        | Solver.ModelStatus.Infeasible, _ -> Suboptimal "Model is infeasible"
-        | Solver.ModelStatus.InfOrUnbd, _ -> Suboptimal "Model is infeasible or unbounded"
-        | Solver.ModelStatus.Unbounded, _ -> Suboptimal "Model is unbounded"
-        | Solver.ModelStatus.Unknown, _ -> Suboptimal "Model status is unknown"
         | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) -> 
             let solution = buildSolution (Model.getDecisions model) vars optanoSolution
             Optimal solution
-        | _ -> Suboptimal "Model state is undetermined"
+        | Solver.ModelStatus.Infeasible, _ -> 
+            SolveResult.Infeasible "The model was found to be infeasible"
+        | Solver.ModelStatus.Unbounded, _ -> 
+            SolveResult.Unbounded "The model was found to be unbounded"
+        | _ -> 
+            SolveResult.Unknown "The model status is unknown. Unable to solve."
 
 
 [<RequireQualifiedAccess>]

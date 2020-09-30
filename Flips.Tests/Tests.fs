@@ -2,11 +2,15 @@ namespace Flips.Tests
 
 module Types =
 
+    type Job = Job of int
+    type Machine = Machine of int
+
     open Xunit
     open FsCheck
     open FsCheck.Xunit
     open Flips
     open Flips.Types
+    open Flips.SliceMap
     open Flips.Tests.Gens
 
     let rng = System.Random()
@@ -238,22 +242,118 @@ module Types =
 
             match result with
             | Optimal _ -> Assert.True(true)
-            | Suboptimal _ -> Assert.True(false, "Simple model failed to solve")
+            | _ -> Assert.True(false, "Simple model failed to solve")
 
         [<Fact>]
         let ``Adding Empty Constraint Seq does not raise error`` () =
-          let x1 = Decision.createContinuous "x1" 0.0 infinity
+            let x1 = Decision.createContinuous "x1" 0.0 infinity
         
-          let objExpr = 1.0 * x1
-          let objective = Objective.create "Get big" Maximize objExpr
+            let objExpr = 1.0 * x1
+            let objective = Objective.create "Get big" Maximize objExpr
 
-          let emptyConstraintList = []
+            let emptyConstraintList = []
 
-          let model = 
-              Model.create objective
-              |> Model.addConstraints emptyConstraintList
+            let model = 
+                Model.create objective
+                |> Model.addConstraints emptyConstraintList
 
-          ()
+            ()
+
+        [<Property>]
+        let ``MultiObjective does not violate worsen initial objective`` () =
+            let maxAssignments = 5.0
+            let maxMachineAssignments = 2.0
+            let jobs = [1..9] |> List.map Job
+            let machines = [1..5] |> List.map Machine
+            let jobRevenue =
+                jobs
+                |> List.map (fun j -> j, float (rng.Next(5, 10)))
+                |> SMap.ofList
+
+            let jobMachineWaste =
+                [for j in jobs do
+                    for m in machines ->
+                        (j, m), float (rng.Next(1, 5))
+                ] |> SMap2.ofList
+
+            let assignments =
+                DecisionBuilder "Assignment" {
+                    for j in jobs do
+                        for m in machines ->
+                            Boolean
+                } |> SMap2.ofSeq
+
+            // Sum the total revenue for the jobs selected
+            let revenueExpr = sum (jobRevenue .* assignments)
+
+            // Sum the waste for running a job on a particular machine
+            let wasteExpr = sum (assignments .* jobMachineWaste)
+
+            // Create an objective to maximize the revenue
+            let revenueObjective = Objective.create "MaxRevenue" Maximize revenueExpr
+
+            // Create an objective to minimize the waste
+            let wasteObjective = Objective.create "MinWaste" Minimize wasteExpr
+
+            // Create a constraint which limits the number of jobs that can be assigned
+            let assignmentConstraint =
+                Constraint.create "MaxNumberOfAssignments" (sum assignments <== maxAssignments)
+
+            // Create constraints for a job only being assigned once
+            let oneAssignmentConstraints =
+                ConstraintBuilder "OneAssignment" {
+                    for j in jobs ->
+                        sum assignments.[j, All] <== 1.0
+                }
+
+            // Create constraints so that no machine can have more than max number of jobs
+            let machineAssignmentConstraints =
+                ConstraintBuilder "MaxMachineAssignement" {
+                    for m in machines ->
+                        sum assignments.[All, m] <== maxMachineAssignments
+                }
+
+            let initialModel =
+                Model.create revenueObjective
+                |> Model.addConstraint assignmentConstraint
+                |> Model.addConstraints machineAssignmentConstraints
+                |> Model.addConstraints oneAssignmentConstraints
+
+            let postModel =
+              Model.create revenueObjective
+              |> Model.addObjective wasteObjective
+              |> Model.addConstraint assignmentConstraint
+              |> Model.addConstraints machineAssignmentConstraints
+              |> Model.addConstraints oneAssignmentConstraints
+
+
+            // Create a Settings type which tells the Solver which types of underlying solver to use,
+            // the time alloted for solving, and whether to write an LP file to disk
+            let settings = {
+                SolverType = SolverType.CBC
+                MaxDuration = 10_000L
+                WriteLPFile = None
+            }
+
+            // Call the `solve` function in the Solve module to evaluate the model
+            let initialResult = Solver.solve settings initialModel
+
+            let postResult = Solver.solve settings postModel
+
+            match initialResult, postResult with
+            | Optimal sln1, Optimal sln2 ->
+                let initialRevenue = sln1.ObjectiveResult
+                let postSolutionRevenue = Solution.evaluate sln2 revenueExpr
+
+                let revenueIsTheSame =
+                    System.Math.Abs (initialRevenue - postSolutionRevenue) < 0.001
+                
+                Assert.True(revenueIsTheSame)
+            | _, Optimal _ -> Assert.True(false, "initialModel failed to solve")
+            | Optimal _, _ -> Assert.True(false, "postModel failed to solve")
+            | _, _ -> Assert.True(false, "The initialModel and postModel failed to solve")
+
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SlicetSetTests =
