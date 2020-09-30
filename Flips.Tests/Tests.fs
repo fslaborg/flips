@@ -242,7 +242,7 @@ module Types =
 
             match result with
             | Optimal _ -> Assert.True(true)
-            | Suboptimal _ -> Assert.True(false, "Simple model failed to solve")
+            | _ -> Assert.True(false, "Simple model failed to solve")
 
         [<Fact>]
         let ``Adding Empty Constraint Seq does not raise error`` () =
@@ -341,8 +341,6 @@ module Types =
             let postResult = Solver.solve settings postModel
 
             match initialResult, postResult with
-            | Suboptimal _, _ -> Assert.True(false, "initialModel failed to solve")
-            | _, Suboptimal _ -> Assert.True(false, "postModel failed to solve")
             | Optimal sln1, Optimal sln2 ->
                 let initialRevenue = sln1.ObjectiveResult
                 let postSolutionRevenue = Solution.evaluate sln2 revenueExpr
@@ -351,6 +349,9 @@ module Types =
                     System.Math.Abs (initialRevenue - postSolutionRevenue) < 0.001
                 
                 Assert.True(revenueIsTheSame)
+            | _, Optimal _ -> Assert.True(false, "initialModel failed to solve")
+            | Optimal _, _ -> Assert.True(false, "postModel failed to solve")
+            | _, _ -> Assert.True(false, "The initialModel and postModel failed to solve")
 
 
 
