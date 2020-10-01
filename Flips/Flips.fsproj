@@ -15,7 +15,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyVersion>2.3.0.0</AssemblyVersion>
     <FileVersion>2.3.1.0</FileVersion>
-    <PackageReleaseNotes>Added Multi-Objective function models and bug-fix</PackageReleaseNotes>
+    <PackageReleaseNotes>Bug fix for Optano Solve</PackageReleaseNotes>
     <PackageIcon>Favicon.png</PackageIcon>
   </PropertyGroup>
 
