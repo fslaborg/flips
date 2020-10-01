@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Platforms>x64</Platforms>
-    <Version>2.3.0</Version>
+    <Version>2.3.1</Version>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
@@ -13,8 +13,8 @@
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.0</FileVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <FileVersion>2.3.1.0</FileVersion>
     <PackageReleaseNotes>Added Multi-Objective function models and bug-fix</PackageReleaseNotes>
     <PackageIcon>Favicon.png</PackageIcon>
   </PropertyGroup>
