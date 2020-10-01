@@ -191,32 +191,32 @@ module internal Optano =
         | Cplex128
         | Gurobi900
 
-
-    let private buildExpression (vars:Dictionary<DecisionName, Variable>) (expr:LinearExpression) =
-        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
-
-        let constant = Expression.Sum([reducedExpr.Offset])
-        let variables =
-            reducedExpr.Coefficients
-            |> Seq.map (fun kvp -> kvp.Value * vars.[kvp.Key])
-            |> (fun terms -> Expression.Sum(terms))
-
-        constant + variables
-
-
-    let private createVariable (decision:Decision) =
-        let (DecisionName name) = decision.Name
-        match decision.Type with
+    
+    let private createVariable (DecisionName name:DecisionName) (decisionType:DecisionType) =
+        match decisionType with
         | Boolean -> new Variable(name, 0.0, 1.0, Enums.VariableType.Binary)
         | Integer (lb, ub) -> new Variable(name, lb, ub, Enums.VariableType.Integer)
         | Continuous (lb, ub) -> new Variable(name, lb, ub, Enums.VariableType.Continuous)
-            
 
-    let private createVariableMap (decisions:seq<Decision>) =
-        decisions
-        |> Seq.map (fun d -> d.Name, d)
-        |> Map.ofSeq
-        |> Map.map (fun _ d -> createVariable d)
+
+    let addVariable decisionName (decisionType:DecisionType) (vars:Dictionary<DecisionName, Variable>) =
+        if not (vars.ContainsKey(decisionName)) then
+            let var = createVariable decisionName decisionType
+            vars.[decisionName] <- var
+
+
+    let private buildExpression (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
+        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
+        
+        let constantExpr = Expression.Sum([reducedExpr.Offset])
+        let decisionExpr =
+            reducedExpr.Coefficients
+            |> Seq.map (fun kvp -> 
+                          addVariable kvp.Key reducedExpr.DecisionTypes.[kvp.Key] vars
+                          kvp.Value * vars.[kvp.Key])
+            |> (fun terms -> Expression.Sum(terms))
+
+        constantExpr + decisionExpr
 
 
     let private addObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) priority (optanoModel:Model) =
@@ -270,8 +270,15 @@ module internal Optano =
 
 
     let private addConstraints (vars:Dictionary<DecisionName, Variable>) (constraints:FSharp.Collections.List<Types.Constraint>) (optanoModel:Model) =
+        let mutable idx = 0
         for c in constraints do
-            addConstraint vars c optanoModel |> ignore
+            printfn "Index: %i ConstraintName: %A" idx c.Name
+            try
+              addConstraint vars c optanoModel |> ignore
+              idx <- idx + 1
+            with
+            | ex -> 
+                printfn "Error: %A" ex.Message
 
 
     let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (optanoSolution:Solution) =
