@@ -270,15 +270,9 @@ module internal Optano =
 
 
     let private addConstraints (vars:Dictionary<DecisionName, Variable>) (constraints:FSharp.Collections.List<Types.Constraint>) (optanoModel:Model) =
-        let mutable idx = 0
         for c in constraints do
-            printfn "Index: %i ConstraintName: %A" idx c.Name
-            try
-              addConstraint vars c optanoModel |> ignore
-              idx <- idx + 1
-            with
-            | ex -> 
-                printfn "Error: %A" ex.Message
+            addConstraint vars c optanoModel |> ignore
+
 
 
     let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (optanoSolution:Solution) =
