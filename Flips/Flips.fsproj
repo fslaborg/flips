@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Platforms>x64</Platforms>
-    <Version>2.3.2</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
@@ -13,16 +13,17 @@
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
-    <FileVersion>2.3.1.0</FileVersion>
-    <PackageReleaseNotes>Bug fix for Optano Solve</PackageReleaseNotes>
     <PackageIcon>Favicon.png</PackageIcon>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="Favicon.png">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath>
+      </PackagePath>
     </None>
     <None Include="Scratchpad.fsx" />
     <Compile Include="Types.fs" />
@@ -39,17 +40,8 @@
     <Compile Include="UnitsOfMeasure.Types.fs" />
     <Compile Include="UnitsOfMeasure.Domain.fs" />
     <Compile Include="Solve.fs" />
+    <None Include="paket.references" />
+    <None Include="paket.template" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Google.OrTools" Version="7.5.7466" />
-    <PackageReference Include="Google.OrTools.runtime.win-x64" Version="7.5.7466" />
-    <PackageReference Include="OPTANO.Modeling" Version="3.3.0.474" />
-    <PackageReference Include="OPTANO.Modeling.Gurobi" Version="9.0.2.24" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.7.2" />
-  </ItemGroup>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

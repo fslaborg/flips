@@ -267,3 +267,8 @@ __pycache__/
 
 .fake
 .ionide
+
+# Paket dependency manager
+paket-files/
+paket.local
+.paket/load

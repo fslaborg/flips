@@ -3,20 +3,97 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips", "Flips\Flips.fsproj", "{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D03043B8-A42E-49F9-9A6D-457E14EAB52F}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{0AEFA371-C09F-427D-8DA5-DE96B5D85D10}"
 	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
+		Nuget.Config = Nuget.Config
+		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
 	EndProjectSection
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips", "Flips\Flips.fsproj", "{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Examples", "Flips.Examples\Flips.Examples.fsproj", "{44E39E9C-7A97-4AA8-8287-78DADA1BF929}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Tests", "Flips.Tests\Flips.Tests.fsproj", "{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C3221202-C366-4541-8997-7D1E45628C60}"
+	ProjectSection(SolutionItems) = preProject
+		docs\.nojekyll = docs\.nojekyll
+		docs\app.css = docs\app.css
+		docs\CNAME = docs\CNAME
+		docs\index.html = docs\index.html
+		docs\package-lock.json = docs\package-lock.json
+		docs\package.json = docs\package.json
+		docs\README.md = docs\README.md
+		docs\WhatIsOptimization.md = docs\WhatIsOptimization.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "example-problems", "example-problems", "{4693BB0E-197B-4B9D-9B2B-F25E9FA939DA}"
+	ProjectSection(SolutionItems) = preProject
+		docs\example-problems\coffee-planning.md = docs\example-problems\coffee-planning.md
+		docs\example-problems\food-truck-constraint-builder.md = docs\example-problems\food-truck-constraint-builder.md
+		docs\example-problems\food-truck-decision-builder.md = docs\example-problems\food-truck-decision-builder.md
+		docs\example-problems\food-truck-intro-problem.md = docs\example-problems\food-truck-intro-problem.md
+		docs\example-problems\food-truck-using-map.md = docs\example-problems\food-truck-using-map.md
+		docs\example-problems\intro-problem.md = docs\example-problems\intro-problem.md
+		docs\example-problems\multi-food-truck-units-of-measure.md = docs\example-problems\multi-food-truck-units-of-measure.md
+		docs\example-problems\README.md = docs\example-problems\README.md
+		docs\example-problems\stock-selection.md = docs\example-problems\stock-selection.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "slicemaps", "slicemaps", "{B6325090-D20A-4599-92D7-1F74A4E31C6A}"
+	ProjectSection(SolutionItems) = preProject
+		docs\slicemaps\README.md = docs\slicemaps\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "types", "types", "{D0D6839C-AD73-442D-A5BA-4A0B7EA04009}"
+	ProjectSection(SolutionItems) = preProject
+		docs\types\README.md = docs\types\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "units-of-measure", "units-of-measure", "{67606615-90CB-4FB1-8147-74E9020EDF52}"
+	ProjectSection(SolutionItems) = preProject
+		docs\units-of-measure\README.md = docs\units-of-measure\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".git", ".git", "{19B7E339-7B60-47EC-94E8-55C011ADF746}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".project", ".project", "{2182CF11-42CF-47B9-B046-4E2F3F88A804}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		dotnet-tools.json = dotnet-tools.json
+		README.md = README.md
+		RELEASE_NOTES.md = RELEASE_NOTES.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{3C52F533-74CC-413D-8EDD-7B3D6B4777B6}"
+	ProjectSection(SolutionItems) = preProject
+		build.cmd = build.cmd
+		build.fsx = build.fsx
+		build.sh = build.sh
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{5ED40737-872B-4038-B860-E793EBE21F28}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{4D5C661A-E91C-4B9E-8167-DE8AC931F87C}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
+		.github\workflows\secrets.yml = .github\workflows\secrets.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{14644FDA-EA92-4678-8C10-7A84B14FCC23}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "tools", "tools\tools.fsproj", "{AC769337-906E-4D1F-BC98-3CC1341323C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -26,17 +103,41 @@ Global
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Release|Any CPU.ActiveCfg = Release|x64
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Release|x64.ActiveCfg = Release|x64
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Release|x64.Build.0 = Release|x64
+		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Debug|x64.ActiveCfg = Debug|x64
 		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Debug|x64.Build.0 = Debug|x64
+		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Release|Any CPU.Build.0 = Release|Any CPU
 		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Release|x64.ActiveCfg = Release|x64
 		{44E39E9C-7A97-4AA8-8287-78DADA1BF929}.Release|x64.Build.0 = Release|x64
+		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Debug|x64.ActiveCfg = Debug|x64
 		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Debug|x64.Build.0 = Debug|x64
+		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Release|x64.ActiveCfg = Release|x64
 		{1B957527-9C3E-4D18-B12B-E68D73B5BB3B}.Release|x64.Build.0 = Release|x64
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Debug|x64.Build.0 = Debug|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Release|x64.ActiveCfg = Release|Any CPU
+		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4693BB0E-197B-4B9D-9B2B-F25E9FA939DA} = {C3221202-C366-4541-8997-7D1E45628C60}
+		{B6325090-D20A-4599-92D7-1F74A4E31C6A} = {C3221202-C366-4541-8997-7D1E45628C60}
+		{D0D6839C-AD73-442D-A5BA-4A0B7EA04009} = {C3221202-C366-4541-8997-7D1E45628C60}
+		{67606615-90CB-4FB1-8147-74E9020EDF52} = {C3221202-C366-4541-8997-7D1E45628C60}
+		{4D5C661A-E91C-4B9E-8167-DE8AC931F87C} = {5ED40737-872B-4038-B860-E793EBE21F28}
+		{AC769337-906E-4D1F-BC98-3CC1341323C4} = {14644FDA-EA92-4678-8C10-7A84B14FCC23}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0DAA41C6-3CA8-4C2F-B6E3-1A585E82830C}
