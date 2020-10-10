@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Flips</title>
     <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css">
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" type="text/css" href="app.css">
   </head>
   <body>
     <div id="root"></div>
@@ -14,22 +14,26 @@
         new Docute({
             detectSystemDarkTheme: true,
             darkThemeToggler: true,
+            imageZoom: true,
+            layout: "wide",
             target: '#root',
             highlight: ["fsharp", "bash", "powershell", "json"],
+            cssVariables: {
+                accentColor: "hsl(171, 100%, 41%)",
+                sidebarWidth: "300px",
+                sidebarLinkActiveColor: "hsl(171, 100%, 41%)",
+                sidebarLinkArrowColor: "hsl(171, 100%, 41%)"
+            },
             nav: [
                 { title: "GitHub Repository", link: "https://github.com/matthewcrews/flips" }
             ],
             sidebar: [
-                {
-                    title: 'Flips',
-                    links: [
-                        { title: 'Introduction', link: '/' },
-                        { title: 'Types', link: '/types/'},
-                        { title: 'Units of Measure', link: '/units-of-measure/'},
-                        { title: 'SliceMaps', link: '/slicemaps/' },
-                        { title: 'Example Problems', link: '/example-problems/'}
-                    ]
-                }
+                { title: 'Introduction', link: '/' },
+                { title: 'Release Notes', link: '/RELEASE_NOTES' },
+                { title: 'Types', link: '/types/'},
+                { title: 'Units of Measure', link: '/units-of-measure/'},
+                { title: 'SliceMaps', link: '/slicemaps/' },
+                { title: 'Example Problems', link: '/example-problems/'}
             ]
         })
     </script>

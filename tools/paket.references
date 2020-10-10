@@ -1,0 +1,4 @@
+group Tooling
+	Fake.IO.FileSystem
+	FSharp.Core
+	FSharpLint.Core

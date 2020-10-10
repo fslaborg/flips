@@ -87,9 +87,6 @@ module Solution =
 
 [<AutoOpen>]
 module Builders =
-    
-    open Flips.Types
-    open Flips.UnitsOfMeasure.Types
 
     /// <summary>A Computation Expression for creating tuples of type ('Key * Decision<'Measure>)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
@@ -111,7 +108,7 @@ module Builders =
         member this.For(source:seq<'a>, body:'a -> 'b) =
             source |> Seq.map (fun x -> x, body x)
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>>) =
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*Flips.Types.DecisionType>>>>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
@@ -121,7 +118,7 @@ module Builders =
             g |> Seq.collect (fun (g, h) ->
             h |> Seq.map (fun (h, i) -> createDecision (a,b,c,d,e,f,g,h) i))))))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>) =
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*Flips.Types.DecisionType>>>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
@@ -130,7 +127,7 @@ module Builders =
             f |> Seq.collect (fun (f, g) ->
             g |> Seq.map (fun (g, h) -> createDecision (a,b,c,d,e,f,g) h)))))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>) =
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*Flips.Types.DecisionType>>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
@@ -138,29 +135,29 @@ module Builders =
             e |> Seq.collect (fun (e, f) ->
             f |> Seq.map (fun (f, g) -> createDecision (a,b,c,d,e,f) g))))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>) =
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*Flips.Types.DecisionType>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
             d |> Seq.collect (fun (d, e) ->
             e |> Seq.map (fun (e, f) -> createDecision (a,b,c,d,e) f)))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*DecisionType>>>>) =
+        member this.Run(a:seq<_*seq<_*seq<_*seq<_*Flips.Types.DecisionType>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
             d |> Seq.map (fun (d, e) -> createDecision (a,b,c,d) e))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*DecisionType>>>) =
+        member this.Run(a:seq<_*seq<_*seq<_*Flips.Types.DecisionType>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.map (fun (c, d) -> createDecision (a,b,c) d)))
 
-        member this.Run(a:seq<_*seq<_*DecisionType>>) =
+        member this.Run(a:seq<_*seq<_*Flips.Types.DecisionType>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.map (fun (b, c) -> createDecision (a, b) c))
 
-        member this.Run(a:seq<_*DecisionType>) = 
+        member this.Run(a:seq<_*Flips.Types.DecisionType>) = 
             a |> Seq.map (fun (a, b) -> createDecision a b)
 
 
