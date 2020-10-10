@@ -21,7 +21,7 @@ For anyone not familiar with LP/MIP, the process of creating and solving a model
 1. Define Parameters: This is the input data for your model
 2. Create Decisions: These are the choices that we want the Solver to make.
 3. Define the Objective: This is how success is measured
-4. Add Constraints: These are the rules that the Solver must objey for the solution to be valid
+4. Add Constraints: These are the rules that the Solver must obey for the solution to be valid
 5. Solve the Model: We give the optimization model to the Solver for it to find the best solution.
 6. Inspect the Result: Not all models are solvable. Depending on the formulation, there may be no solutions. We always check whether the Solver was able to find a solution to the model.
 
@@ -41,7 +41,7 @@ let hotdogWeight = 0.4
 let maxTruckWeight = 200.0
 ```
 
-Next we need to create the Decisions for the Solver to make. Decisions come in three varities: Boolean, Integer, and Continuous. Every Decision must be given a name and a Lower and Upper bound. In the case of a Boolean Decision, the Lower and Upper bound is implictly 0 and 1. For the case of Integer or Continuous, the bounds must be provided. This tells the Solver what is the legal range of values the Decision can take on. Most real-world Decisions have some bound to them. It is rare that something can be positive or negative infinity. There are four functions for creating Decisions in the `Decision` module. 
+Next we need to create the Decisions for the Solver to make. Decisions come in three varieties: Boolean, Integer, and Continuous. Every Decision must be given a name and a Lower and Upper bound. In the case of a Boolean Decision, the Lower and Upper bound is implicitly 0 and 1. For the case of Integer or Continuous, the bounds must be provided. This tells the Solver what is the legal range of values the Decision can take on. Most real-world Decisions have some bound to them. It is rare that something can be positive or negative infinity. There are four functions for creating Decisions in the `Decision` module. 
 
 ```fsharp
 create: (name:string) -> (decisionType:DecisionType) -> Decision
@@ -85,7 +85,7 @@ let maxWeight = Constraint.create "MaxWeight" (numberOfHotdogs * hotdogWeight + 
 Now that we have an `Objective` and some `Constraint`s, we can create a `Model` and add the `Constraint`s to it.
 
 ```fsharp
-// Create a Model type and pipe it through the addition of the constraitns
+// Create a Model type and pipe it through the addition of the constraints
 let model =
     Model.create objective
     |> Model.addConstraint maxHamburger
@@ -201,7 +201,7 @@ The tools of Linear/Mixed-Integer Programming are underutilized. Businesses freq
 
 ### Lack of Awareness
 
-LP/MIP is typically found in Operations Research curriculum. In some cases, people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldly as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relegated to expert users who likely studied it more seriously in university.
+LP/MIP is typically found in Operations Research curriculum. In some cases, people are exposed to it when they take a course on Excel and are shown the Solver that is built into Excel as an add-in. The Solver found in Excel is great for small, simple problems but begins to become unwieldy as the complexity and size grow. You eventually need to graduate to more powerful and expressive tools but if you haven't studied LP/MIP, you may not be aware of them. This lack of awareness has lead LP/MIP being relegated to expert users who likely studied it more seriously in university.
 
 ### Lack of Tools
 
