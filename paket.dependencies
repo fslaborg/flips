@@ -1,8 +1,8 @@
-version 5.247.4
+version 5.251.0
 
-framework: auto-detect
 generate_load_scripts: true
 
+source https://nuget.org/api/v2
 source https://api.nuget.org/v3/index.json
 
 nuget coverlet.collector ~> 1
@@ -10,8 +10,7 @@ nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
 nuget FSharp.Core ~> 4.7
 nuget FSharp.Data ~> 3
-nuget Google.OrTools ~> 7
-nuget Google.OrTools.runtime.win-x64 ~> 7
+nuget Google.OrTools ~> 8 framework: netstandard2.1
 nuget MathNet.Numerics ~> 4
 nuget MathNet.Numerics.FSharp ~> 4
 nuget Microsoft.NET.Test.Sdk ~> 16
@@ -21,15 +20,15 @@ nuget xunit ~> 2
 nuget xunit.runner.visualstudio ~> 2
 
 group Tooling
-	source https://nuget.org/api/v2
-	source https://api.nuget.org/v3/index.json
+  source https://nuget.org/api/v2
+  source https://api.nuget.org/v3/index.json
 
-	nuget Fake.IO.FileSystem ~> 5
-	nuget FSharp.Core ~> 4.7
-	nuget FSharpLint.Core ~> 0
+  nuget Fake.IO.FileSystem ~> 5
+  nuget FSharp.Core ~> 4.7
+  nuget FSharpLint.Core ~> 0
 
 group FakeBuild
-	source https://api.nuget.org/v3/index.json
+  source https://api.nuget.org/v3/index.json
 
     nuget Fake.Core.Target ~> 5
     nuget Fake.Core.ReleaseNotes ~> 5
