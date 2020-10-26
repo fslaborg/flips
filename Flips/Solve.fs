@@ -156,8 +156,8 @@ module internal ORTools =
 
         let solver = 
             match solverType with
-            | CBC -> Solver.CreateSolver("MIP Solver", "CBC_MIXED_INTEGER_PROGRAMMING")
-            | GLOP -> Solver.CreateSolver("LP Solver", "GLOP_LINEAR_PROGRAMMING")
+            | CBC -> Solver.CreateSolver("CBC")
+            | GLOP -> Solver.CreateSolver("GLOP")
 
         solver.SetTimeLimit(settings.MaxDuration)
         solver.EnableOutput()

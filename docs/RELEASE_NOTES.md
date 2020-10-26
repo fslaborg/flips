@@ -1,3 +1,7 @@
+### 2.3.4 - Monday, October 26th, 2020
+* Updated Google OR Tools
+* Bug fix for SMap4
+
 ### 2.3.2 - Thursday, October 1st, 2020
 * Removed unnecessary printfn
 

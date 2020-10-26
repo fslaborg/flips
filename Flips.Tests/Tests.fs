@@ -1284,6 +1284,20 @@ module Types =
                 Assert.True(k2 >= x2)
                 Assert.True(k4 >= x4)
 
+        [<Property>]
+        let ``SMap4 1, 4 dimension filters work`` 
+            (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>)
+            (x1:NonEmptyString)
+            (x2:NonEmptyString)
+            (x3:NonEmptyString)
+            (x4:NonEmptyString) =
+
+            let sm = d |> SMap4
+            let r = sm.[GreaterOrEqual x1, x2, x3, GreaterOrEqual x4]
+
+            for (k1, k4) in r.Keys do
+                Assert.True(k1 >= x1)
+                Assert.True(k4 >= x4)
 
         [<Property>]
         let ``SMap4 2, 3 dimension filters work`` 

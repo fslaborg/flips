@@ -152,6 +152,13 @@ type SMap4<'Key1, 'Key2, 'Key3, 'Key4, 'Value when 'Key1 : comparison and 'Key2 
             SMap2 (keys2, keys3, newTryFind)
 
     member this.Item
+            with get (k1f, k2, k3, k4f) =
+                let keys1 = SliceSet.slice k1f keys1
+                let keys4 = SliceSet.slice k4f keys4
+                let newTryFind (k1, k4) = tryFind (k1, k2, k3, k4)
+                SMap2 (keys1, keys4, newTryFind)
+
+    member this.Item
         with get (k1f, k2, k3f, k4) =
             let keys1 = SliceSet.slice k1f keys1
             let keys3 = SliceSet.slice k3f keys3
