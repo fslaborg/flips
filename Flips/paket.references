@@ -2,3 +2,4 @@ Google.OrTools
 OPTANO.Modeling
 OPTANO.Modeling.Gurobi
 FSharp.Core
+System.Memory
