@@ -4,6 +4,7 @@ open System
 open System.Collections.Generic
 
 
+[<NoComparison;NoEquality>]
 type SliceType<'a when 'a : comparison> =
   | All
   | Equals of 'a

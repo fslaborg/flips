@@ -1,3 +1,6 @@
+### 2.3.5 - Friday, November 13th, 2020
+* Target netstandard2.0 for FSharp 5.0 Notebooks compatability
+
 ### 2.3.4 - Monday, October 26th, 2020
 * Updated Google OR Tools
 * Bug fix for SMap4
