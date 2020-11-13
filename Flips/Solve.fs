@@ -32,10 +32,10 @@ module internal ORTools =
 
     let private buildExpression solver (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
         let reducedExpr = Flips.Types.LinearExpression.Reduce expr
-        
+
         let decisionExpr =
             reducedExpr.Coefficients
-            |> Seq.map (fun kvp -> 
+            |> Seq.map (fun kvp ->
                           addVariable solver kvp.Key reducedExpr.DecisionTypes.[kvp.Key] vars
                           kvp.Value * vars.[kvp.Key])
             |> Array.ofSeq
@@ -74,10 +74,10 @@ module internal ORTools =
         let constraintExpr = lhsExpr - rhsExpr
 
         match inequality with
-        | LessOrEqual -> 
+        | LessOrEqual ->
             let c = RangeConstraint(constraintExpr, System.Double.NegativeInfinity, 0.0)
             solver.Add(c)
-        | GreaterOrEqual -> 
+        | GreaterOrEqual ->
             let c = RangeConstraint(constraintExpr, 0.0, System.Double.PositiveInfinity)
             solver.Add(c)
 
@@ -96,9 +96,9 @@ module internal ORTools =
     let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
         let decisionMap =
             decisions
-            |> Seq.map (fun d -> 
-                            match Dictionary.tryFind d.Name vars with 
-                            | Some var -> d, var.SolutionValue() 
+            |> Seq.map (fun d ->
+                            match Dictionary.tryFind d.Name vars with
+                            | Some var -> d, var.SolutionValue()
                             | None -> d, 0.0)
             |> Map.ofSeq
 
@@ -119,12 +119,12 @@ module internal ORTools =
         let resultStatus = solver.Solve()
 
         match resultStatus with
-        | Solver.ResultStatus.OPTIMAL -> 
+        | Solver.ResultStatus.OPTIMAL ->
             Result.Ok solver
         | _ ->
             Result.Error resultStatus
 
-            
+
 
     let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float) (solver:Solver) =
         let objectiveAsConstraint =
@@ -142,7 +142,7 @@ module internal ORTools =
     let rec internal solveForObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (solver:Solver) =
 
         match objectives with
-        | [] -> 
+        | [] ->
             failwith "Model without Objective" // Argument should be a special type
         | objective :: [] ->
             solveForObjective vars objective solver
@@ -154,24 +154,24 @@ module internal ORTools =
 
     let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
 
-        let solver = 
+        let solver =
             match solverType with
             | CBC -> Solver.CreateSolver("CBC")
             | GLOP -> Solver.CreateSolver("GLOP")
 
         solver.SetTimeLimit(settings.MaxDuration)
         solver.EnableOutput()
-    
+
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
-    
+
         // Write LP Formulation to file if requested
         settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
-    
+
         let result = solveForObjectives vars (List.rev model.Objectives) solver
-    
+
         match result with
-        | Result.Ok solver -> 
+        | Result.Ok solver ->
             buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
             |> SolveResult.Optimal
         | Result.Error errorStatus ->
@@ -191,7 +191,7 @@ module internal Optano =
         | Cplex128
         | Gurobi900
 
-    
+
     let private createVariable (DecisionName name:DecisionName) (decisionType:DecisionType) =
         match decisionType with
         | Boolean -> new Variable(name, 0.0, 1.0, Enums.VariableType.Binary)
@@ -207,11 +207,11 @@ module internal Optano =
 
     let private buildExpression (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
         let reducedExpr = Flips.Types.LinearExpression.Reduce expr
-        
+
         let constantExpr = Expression.Sum([reducedExpr.Offset])
         let decisionExpr =
             reducedExpr.Coefficients
-            |> Seq.map (fun kvp -> 
+            |> Seq.map (fun kvp ->
                           addVariable kvp.Key reducedExpr.DecisionTypes.[kvp.Key] vars
                           kvp.Value * vars.[kvp.Key])
             |> (fun terms -> Expression.Sum(terms))
@@ -223,7 +223,7 @@ module internal Optano =
         let (ObjectiveName name) = objective.Name
         let expr = buildExpression vars objective.Expression
 
-        let sense = 
+        let sense =
             match objective.Sense with
             | Minimize -> Enums.ObjectiveSense.Minimize
             | Maximize -> Enums.ObjectiveSense.Maximize
@@ -233,7 +233,7 @@ module internal Optano =
 
     let private addObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (optanoModel:Model) =
         let numOfObjectives = objectives.Length
-        
+
         objectives
         // The order of the objectives is the priority order
         // OPTANO sorts objectives by PriorityLevel desc
@@ -253,11 +253,11 @@ module internal Optano =
         let lhsExpr = buildExpression vars lhs
         let rhsExpr = buildExpression vars rhs
 
-        let c = 
+        let c =
             match inequality with
-            | LessOrEqual -> 
+            | LessOrEqual ->
                 Constraint.LessThanOrEqual(lhsExpr, rhsExpr)
-            | GreaterOrEqual -> 
+            | GreaterOrEqual ->
                 Constraint.GreaterThanOrEqual(lhsExpr, rhsExpr)
 
         optanoModel.AddConstraint(c, n)
@@ -278,9 +278,9 @@ module internal Optano =
     let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (optanoSolution:Solution) =
         let decisionMap =
             decisions
-            |> Seq.map (fun d -> 
-                            match Dictionary.tryFind d.Name vars with 
-                            | Some var -> d, var.Value 
+            |> Seq.map (fun d ->
+                            match Dictionary.tryFind d.Name vars with
+                            | Some var -> d, var.Value
                             | None -> d, 0.0)
             |> Map.ofSeq
 
@@ -311,26 +311,26 @@ module internal Optano =
 
 
     let internal solve (solverType:OptanoSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
-        
+
         let optanoModel = new Model()
         let vars = Dictionary()
         addConstraints vars model.Constraints optanoModel
         addObjectives vars (List.rev model.Objectives) optanoModel |> ignore
 
-        let optanoSolution = 
+        let optanoSolution =
             match solverType with
             | Cplex128 -> cplex128Solve settings optanoModel
             | Gurobi900 -> gurobi900Solve settings optanoModel
 
         match optanoSolution.ModelStatus, optanoSolution.Status with
-        | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) -> 
+        | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) ->
             let solution = buildSolution (Model.getDecisions model) vars optanoSolution
             Optimal solution
-        | Solver.ModelStatus.Infeasible, _ -> 
+        | Solver.ModelStatus.Infeasible, _ ->
             SolveResult.Infeasible "The model was found to be infeasible"
-        | Solver.ModelStatus.Unbounded, _ -> 
+        | Solver.ModelStatus.Unbounded, _ ->
             SolveResult.Unbounded "The model was found to be unbounded"
-        | _ -> 
+        | _ ->
             SolveResult.Unknown "The model status is unknown. Unable to solve."
 
 
@@ -340,7 +340,7 @@ module Solver =
     /// <summary>The function used to call the underlying solver with the model</summary>
     /// <param name="settings">The settings for the solver to use</param>
     /// <param name="model">A model which represents the problem</param>
-    /// <returns>A solution which contains results if successful or a message in case of an error</returns
+    /// <returns>A solution which contains results if successful or a message in case of an error</returns>
     let solve (settings:SolverSettings) (model:Flips.Model.Model) =
 
         match settings.SolverType with
@@ -349,4 +349,4 @@ module Solver =
         | Cplex128 -> Optano.solve Optano.OptanoSolverType.Cplex128 settings model
         | Gurobi900 -> Optano.solve Optano.OptanoSolverType.Gurobi900 settings model
 
-    
+
