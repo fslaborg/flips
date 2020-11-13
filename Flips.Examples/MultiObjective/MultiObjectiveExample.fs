@@ -92,10 +92,10 @@ let solve () =
         let revenueResult = Solution.evaluate solution revenueExpr
 
         printfn "Revenue: %f" revenueResult
-        
+
         printfn "Waste: %f" solution.ObjectiveResult
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
             printfn "Decision: %A\tValue: %f" decision.Name value
-    | errorCase -> 
+    | errorCase ->
         printfn "Unable to solve. Error: %A" errorCase

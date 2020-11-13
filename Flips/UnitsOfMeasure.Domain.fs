@@ -11,7 +11,7 @@ module Decision =
     /// <typeparam name="'Measure">The Unit of Measure for the Decision</typeparam>
     /// <param name="decisionName">The unique identifier for the Decision</param>
     /// <param name="decitionType">The type of the decision</param>
-    /// <returns>A new Decision with the given DecisionType</returns
+    /// <returns>A new Decision with the given DecisionType</returns>
     let create<[<Measure>] 'Measure> decisionName decisionType =
         let d = Decision.create decisionName decisionType
         Decision<'Measure>.Value d
@@ -20,7 +20,7 @@ module Decision =
     /// <remarks>These types of decisions are meant to represent True/False, Yes/No types of decisions. They map to 0.0 and 1.0 in the mathematical representation.</remarks>
     /// <typeparam name="'Measure">The Unit of Measure for the Decision</typeparam>
     /// <param name="decisionName">The unique identifier for the decision</param>
-    /// <returns>A new Decision with a type of Boolean</returns
+    /// <returns>A new Decision with a type of Boolean</returns>
     let createBoolean<[<Measure>] 'Measure> decisionName =
         let d = Decision.createBoolean decisionName
         Decision<'Measure>.Value d
@@ -31,7 +31,7 @@ module Decision =
     /// <param name="decisionName">The unique identifier for the decision</param>
     /// <param name="lowerBound">The smallest value the decision is allowed to take on</param>
     /// <param name="upperBound">The largest value the decision is allowed to take on</param>
-    /// <returns>A new Decision with a type of Integer</returns
+    /// <returns>A new Decision with a type of Integer</returns>
     let createInteger<[<Measure>] 'Measure> decisionName (lowerBound:float<'Measure>) (upperBound:float<'Measure>) =
         let d = Decision.createInteger decisionName (float lowerBound) (float upperBound)
         Decision<'Measure>.Value d
@@ -43,7 +43,7 @@ module Decision =
     /// <param name="decisionName">The unique identifier for the decision</param>
     /// <param name="lowerBound">The smallest value the decision is allowed to take on</param>
     /// <param name="upperBound">The largest value the decision is allowed to take on</param>
-    /// <returns>A new Decision with a type of Continuous</returns
+    /// <returns>A new Decision with a type of Continuous</returns>
     let createContinuous<[<Measure>] 'Measure> decisionName (lowerBound:float<'Measure>) (upperBound:float<'Measure>) =
         let d = Decision.createContinuous decisionName (float lowerBound) (float upperBound)
         Decision<'Measure>.Value d
@@ -51,12 +51,12 @@ module Decision =
 
 [<RequireQualifiedAccess>]
 module Objective =
-    
+
     /// <summary>Create an Objective for an optimization model</summary>
     /// <param name="objectiveName">The name which describes the goal of the objective function</param>
     /// <param name="objectiveSense">The goal of the objective: Maximize or Minimize</param>
     /// <param name="objectiveExpression">The Linear Expression which describes the goal of the model</param>
-    /// <returns>A new Objective</returns
+    /// <returns>A new Objective</returns>
     let create objectiveName sense (Value expr:LinearExpression<'Measure>) =
         Objective.create objectiveName sense expr
 
@@ -67,7 +67,7 @@ module Solution =
     /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
     /// <param name="solution">The solution that is used to look up the solver values</param>
     /// <param name="decisions">A Map<'Key, Decision<'Measure>> that will be used for the lookups</param>
-    /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>
+    /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>>
     let getValues (s:Types.Solution) (m:Map<_,Decision<'Measure>>) =
         let getWithDefault _ (Decision.Value d:Decision<'Measure>) =
             match Map.tryFind d s.DecisionResults with
@@ -79,7 +79,7 @@ module Solution =
     /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression with a Unit of Measure to evaluate the resulting value for</param>
-    /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
+    /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>>
     let evaluate (solution:Types.Solution) (Value expression:LinearExpression<'Measure>) =
         Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
@@ -91,7 +91,7 @@ module Builders =
     /// <summary>A Computation Expression for creating tuples of type ('Key * Decision<'Measure>)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
     /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns
+    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns>
     type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
@@ -157,7 +157,7 @@ module Builders =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.map (fun (b, c) -> createDecision (a, b) c))
 
-        member this.Run(a:seq<_*Flips.Types.DecisionType>) = 
+        member this.Run(a:seq<_*Flips.Types.DecisionType>) =
             a |> Seq.map (fun (a, b) -> createDecision a b)
 
 
@@ -178,15 +178,15 @@ module Sum =
 
     /// <summary>A function which sums the values contained in a SliceMap</summary>
     /// <param name="x">An instance of ISliceData</param>
-    /// <returns>A LinearExpression with a Unit of Measure</returns
+    /// <returns>A LinearExpression with a Unit of Measure</returns>
     let inline sum (x:ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
         TryFind.sum x.Keys x.TryFind
 
     /// <summary>A function which sums a sequence of SliceMaps</summary>
     /// <param name="x">A sequence of SliceMaps</param>
-    /// <returns>A LinearExpression with a Unit of Measure</returns
-    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> Flips.Types.LinearExpression) 
+    /// <returns>A LinearExpression with a Unit of Measure</returns>
+    let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> Flips.Types.LinearExpression)
                               and ^a: (static member (+): ^a * ^a -> ^a)
-                              and ^a: (static member Zero: ^a)> (k1: ^a seq) : Flips.Types.LinearExpression = 
+                              and ^a: (static member Zero: ^a)> (k1: ^a seq) : Flips.Types.LinearExpression =
         let r = Seq.sum k1
         ((^a) : (static member Sum: ^a -> Flips.Types.LinearExpression) r)
