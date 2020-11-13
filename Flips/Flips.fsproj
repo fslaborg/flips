@@ -16,8 +16,18 @@
     <PackageIcon>Favicon.png</PackageIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <NoWarn>NU1701;0052;</NoWarn>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
+    <WarningLevel>5</WarningLevel>
+    <DocumentationFile>bin\x64\Debug\netstandard2.0\Flips.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <NoWarn></NoWarn>
+    <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Favicon.png">
@@ -42,6 +52,11 @@
     <Compile Include="Solve.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Google.OrTools.runtime.win-x64">
+      <NoWarn>NU1701</NoWarn>
+    </PackageReference>
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

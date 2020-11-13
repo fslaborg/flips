@@ -24,6 +24,7 @@ type DecisionName = DecisionName of string
 
 /// Used for the reduction of a LinearExpression to a form used for mapping to 
 /// underlying solvers.
+[<NoComparison>]
 type internal ReduceAccumulator = {
     DecisionTypes : Dictionary<DecisionName, DecisionType>
     Coefficients : Dictionary<DecisionName, List<float>>
@@ -367,6 +368,7 @@ and
 
 and 
     /// The representation of how two LinearExpressions must relate to one another
+    [<NoComparison>]
     ConstraintExpression = 
     | Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
     | Equality of LHS:LinearExpression * RHS:LinearExpression
@@ -375,6 +377,7 @@ and
 type ConstraintName = ConstraintName of string
 
 /// Represents a constraint for the model
+[<NoComparison>]
 type Constraint = {
     Name : ConstraintName
     Expression : ConstraintExpression
@@ -390,6 +393,7 @@ type ObjectiveSense =
 type ObjectiveName = ObjectiveName of string
 
 /// The goal of the optimization model
+[<NoComparison>]
 type Objective = {
     Name : ObjectiveName
     Sense : ObjectiveSense

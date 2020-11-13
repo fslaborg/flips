@@ -113,6 +113,7 @@ module Model =
 
     /// A type which represents the optimization model. It contains an Objective which represents the
     /// goal of the model and a collection of Constraints which the model must obey.
+    [<NoComparison>]
     type Model = private {
         _Objectives : Objective list
         _Constraints : Constraint list

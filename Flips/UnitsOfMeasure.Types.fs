@@ -68,6 +68,7 @@ module Types =
 
   and 
       /// A LinearExpression with a UnitOfMeausre
+      [<NoComparison>]
       LinearExpression<[<Measure>] 'Measure> =
       | Value of Types.LinearExpression
       with
