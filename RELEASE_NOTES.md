@@ -1,3 +1,7 @@
+### 2.3.6 - Friday, November 13th, 2020
+* Fixed XML Comments
+* Fixed writing of LP file for OPTANO based solvers
+
 ### 2.3.5 - Friday, November 13th, 2020
 * Target netstandard2.0 for FSharp 5.0 Notebooks compatability
 
