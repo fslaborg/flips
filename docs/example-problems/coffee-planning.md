@@ -128,12 +128,11 @@ printfn "-- Result --"
 // If the model could be solved, it will print the value of the Objective Function and the
 // values for the Decision Variables
 match result with
-| Suboptimal msg -> printfn "Unable to solve. Error: %s" msg
 | Optimal solution ->
     printfn "Objective Value: %f" solution.ObjectiveResult
 
-    let roasterValues = Solution.getValues solution buildRoaster.AsMap
-    let warehouseValues = Solution.getValues solution buildWarehouse.AsMap
+    let roasterValues = Solution.getValues solution (buildRoaster.AsMap())
+    let warehouseValues = Solution.getValues solution (buildWarehouse.AsMap())
 
     printfn "Plan Cost: $%.2f" solution.ObjectiveResult
 
@@ -142,4 +141,5 @@ match result with
     for location in locations do
         let (Location l) = location
         printfn "%-12s\t%12A\t%12A" l roasterValues.[location] warehouseValues.[location]
+| _ -> printfn $"Unable to solve. Error: %A{result}"
 ```
