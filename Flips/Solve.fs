@@ -317,6 +317,8 @@ module internal Optano =
         addConstraints vars model.Constraints optanoModel
         addObjectives vars (List.rev model.Objectives) optanoModel |> ignore
 
+        settings.WriteLPFile |> Option.map (writeLPFile optanoModel) |> ignore
+
         let optanoSolution =
             match solverType with
             | Cplex128 -> cplex128Solve settings optanoModel
