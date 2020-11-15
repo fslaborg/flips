@@ -10,8 +10,10 @@ open Flips.Tests.Types
 
 
 module UnitsOfMeasureTests =
+    open Flips.SliceMap
     open Flips.UnitsOfMeasure
     open Flips.UnitsOfMeasure.Types
+    open Flips.Tests.UnitsOfMeasure
     open Flips.Tests.Gens.UnitsOfMeasure
 
     let randomItemExpressionFromDecisions rng (decisions:seq<Decision<Item>>) =
@@ -207,3 +209,29 @@ module UnitsOfMeasureTests =
             Assert.Equal(expr, r)
 
 
+        // just make sure it compiles (was buggy giving SMap<NonEmptyString, Scalar<Item ^ 2>> due to implementation issue, same for SMap2, SMap3, SMap4 and SMap5)
+        [<Property>]
+        let ``SMap pairwise addition doesn't affect measure type `` (a: SMap<NonEmptyString,Scalar<Item>>) (b: SMap<NonEmptyString,Scalar<Item>>) =
+          let c : SMap<NonEmptyString, Scalar<Item>> = a + b
+          ()
+        [<Property>]
+        let ``SMap2 pairwise addition doesn't affect measure type `` (a: SMap2<NonEmptyString,NonEmptyString,Scalar<Item>>) (b: SMap2<NonEmptyString,NonEmptyString,Scalar<Item>>) =
+          // just make sure it compiles (was buggy giving SMap<NonEmptyString, Scalar<Item ^ 2>> due to implementation issue)
+          let c : SMap2<NonEmptyString, NonEmptyString, Scalar<Item>> = a + b
+          ()
+        [<Property>]
+        let ``SMap3 pairwise addition doesn't affect measure type `` (a: SMap3<NonEmptyString,NonEmptyString,NonEmptyString,Scalar<Item>>) (b: SMap3<NonEmptyString,NonEmptyString,NonEmptyString,Scalar<Item>>) =
+          // just make sure it compiles (was buggy giving SMap<NonEmptyString, Scalar<Item ^ 2>> due to implementation issue)
+          let c : SMap3<NonEmptyString,NonEmptyString,NonEmptyString, Scalar<Item>> = a + b
+          ()
+        [<Property>]
+        let ``SMap4 pairwise addition doesn't affect measure type `` (a: SMap4<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,Scalar<Item>>) (b: SMap4<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,Scalar<Item>>) =
+          // just make sure it compiles (was buggy giving SMap<NonEmptyString, Scalar<Item ^ 2>> due to implementation issue)
+          let c : SMap4<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString, Scalar<Item>> = a + b
+          ()
+        [<Property>]
+        let ``SMap5 pairwise addition doesn't affect measure type `` (a: SMap5<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,Scalar<Item>>) (b: SMap5<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,Scalar<Item>>) =
+          // just make sure it compiles (was buggy giving SMap<NonEmptyString, Scalar<Item ^ 2>> due to implementation issue)
+          let c : SMap5<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString, Scalar<Item>> = a + b
+          ()
+          
