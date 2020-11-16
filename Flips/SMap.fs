@@ -98,7 +98,7 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
         let newKeys = SliceSet.union a.Keys b.Keys
         let newTryFind k =
             match (a.TryFind k), (b.TryFind k) with
-            | Some lv, Some rv -> Some (lv * rv)
+            | Some lv, Some rv -> Some (lv + rv)
             | Some lv, None -> Some lv
             | None, Some rv -> Some rv
             | None, None -> None

@@ -555,6 +555,24 @@ module Types =
             let r1 = (s1 + s2) + s3
             let r2 = s1 + (s2 + s3)
             Assert.StrictEqual(r1, r2)
+    
+        [<Property>]
+        let ``SliceMap addition is pairwise sum`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) =
+            let s1 = Map.ofList v1 |> SMap
+            let s2 = Map.ofList v2 |> SMap
+            
+            let r1 = s1 + s2
+            let r2 =
+              [
+                for key in s1.Keys + s2.Keys do
+                  match s1.TryFind key, s2.TryFind key with
+                  | Some v1, Some v2 -> key, v1 + v2
+                  | None, Some v1 | Some v1, None -> key, v1
+                  | _ -> key, Value 0.
+              ]
+              |> SMap.ofList
+
+            Assert.StrictEqual(r1, r2)
 
         [<Property>]
         let ``SliceMap element-wise multiplication is commutative`` (v1:List<(NonEmptyString * Scalar)>) (v2:List<(NonEmptyString * Scalar)>) =

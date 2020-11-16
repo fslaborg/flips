@@ -427,7 +427,7 @@ type SMap5<'Key1, 'Key2, 'Key3, 'Key4, 'Key5, 'Value when 'Key1 : comparison and
         let keys5 = a.Keys5 + b.Keys5
         let newTryFind k =
             match (a.TryFind k), (b.TryFind k) with
-            | Some lv, Some rv -> Some (lv * rv)
+            | Some lv, Some rv -> Some (lv + rv)
             | Some lv, None -> Some lv
             | None, Some rv -> Some rv
             | None, None -> None

@@ -196,7 +196,7 @@ type SMap3<'Key1, 'Key2, 'Key3, 'Value when 'Key1 : comparison and 'Key2 : compa
         let keys3 = a.Keys3 + b.Keys3
         let newTryFind k =
             match (a.TryFind k), (b.TryFind k) with
-            | Some lv, Some rv -> Some (lv * rv)
+            | Some lv, Some rv -> Some (lv + rv)
             | Some lv, None -> Some lv
             | None, Some rv -> Some rv
             | None, None -> None
