@@ -27,7 +27,7 @@ let solve () =
     let decisions = 
         [for s in sources do
             for d in destinations ->
-                (s, d), 1.0 * Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
+                (s, d), Decision.createContinuous (sprintf "%i_%s" s d) 0.0 infinity]
         |> SMap2.ofList
 
     // Using a ConstraintBuilder ComputationExpression to generate a set of constraints
