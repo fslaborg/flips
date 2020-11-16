@@ -107,6 +107,7 @@ type SliceSet<[<EqualityConditionalOn>]'T when 'T : comparison>(comparer:ICompar
             let s = seq { for idx in 0..values.Length-1 -> values.Span.[idx] }
             s.GetEnumerator()
 
+    interface System.Collections.IEnumerable with
         member _.GetEnumerator(): Collections.IEnumerator = 
             let s = seq { for idx in 0..values.Length-1 -> values.Span.[idx] }
             s.GetEnumerator() :> Collections.IEnumerator

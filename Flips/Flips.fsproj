@@ -13,7 +13,7 @@
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>Favicon.png</PackageIcon>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NoWarn>NU1701;0052;</NoWarn>
@@ -30,11 +30,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="Favicon.png">
-      <Pack>True</Pack>
-      <PackagePath>
-      </PackagePath>
-    </None>
+    <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
     <None Include="Scratchpad.fsx" />
     <Compile Include="Types.fs" />
     <Compile Include="Domain.fs" />
