@@ -1,3 +1,6 @@
+### 2.3.7 - Friday, November 13th, 2020
+* Fixed SMap addition
+
 ### 2.3.6 - Friday, November 13th, 2020
 * Fixed XML Comments
 * Fixed writing of LP file for OPTANO based solvers
