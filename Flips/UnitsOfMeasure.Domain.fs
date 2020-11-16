@@ -166,16 +166,6 @@ module Sum =
 
     open Flips.SliceMap
 
-    type internal Summer () =
-
-        static member inline Sum (x:ISliceData<_,_>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-          TryFind.sum x.Keys x.TryFind
-
-        static member Sum (x:ISliceData<_,Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-          let newTryFind = x.TryFind >> Option.map (fun v -> 1.0 * v)
-          TryFind.sum x.Keys newTryFind
-
-
     /// <summary>A function which sums the values contained in a SliceMap</summary>
     /// <param name="x">An instance of ISliceData</param>
     /// <returns>A LinearExpression with a Unit of Measure</returns>
