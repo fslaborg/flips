@@ -1,4 +1,5 @@
-﻿namespace Flips.Tests
+﻿#nowarn "1240" // This type test or downcast will ignore the unit-of-measure ''Measure'
+namespace Flips.Tests
 
 [<CustomEquality; CustomComparison>]
 type Scalar = Value of float with
