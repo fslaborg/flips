@@ -654,6 +654,25 @@ module Types =
                 Assert.StrictEqual (v, sm.[k])
 
 
+        [<Property>]
+        let ``SMap works with Solution.getValues`` (d:List<(NonEmptyString * Scalar)>) =
+            let uniqueValues = d |> List.distinctBy fst
+            let expectedResult = uniqueValues |> Map.ofList
+            let names = uniqueValues |> List.map fst
+            let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap
+            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
+            let solution = {
+                ObjectiveResult = 0.0
+                DecisionResults = decisionResults
+            }
+
+            let resultValues = 
+                Solution.getValues solution decisions
+                |> Map.map (fun k v -> Scalar.Value v)
+
+            Assert.StrictEqual(expectedResult, resultValues)
+
+
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module SliceMap2Tests =
         open Flips.SliceMap
@@ -799,6 +818,25 @@ module Types =
             
             for (k, v) in Map.toSeq valueMap do
                 Assert.StrictEqual (v, sm.[k])
+
+
+        [<Property>]
+        let ``SMap2 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString) * Scalar)>) =
+            let uniqueValues = d |> List.distinctBy fst
+            let expectedResult = uniqueValues |> Map.ofList
+            let names = uniqueValues |> List.map fst
+            let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap2
+            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
+            let solution = {
+                ObjectiveResult = 0.0
+                DecisionResults = decisionResults
+            }
+
+            let resultValues = 
+                Solution.getValues solution decisions
+                |> Map.map (fun k v -> Scalar.Value v)
+
+            Assert.StrictEqual(expectedResult, resultValues)
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -1044,6 +1082,25 @@ module Types =
             
             for (k, v) in Map.toSeq valueMap do
                 Assert.StrictEqual (v, sm.[k])
+
+
+        [<Property>]
+        let ``SMap3 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let uniqueValues = d |> List.distinctBy fst
+            let expectedResult = uniqueValues |> Map.ofList
+            let names = uniqueValues |> List.map fst
+            let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap3
+            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
+            let solution = {
+                ObjectiveResult = 0.0
+                DecisionResults = decisionResults
+            }
+
+            let resultValues = 
+                Solution.getValues solution decisions
+                |> Map.map (fun k v -> Scalar.Value v)
+
+            Assert.StrictEqual(expectedResult, resultValues)
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -1445,6 +1502,25 @@ module Types =
             
             for (k, v) in Map.toSeq valueMap do
                 Assert.StrictEqual (v, sm.[k])
+
+
+        [<Property>]
+        let ``SMap4 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let uniqueValues = d |> List.distinctBy fst |> fun x -> x.[..6]
+            let expectedResult = uniqueValues |> Map.ofList
+            let names = uniqueValues |> List.map fst
+            let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap4
+            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
+            let solution = {
+                ObjectiveResult = 0.0
+                DecisionResults = decisionResults
+            }
+
+            let resultValues = 
+                Solution.getValues solution decisions
+                |> Map.map (fun k v -> Scalar.Value v)
+
+            Assert.StrictEqual(expectedResult, resultValues)
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
@@ -2116,6 +2192,25 @@ module Types =
             
             for (k, v) in Map.toSeq valueMap do
                 Assert.StrictEqual (v, sm.[k])
+
+
+        [<Property>]
+        let ``SMap5 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar)>) =
+            let uniqueValues = d |> List.distinctBy fst |> fun x -> x.[..6]
+            let expectedResult = uniqueValues |> Map.ofList
+            let names = uniqueValues |> List.map fst
+            let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap5
+            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
+            let solution = {
+                ObjectiveResult = 0.0
+                DecisionResults = decisionResults
+            }
+
+            let resultValues = 
+                Solution.getValues solution decisions
+                |> Map.map (fun k v -> Scalar.Value v)
+
+            Assert.StrictEqual(expectedResult, resultValues)
 
 
 

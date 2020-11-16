@@ -1,5 +1,6 @@
 ﻿namespace Flips.SliceMap
 
+open System
 open System.Collections.Generic
 
 [<NoComparison>]
@@ -106,6 +107,75 @@ type SMap<'Key, 'Value when 'Key : comparison and 'Value : equality>
 
     static member inline Sum (m:SMap<_, _>) =
         TryFind.sum m.Keys m.TryFind
+
+    interface IEnumerable<KeyValuePair<'Key, 'Value>> with
+        member _.GetEnumerator () : IEnumerator<KeyValuePair<'Key, 'Value>> = 
+            let s = seq { for key in keys -> tryFind key |> Option.map (fun v -> KeyValuePair(key, v)) } |> Seq.choose id
+            s.GetEnumerator ()
+
+    interface System.Collections.IEnumerable with
+        member _.GetEnumerator () : Collections.IEnumerator = 
+            let s = seq { for key in keys -> tryFind key |> Option.map (fun v -> KeyValuePair(key, v)) } |> Seq.choose id
+            s.GetEnumerator () :> Collections.IEnumerator
+
+    interface IDictionary<'Key, 'Value> with 
+        member m.Item 
+            with get x = m.[x] 
+            and  set x v = ignore(x, v); raise (NotSupportedException("SliceMap cannot be mutated"))
+
+        // REVIEW: this implementation could avoid copying the Values to an array 
+        member m.Keys = ([| for kvp in m -> kvp.Key |] :> ICollection<'Key>)
+
+        // REVIEW: this implementation could avoid copying the Values to an array 
+        member m.Values = ([| for kvp in m -> kvp.Value |] :> ICollection<'Value>)
+
+        member m.Add(k, v) = ignore(k, v); raise (NotSupportedException("SliceMap cannot be mutated"))
+
+        member m.ContainsKey k = m.ContainsKey k
+
+        member m.TryGetValue(k, r) = 
+            match m.TryFind(k) with 
+            | Some v -> 
+                r <- v
+                true
+            | None -> false
+
+        member m.Remove(k : 'Key) = ignore k; (raise (NotSupportedException("SliceMap cannot be mutated")) : bool)
+
+    interface ICollection<KeyValuePair<'Key, 'Value>> with 
+        member __.Add x = ignore x; raise (NotSupportedException("SliceMap cannot be mutated"))
+
+        member __.Clear() = raise (NotSupportedException("SliceMap cannot be mutated"))
+
+        member __.Remove x = ignore x; raise (NotSupportedException("SliceMap cannot be mutated"))
+
+        member m.Contains x = m.ContainsKey x.Key && Unchecked.equals m.[x.Key] x.Value
+
+        member m.CopyTo(arr, i) = raise (NotSupportedException("SliceMap does not support CopyTo"))
+
+        member __.IsReadOnly = true
+
+        member m.Count = raise (NotSupportedException("SliceMap does not support Count"))
+
+    interface IReadOnlyCollection<KeyValuePair<'Key, 'Value>> with
+        member m.Count = raise (NotSupportedException("SliceMap does not support Count"))
+
+    interface IReadOnlyDictionary<'Key, 'Value> with
+
+        member m.Item with get key = m.[key]
+
+        member m.Keys = seq { for kvp in m -> kvp.Key }
+
+        member m.TryGetValue(key, value: byref<'Value>) = 
+            match m.TryFind(key) with 
+            | Some v -> 
+                value <- v
+                true
+            | None -> false
+
+        member m.Values = seq { for kvp in m -> kvp.Value }
+
+        member m.ContainsKey key = m.ContainsKey key
 
 
 [<RequireQualifiedAccess>]

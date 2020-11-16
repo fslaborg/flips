@@ -168,14 +168,17 @@ module Solution =
 
     /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
     /// <param name="solution">The solution that is used to look up the solver values</param>
-    /// <param name="decisions">A Map<'Key, Decision> that will be used for the lookups</param>
+    /// <param name="decisions">An IDictionary<'Key, Decision> that will be used for the lookups</param>
     /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
-    let getValues (solution:Solution) (decisions:Map<_,Decision>) =
-        let getWithDefault _ d =
+    let getValues (solution:Solution) (decisions:System.Collections.Generic.IDictionary<_,Decision>) =
+        let inline getWithDefault d =
             match Map.tryFind d solution.DecisionResults with
             | Some v -> v
             | None -> 0.0
-        decisions |> Map.map getWithDefault
+
+        seq { for kvp in decisions -> kvp.Key, getWithDefault kvp.Value}
+        |> Map.ofSeq
+
 
 
     /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
