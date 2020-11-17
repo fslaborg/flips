@@ -7,7 +7,7 @@ open Flips.SliceMap
 type Job = Job of int
 type Machine = Machine of int
 
-let solve () =
+let solve settings =
     let rng = System.Random(123)
     // Declare the parameters for our model
     let maxAssignments = 5.0
@@ -68,15 +68,6 @@ let solve () =
         |> Model.addConstraint assignmentConstraint
         |> Model.addConstraints machineAssignmentConstraints
         |> Model.addConstraints oneAssignmentConstraints
-
-
-    // Create a Settings type which tells the Solver which types of underlying solver to use,
-    // the time alloted for solving, and whether to write an LP file to disk
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 10_000L
-        WriteLPFile = None
-    }
 
     // Call the `solve` function in the Solve module to evaluate the model
     let result = Solver.solve settings model

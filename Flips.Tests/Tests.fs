@@ -236,6 +236,7 @@ module Types =
                 SolverType = SolverType.CBC
                 MaxDuration = 30_000L
                 WriteLPFile = Some "Test.lp"
+                WriteMPSFile = Some "Test.mps"
             }
         
             let result = Solver.solve settings model
@@ -333,6 +334,7 @@ module Types =
                 SolverType = SolverType.CBC
                 MaxDuration = 10_000L
                 WriteLPFile = None
+                WriteMPSFile = None
             }
 
             // Call the `solve` function in the Solve module to evaluate the model

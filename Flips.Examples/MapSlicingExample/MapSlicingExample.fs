@@ -5,7 +5,7 @@ open Flips.Types
 open Flips.SliceMap
 
 
-let solve () =
+let solve settings =
     let sources = [1 .. 3]
     let sourceMax = Map.ofList [for s in sources -> s, 10.0 * float s]
 
@@ -68,12 +68,6 @@ let solve () =
         |> Model.addConstraints sourceConstraints
         |> Model.addConstraints destinationConstraints
         |> Model.addConstraints arcConstraints
-
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 30_000L
-        WriteLPFile = Some "ConstraintBuilderExample.lp"
-    }
 
     let result = Solver.solve settings model
 

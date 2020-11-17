@@ -12,7 +12,7 @@ type [<Measure>] Build
 
 type Location = Location of string
 
-let solve () =
+let solve settings =
 
     let minRoastingCapacity = 30.0<Ton>
     let minWarehouseCapacity = 30_000.0<ft^3>
@@ -112,12 +112,6 @@ let solve () =
         |> Model.addConstraint minRoastingCapacityConstraint
         |> Model.addConstraint minWarehouseCapacityConstraint
         |> Model.addConstraints warehouseWithRoasterConstraints
-
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 10_000L
-        WriteLPFile = None
-    }
 
     // Call the `solve` function in the Solve module to evaluate the model
     let result = Solver.solve settings model
