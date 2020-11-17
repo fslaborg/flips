@@ -3,7 +3,7 @@
 open Flips
 open Flips.Types
 
-let solve () =
+let solve settings =
     let x1 = Decision.createContinuous "x1" 0.0 infinity
     let x2 = Decision.createContinuous "x2" 0.0 infinity
     
@@ -14,12 +14,6 @@ let solve () =
         |> Model.addConstraint (Constraint.create "Max x1" (x1 <== 10.0))
         |> Model.addConstraint (Constraint.create "Max x2" (x2 <== 5.0))
         |> Model.addConstraint (Constraint.create "Max x1 and x2" (x1 + x2 <== 12.0))
-    
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 30_000L
-        WriteLPFile = Some "Test.lp"
-    }
     
     let result = Solver.solve settings model
     printfn "%A" result

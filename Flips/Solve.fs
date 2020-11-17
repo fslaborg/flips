@@ -45,14 +45,6 @@ module internal ORTools =
         resultExpr
 
 
-
-    let private createVariableMap (solver:Solver) (decisions:seq<Decision>) =
-        decisions
-        |> Seq.map (fun d -> d.Name, d.Type)
-        |> Map.ofSeq
-        |> Map.map (fun name decisionType -> createVariable solver name decisionType)
-
-
     let private setObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
         let expr = buildExpression solver vars objective.Expression
 
@@ -113,6 +105,11 @@ module internal ORTools =
         System.IO.File.WriteAllText(filePath, lpFile)
 
 
+    let private writeMPSFile (solver:Solver) (filePath:string) =
+        let lpFile = solver.ExportModelAsMpsFormat(false, false)
+        System.IO.File.WriteAllText(filePath, lpFile)
+
+
     let internal solveForObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
         setObjective vars objective solver
 
@@ -165,8 +162,9 @@ module internal ORTools =
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
 
-        // Write LP Formulation to file if requested
-        settings.WriteLPFile |> Option.map (writeLPFile solver) |> ignore
+        // Write LP/MPS Formulation to file if requested
+        settings.WriteLPFile |> Option.iter (writeLPFile solver)
+        settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
 
         let result = solveForObjectives vars (List.rev model.Objectives) solver
 
@@ -297,6 +295,13 @@ module internal Optano =
         let lpExporter = Exporter.LPExporter(outputStream)
         lpExporter.Write(optanoModel)
 
+    let private writeMPSFile (optanoModel:Model) (filePath:string) =
+        if System.IO.File.Exists(filePath) then
+            System.IO.File.Delete(filePath)
+        use outputStream = new System.IO.FileStream(filePath, System.IO.FileMode.CreateNew)
+        let exporter = Exporter.MPSExporter(outputStream)
+        exporter.Write(optanoModel)
+
 
     let private gurobi900Solve (settings:Types.SolverSettings) (optanoModel:Model) =
         use solver = new Solver.Gurobi900.GurobiSolver()
@@ -317,7 +322,8 @@ module internal Optano =
         addConstraints vars model.Constraints optanoModel
         addObjectives vars (List.rev model.Objectives) optanoModel |> ignore
 
-        settings.WriteLPFile |> Option.map (writeLPFile optanoModel) |> ignore
+        settings.WriteLPFile |> Option.iter (writeLPFile optanoModel)
+        settings.WriteMPSFile |> Option.iter (writeMPSFile optanoModel)
 
         let optanoSolution =
             match solverType with

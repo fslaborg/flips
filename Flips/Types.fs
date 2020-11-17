@@ -419,6 +419,7 @@ type SolverSettings = {
     SolverType : SolverType
     MaxDuration : int64
     WriteLPFile : Option<string>
+    WriteMPSFile : Option<string>
 }
 
 /// The result of calling the solve function. If the solve was successful, the Optimal

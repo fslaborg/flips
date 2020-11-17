@@ -9,7 +9,7 @@ open Flips.Types
 
 type YahooStocks = CsvProvider<"2020-01-01,1.11,1.22,1.33,1.44,1.55,5666777888", Schema = " Date (date), Open (float), High(float), Low(float), Close(float), Adj Close (float), Volume(int64)">
 
-let solve () =
+let solve settings =
 
     // Raw data preparation (downloaded directly from yahoo using CSV data provider)
     let getStockReturns (tickers : string list) startDate endDate = 
@@ -93,14 +93,7 @@ let solve () =
         |> Model.addConstraint maxProfitConstraint
         |> Model.addConstraint maxWeightConstraint
         |> Model.addConstraints weightsLessThan1Constraints
-        
-    // Settings
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 1_000_000L
-        WriteLPFile = None
-    }
-
+    
     // Solve
     let results = Solver.solve settings model
 

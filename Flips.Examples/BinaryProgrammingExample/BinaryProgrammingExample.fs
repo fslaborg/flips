@@ -5,7 +5,7 @@ open Flips.Types
 open Flips.SliceMap
 
 
-let solve () =
+let solve settings =
 
     let indexes = [1..9]
     let value = [for i in indexes -> i, 10.0 - (float i)] |> SMap.ofList
@@ -23,13 +23,7 @@ let solve () =
     let model =
         Model.create objective
         |> Model.addConstraint uniqueConstraint
-
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 30_000L
-        WriteLPFile = Some "ConstraintBuilderExample.lp"
-    }
-    
+            
     let result = Solver.solve settings model
 
     printfn "--Result--"
