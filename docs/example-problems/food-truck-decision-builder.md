@@ -52,6 +52,7 @@ let settings = {
     SolverType = SolverType.CBC
     MaxDuration = 10_000L
     WriteLPFile = None
+    WriteMPSFile = None
 }
 
 // Call the `solve` function in the Solve module to evaluate the model
