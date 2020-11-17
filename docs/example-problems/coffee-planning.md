@@ -131,8 +131,8 @@ match result with
 | Optimal solution ->
     printfn "Objective Value: %f" solution.ObjectiveResult
 
-    let roasterValues = Solution.getValues solution (buildRoaster.AsMap())
-    let warehouseValues = Solution.getValues solution (buildWarehouse.AsMap())
+    let roasterValues = Solution.getValues solution buildRoaster
+    let warehouseValues = Solution.getValues solution buildWarehouse
 
     printfn "Plan Cost: $%.2f" solution.ObjectiveResult
 

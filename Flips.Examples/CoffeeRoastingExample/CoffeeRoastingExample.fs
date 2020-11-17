@@ -132,8 +132,8 @@ let solve () =
     | Optimal solution ->
         printfn "Objective Value: %f" solution.ObjectiveResult
 
-        let roasterValues = Solution.getValues solution (SMap.toMap buildRoaster)
-        let warehouseValues = Solution.getValues solution (SMap.toMap buildWarehouse)
+        let roasterValues = Solution.getValues solution buildRoaster
+        let warehouseValues = Solution.getValues solution buildWarehouse
 
         printfn "Plan Cost: $%.2f" solution.ObjectiveResult
 

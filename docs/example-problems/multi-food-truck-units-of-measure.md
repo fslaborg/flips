@@ -82,7 +82,7 @@ match result with
 | Optimal solution ->
     printfn "Objective Value: %f" solution.ObjectiveResult
 
-    let values = Solution.getValues solution (numberOfItem.AsMap())
+    let values = Solution.getValues solution numberOfItem
 
     for ((location, item), value) in values |> Map.toSeq do
         printfn "Item: %s\tLocation: %s\tValue: %f" item location value
