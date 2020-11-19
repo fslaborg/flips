@@ -1,3 +1,8 @@
+### 2.4.1 - Wednesday, November 18th, 2020
+* Fixed writing of LP files to have correct variable names
+* Added writing of MPS files
+* Added SourceLink
+
 ### 2.4.0 - Monday, November 16th, 2020
 * Implemented interfaces for SliceMaps to be used with Solution.getValues
 
