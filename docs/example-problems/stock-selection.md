@@ -96,11 +96,9 @@ let model =
     |> Model.addConstraints weightsLessThan1Constraints
     
 // Settings
-let settings = {
-    SolverType = SolverType.CBC
-    MaxDuration = 1_000_000L
-    WriteLPFile = None
-}
+let settings = 
+    Settings.basic
+    |> Settings.setMaxDuration 1_000_000L
 
 // Solve
 let results = Solver.solve settings model
@@ -109,7 +107,7 @@ let results = Solver.solve settings model
 printfn "-- Result --"
 match results with
 | Optimal solution ->
-    printfn "Objective Value - Risk: %f %%" (solution.ObjectiveResult * 100.0)
+    printfn "Objective Value - Risk: %f %%" ((Solution.evaluateObjective solution objective) * 100.0)
 
     for (decision, value) in solution.DecisionResults |> Map.toSeq |> Seq.filter(fun (key, value) -> value > 0.0) do
         let (DecisionName name) = decision.Name

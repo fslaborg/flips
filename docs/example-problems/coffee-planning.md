@@ -112,15 +112,9 @@ let model =
     |> Model.addConstraint minWarehouseCapacityConstraint
     |> Model.addConstraints warehouseWithRoasterConstraints
 
-let settings = {
-    SolverType = SolverType.CBC
-    MaxDuration = 10_000L
-    WriteLPFile = None
-    WriteMPSFile = None
-}
-
 // Call the `solve` function in the Solve module to evaluate the model
-let result = Solver.solve settings model
+// using the basic settings
+let result = Solver.solve Settings.basic model
 
 printfn "-- Result --"
 
@@ -130,7 +124,7 @@ printfn "-- Result --"
 // values for the Decision Variables
 match result with
 | Optimal solution ->
-    printfn "Objective Value: %f" solution.ObjectiveResult
+    printfn "Objective Value: %f" (Solution.evaluateObjective solution objective)
 
     let roasterValues = Solution.getValues solution buildRoaster
     let warehouseValues = Solution.getValues solution buildWarehouse

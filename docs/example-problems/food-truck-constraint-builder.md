@@ -45,17 +45,9 @@ let model =
     |> Model.addConstraints maxItemConstraints
     |> Model.addConstraint maxWeight
 
-// Create a Settings type which tells the Solver which types of underlying solver to use,
-// the time alloted for solving, and whether to write an LP file to disk
-let settings = {
-    SolverType = SolverType.CBC
-    MaxDuration = 10_000L
-    WriteLPFile = None
-    WriteMPSFile = None
-}
-
 // Call the `solve` function in the Solve module to evaluate the model
-let result = Solver.solve settings model
+// using the basic settings
+let result = Solver.solve Settings.basic model
 
 printfn "-- Result --"
 
@@ -65,7 +57,7 @@ printfn "-- Result --"
 // values for the Decision Variables
 match result with
 | Optimal solution ->
-    printfn "Objective Value: %f" solution.ObjectiveResult
+    printfn "Objective Value: %f" (Solution.evaluateObjective solution objective)
 
     for (decision, value) in solution.DecisionResults |> Map.toSeq do
         printfn "Decision: %A\tValue: %f" decision.Name value
