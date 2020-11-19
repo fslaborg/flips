@@ -124,7 +124,7 @@ printfn "-- Result --"
 // values for the Decision Variables
 match result with
 | Optimal solution ->
-    printfn "Objective Value: %f" (Solution.evaluateObjective solution objective)
+    printfn "Objective Value: %f" (Objective.evaluate solution objective)
 
     let roasterValues = Solution.getValues solution buildRoaster
     let warehouseValues = Solution.getValues solution buildWarehouse

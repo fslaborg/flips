@@ -54,7 +54,7 @@ printfn "-- Result --"
 // values for the Decision Variables
 match result with
 | Optimal solution ->
-    printfn "Objective Value: %f" (Solution.evaluateObjective solution objective)
+    printfn "Objective Value: %f" (Objective.evaluate solution objective)
 
     for (decision, value) in solution.DecisionResults |> Map.toSeq do
         let (DecisionName name) = decision.Name

@@ -81,9 +81,9 @@ let solve settings =
     match result with
     | Optimal solution ->
 
-        printfn "Revenue: %f" (Solution.evaluateObjective solution revenueObjective)
+        printfn "Revenue: %f" (Objective.evaluate solution revenueObjective)
         
-        printfn "Waste: %f" (Solution.evaluateObjective solution wasteObjective)
+        printfn "Waste: %f" (Objective.evaluate solution wasteObjective)
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
             printfn "Decision: %A\tValue: %f" decision.Name value
