@@ -403,7 +403,7 @@ type Objective = {
 /// The results of the optimization if it was successful
 type Solution = {
     DecisionResults : Map<Decision,float>
-    [<Obsolete("Please use the Solution.evaluateObjective function instead")>]
+    [<Obsolete("Please use the Objective.evaluate function instead")>]
     ObjectiveResult : float
 }
 

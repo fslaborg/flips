@@ -107,6 +107,13 @@ module Objective =
             Expression = objectiveExpression
         }
 
+    /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
+    /// <param name="solution">The solution used for looking up the results of Decisions</param>
+    /// <param name="objective">The Objective to evaluate the resulting value for</param>
+    /// <returns>A float which is the simplification of the LinearExpression</returns>
+    let evaluate (solution:Solution) (objective:Objective) =
+        LinearExpression.Evaluate solution.DecisionResults objective.Expression
+
 
 [<RequireQualifiedAccess>]
 module Model =
@@ -114,7 +121,7 @@ module Model =
     /// A type which represents the optimization model. It contains an Objective which represents the
     /// goal of the model and a collection of Constraints which the model must obey.
     [<NoComparison>]
-    type Model = private {
+    type Model = internal {
         _Objectives : Objective list
         _Constraints : Constraint list
     }
@@ -226,13 +233,6 @@ module Solution =
     /// <returns>A float which is the simplification of the LinearExpression</returns>
     let evaluate (solution:Solution) (expression:LinearExpression) =
         LinearExpression.Evaluate solution.DecisionResults expression
-
-    /// <summary>A function for evaluating the resulting value of an Objective</summary>
-    /// <param name="solution">The solution used for lookup up the results of Decisions</param>
-    /// <param name="objective">The Objective to evaluate the resulting value for</param>
-    /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluateObjective (solution:Solution) (objective:Objective) =
-        LinearExpression.Evaluate solution.DecisionResults objective.Expression
 
 
 [<AutoOpen>]
