@@ -47,7 +47,7 @@ let solve settings =
         [for item in items do
             // The total of the Item is the sum across the Locations
             let locationSum = List.sum [for location in locations -> 1.0 * numberOfItem.[location, item]]
-            let name = sprintf "MaxItemTotal|%s" item
+            let name = sprintf "MaxItemTotal_%s" item
             Constraint.create name (locationSum <== maxIngredients.[item])
         ]
 
@@ -56,7 +56,7 @@ let solve settings =
     let maxWeightConstraints = 
         [for location in locations -> 
             let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
-            let name = sprintf "MaxTotalWeight|%s" location
+            let name = sprintf "MaxTotalWeight_%s" location
             Constraint.create name (weightSum <== maxTruckWeight.[location])
         ]
 

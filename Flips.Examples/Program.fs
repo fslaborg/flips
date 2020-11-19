@@ -16,19 +16,19 @@ let main argv =
         WriteMPSFile = None
     }
 
-    FoodTruckExample.solve settings
-    FoodTruckMapExample.solve settings
-    FoodTruckConstraintBuilderExample.solve settings
-    FoodTruckDecisionBuilder.solve settings
-    FoodTruckUnitsOfMeasureExample.solve settings
-    MultipleFoodTruckExample.solve settings
-    MultipleFoodTruckWithSliceMapExample.solve settings
-    MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.solve settings
+    FoodTruckExample.solve { settings with WriteLPFile = Some "foodtruck.lp" }
+    FoodTruckMapExample.solve { settings with WriteLPFile = Some "foodmaptruck.lp" }
+    FoodTruckConstraintBuilderExample.solve { settings with WriteLPFile = Some "foodtruckconstraintbuilder.lp" }
+    FoodTruckDecisionBuilder.solve { settings with WriteLPFile = Some "foodtruckdecisionbuilder.lp" }
+    FoodTruckUnitsOfMeasureExample.solve { settings with WriteLPFile = Some "foodtruckuom.lp" }
+    MultipleFoodTruckExample.solve { settings with WriteLPFile = Some "multiplefoodtruck.lp" }
+    MultipleFoodTruckWithSliceMapExample.solve { settings with WriteLPFile = Some "multiplefoodtruckslicemap.lp" }
+    MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.solve  { settings with WriteLPFile = Some "multiplefoodtruckslicemapuom.lp" }
     SimpleExample.solve { settings with WriteLPFile = Some "simpleproblem.lp" }
     MapSlicingExample.solve { settings with WriteLPFile = Some "ConstraintBuilder.lp" }
     BinaryProgrammingExample.solve { settings with WriteLPFile = Some "ConstraintBuilderWithBinary.lp" }
-    StocksExample.solve settings
-    CoffeeRoastingExample.solve settings
+    StocksExample.solve  { settings with WriteLPFile = Some "stocks.lp" }
+    CoffeeRoastingExample.solve  { settings with WriteLPFile = Some "coffeeroasting.lp" }
     MultiObjective.solve { settings with WriteMPSFile = Some "multiobjective.mps" }
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
