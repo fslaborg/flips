@@ -216,7 +216,7 @@ module Builders =
         tupleToObjectList indices
         |> List.map (sprintf "%O")
         |> String.concat "_"
-        |> (sprintf "%s|%s" prefix)
+        |> (sprintf "%s_%s" prefix)
 
 
     /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>

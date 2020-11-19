@@ -46,7 +46,7 @@ let locations = ["CityA"; "CityB"; "CityC"]
 let withoutDecisionBuilder =
     [for i in indexes do
         for l in locations ->
-            let name = sprintf "Test|%i_%s" i l
+            let name = sprintf "Test_%i_%s" i l
             let decisionType = DecisionType.Continuous (0.0, infinity)
             (i, l), Decision.create name decisionType
     ] |> Map.ofList
@@ -71,7 +71,7 @@ Since the creation of constraints is such a common occurrence in modeling, a `Co
 let maxItemConstraints =
     [for item in items do
         for location in locations do
-            let name = sprintf "MaxItem|%s_%s" item location
+            let name = sprintf "MaxItem_%s_%s" item location
             Constraint.create name (numberOfItem.[item,location] <== maxIngredients.[item])]
 
 // The equivalent statement using a `ConstraintBuilder`

@@ -425,7 +425,7 @@ let maxItemConstraints =
     [for item in items do
         // The total of the Item is the sum across the Locations
         let locationSum = List.sum [for location in locations -> numberOfItem.[location, item]]
-        let name = sprintf "MaxItemTotal|%s" item
+        let name = sprintf "MaxItemTotal_%s" item
         Constraint.create name (locationSum <== maxIngredients.[item])
     ]
 
@@ -434,7 +434,7 @@ let maxItemConstraints =
 let maxWeightConstraints = 
     [for location in locations -> 
         let weightSum = List.sum [for item in items -> itemWeight.[item] * numberOfItem.[location, item]]
-        let name = sprintf "MaxTotalWeight|%s" location
+        let name = sprintf "MaxTotalWeight_%s" location
         Constraint.create name (weightSum <== maxTruckWeight.[location])
     ]
 
@@ -492,14 +492,14 @@ let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
 // Create Total Item Maximum constraints for each item
 let maxItemConstraints =
     [for item in items do
-        let name = sprintf "MaxItemTotal|%s" item
+        let name = sprintf "MaxItemTotal_%s" item
         Constraint.create name (sum numberOfItem.[All, item] <== maxIngredients.[item])
     ]
 
 // Create a Constraint for the Max combined weight of items for each Location
 let maxWeightConstraints = 
     [for location in locations -> 
-        let name = sprintf "MaxTotalWeight|%s" location
+        let name = sprintf "MaxTotalWeight_%s" location
         Constraint.create name (sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location])
     ]
 

@@ -56,22 +56,35 @@ module internal ORTools =
     let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
         let lhsExpr = buildExpression solver vars lhs
         let rhsExpr = buildExpression solver vars rhs
-        let c = Google.OrTools.LinearSolver.Equality(lhsExpr, rhsExpr, true)
-        solver.Add(c)
+        // note: this is work around for
+        // https://github.com/google/or-tools/issues/2231
+        // https://github.com/matthewcrews/flips/issues/104
+        let dictionary = new Dictionary<_, _>()
+        let mutable num = lhsExpr.Visit(dictionary)
+        num <- num + rhsExpr.DoVisit(dictionary, -1.0)
+        let c = solver.MakeConstraint(0.0 - num, 0.0 - num, n)
+        for item in dictionary do
+            c.SetCoefficient(item.Key, item.Value)
 
 
     let private addInequalityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
         let lhsExpr = buildExpression solver vars lhs
         let rhsExpr = buildExpression solver vars rhs
         let constraintExpr = lhsExpr - rhsExpr
+        
+        let lb, ub =
+            match inequality with
+            | LessOrEqual -> System.Double.NegativeInfinity, 0.0
+            | GreaterOrEqual -> 0.0, System.Double.PositiveInfinity
 
-        match inequality with
-        | LessOrEqual ->
-            let c = RangeConstraint(constraintExpr, System.Double.NegativeInfinity, 0.0)
-            solver.Add(c)
-        | GreaterOrEqual ->
-            let c = RangeConstraint(constraintExpr, 0.0, System.Double.PositiveInfinity)
-            solver.Add(c)
+        // note: this is work around for
+        // https://github.com/google/or-tools/issues/2231
+        // https://github.com/matthewcrews/flips/issues/104
+        let dictionary = new Dictionary<_, _>()
+        let num = constraintExpr.Visit(dictionary)
+        let c = solver.MakeConstraint(lb - num, ub - num, n)
+        for item in dictionary do
+            c.SetCoefficient(item.Key, item.Value)
 
 
     let private addConstraint (vars:Dictionary<DecisionName, Variable>) (c:Types.Constraint) (solver:Solver) =
@@ -117,7 +130,7 @@ module internal ORTools =
 
         match resultStatus with
         | Solver.ResultStatus.OPTIMAL ->
-            Result.Ok solver
+            Result.Ok (solver,objective)
         | _ ->
             Result.Error resultStatus
 
@@ -145,7 +158,7 @@ module internal ORTools =
             solveForObjective vars objective solver
         | objective :: remaining ->
             solveForObjective vars objective solver
-            |> Result.map (fun solver -> addObjectiveAsConstraint vars objective (solver.Objective().BestBound()) solver)
+            |> Result.map (fun (solver,_) -> addObjectiveAsConstraint vars objective (solver.Objective().BestBound()) solver)
             |> Result.bind (solveForObjectives vars remaining)
 
 
@@ -162,14 +175,28 @@ module internal ORTools =
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
 
-        // Write LP/MPS Formulation to file if requested
-        settings.WriteLPFile |> Option.iter (writeLPFile solver)
-        settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+        
+        model.Objectives
+        |> List.tryHead 
+        |> Option.iter (fun objective -> 
+          // Write LP/MPS Formulation to file if requested with first objective
+          setObjective vars objective solver
+          settings.WriteLPFile |> Option.iter (writeLPFile solver)
+          settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+        )
 
         let result = solveForObjectives vars (List.rev model.Objectives) solver
 
         match result with
-        | Result.Ok solver ->
+        | Result.Ok (solver,objective) ->
+            match model.Objectives with
+            | firstObjective :: _ when firstObjective <> objective ->
+              // Write LP/MPS Formulation to file again if requested
+              // doing it again in case the solved objective isn't the first one
+              settings.WriteLPFile |> Option.iter (writeLPFile solver)
+              settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+            | [] | [_] | _ -> () 
+
             buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
             |> SolveResult.Optimal
         | Result.Error errorStatus ->
