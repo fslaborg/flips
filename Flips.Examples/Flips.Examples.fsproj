@@ -5,6 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <WarningsAsErrors>3239;0044;</WarningsAsErrors>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="MultiObjective\MultiObjectiveExample.fs" />
     <Compile Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
