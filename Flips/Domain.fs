@@ -180,6 +180,8 @@ module Settings =
             MaxDuration = 10_000L
             WriteLPFile = None
             WriteMPSFile = None
+            // We want to enable this in a future major release
+            // EnableOutput = false
         }
 
     /// <summary>A function to set whether to write an LP file for the model</summary>
@@ -209,6 +211,14 @@ module Settings =
     /// <returns>A new Settings type with the SolverType updated</returns>
     let setSolverType solverType settings =
         { settings with SolverType = solverType }
+
+    // We will enable this in the next major release
+    /// <summary>A function for setting the EnableOutput flag</summary>
+    /// <param name="solverType">The bool to set the EnableOutput field to</param>
+    /// <param name="settings">The Settings type to build a new value off of</param>
+    /// <returns>A new Settings type with the EnableOutput updated</returns>
+    //let setEnableOutput enableOutput settings =
+    //  { settings with EnableOutput = enableOutput }
 
 
 [<RequireQualifiedAccess>]
