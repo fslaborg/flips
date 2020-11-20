@@ -1,8 +1,13 @@
-### 2.4.1 - Monday, November 16th, 2020
+### 2.4.2 - Thursday, November 16th, 2020
 * Added Settings.basic type for default values for the solver
 * Added functions for adjusting the settings for the solver
 * Added Solution.evaluateObjective function for getting the value of an objective after solving
 * Deprecated the Solution.ObjectiveValue field
+
+### 2.4.1 - Wednesday, November 18th, 2020
+* Fixed writing of LP files to have correct variable names
+* Added writing of MPS files
+* Added SourceLink
 
 ### 2.4.0 - Monday, November 16th, 2020
 * Implemented interfaces for SliceMaps to be used with Solution.getValues
