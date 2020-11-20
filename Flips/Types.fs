@@ -403,6 +403,7 @@ type Objective = {
 /// The results of the optimization if it was successful
 type Solution = {
     DecisionResults : Map<Decision,float>
+    [<Obsolete("Please use the Objective.evaluate function instead")>]
     ObjectiveResult : float
 }
 
@@ -420,6 +421,8 @@ type SolverSettings = {
     MaxDuration : int64
     WriteLPFile : Option<string>
     WriteMPSFile : Option<string>
+    // We want to enable this in the next major release
+    //EnableOutput : bool
 }
 
 /// The result of calling the solve function. If the solve was successful, the Optimal

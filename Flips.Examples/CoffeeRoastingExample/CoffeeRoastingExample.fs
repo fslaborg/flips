@@ -124,12 +124,12 @@ let solve settings =
     // values for the Decision Variables
     match result with
     | Optimal solution ->
-        printfn "Objective Value: %f" solution.ObjectiveResult
+        printfn "Objective Value: %f" (Objective.evaluate solution objective)
 
         let roasterValues = Solution.getValues solution buildRoaster
         let warehouseValues = Solution.getValues solution buildWarehouse
 
-        printfn "Plan Cost: $%.2f" solution.ObjectiveResult
+        printfn "Plan Cost: $%.2f" (Objective.evaluate solution objective)
 
         printfn "Location\tRoaster\tWarehouse"
 

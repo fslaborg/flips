@@ -109,7 +109,7 @@ module internal ORTools =
 
         {
             DecisionResults = decisionMap
-            ObjectiveResult = solver.Objective().BestBound()
+            ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
         }
 
 
@@ -170,11 +170,15 @@ module internal ORTools =
             | GLOP -> Solver.CreateSolver("GLOP")
 
         solver.SetTimeLimit(settings.MaxDuration)
-        solver.EnableOutput()
+
+        // We will enable this in the next major release
+        //if settings.EnableOutput then
+        //    solver.EnableOutput()
+        //else
+        //    solver.SuppressOutput()
 
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
-
         
         model.Objectives
         |> List.tryHead 
@@ -300,7 +304,7 @@ module internal Optano =
 
 
 
-    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (optanoSolution:Solution) =
+    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (optanoSolution:Solution) (objective:Flips.Types.Objective) =
         let decisionMap =
             decisions
             |> Seq.map (fun d ->
@@ -311,7 +315,7 @@ module internal Optano =
 
         {
             DecisionResults = decisionMap
-            ObjectiveResult = optanoSolution.BestBound
+            ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
         }
 
 
@@ -347,7 +351,8 @@ module internal Optano =
         let optanoModel = new Model()
         let vars = Dictionary()
         addConstraints vars model.Constraints optanoModel
-        addObjectives vars (List.rev model.Objectives) optanoModel |> ignore
+        let orderedObjective = List.rev model.Objectives
+        addObjectives vars orderedObjective optanoModel |> ignore
 
         settings.WriteLPFile |> Option.iter (writeLPFile optanoModel)
         settings.WriteMPSFile |> Option.iter (writeMPSFile optanoModel)
@@ -359,7 +364,7 @@ module internal Optano =
 
         match optanoSolution.ModelStatus, optanoSolution.Status with
         | Solver.ModelStatus.Feasible, (Solver.SolutionStatus.Optimal | Solver.SolutionStatus.Feasible) ->
-            let solution = buildSolution (Model.getDecisions model) vars optanoSolution
+            let solution = buildSolution (Model.getDecisions model) vars optanoSolution (List.head orderedObjective)
             Optimal solution
         | Solver.ModelStatus.Infeasible, _ ->
             SolveResult.Infeasible "The model was found to be infeasible"
