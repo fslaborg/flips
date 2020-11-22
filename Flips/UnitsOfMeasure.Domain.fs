@@ -57,8 +57,40 @@ module Objective =
     /// <param name="objectiveSense">The goal of the objective: Maximize or Minimize</param>
     /// <param name="objectiveExpression">The Linear Expression which describes the goal of the model</param>
     /// <returns>A new Objective</returns>
-    let create objectiveName sense (Value expr:LinearExpression<'Measure>) =
-        Objective.create objectiveName sense expr
+    let create objectiveName sense (LinearExpression.Value expr:LinearExpression<'Measure>) =
+        let objective = Objective.create objectiveName sense expr
+        Objective<'Measure>.Value objective
+
+    /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
+    /// <param name="solution">The solution used for looking up the results of Decisions</param>
+    /// <param name="objective">The Objective to evaluate the resulting value for</param>
+    /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
+    let evaluate (solution:Types.Solution) (Objective.Value objective:Objective<'Measure>) =
+        objective.Expression
+        |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
+        |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
+
+
+
+[<RequireQualifiedAccess>]
+module Model =
+
+    /// <summary>Create a Model with the given objective</summary>
+    /// <param name="objective">The objective for the model</param>
+    /// <returns>A new Model with an Objective but no constraints</returns>
+    let create (Objective.Value objective) : Flips.Model.Model =
+
+        {
+            _Objectives = [objective]
+            _Constraints = []
+        }
+
+    /// <summary>Add an Objective to a Model</summary>
+    /// <param name="objective">The objective to be added to the model</param>
+    /// <returns>A new Model with the Objective added</returns>
+    let addObjective (Objective.Value objective) model : Flips.Model.Model =
+
+        { model with _Objectives = [objective] @ model.Objectives }
 
 
 [<RequireQualifiedAccess>]
@@ -81,7 +113,7 @@ module Solution =
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression with a Unit of Measure to evaluate the resulting value for</param>
     /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
-    let evaluate (solution:Types.Solution) (Value expression:LinearExpression<'Measure>) =
+    let evaluate (solution:Types.Solution) (LinearExpression.Value expression:LinearExpression<'Measure>) =
         Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 

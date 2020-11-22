@@ -23,14 +23,7 @@ let model =
     |> Model.addConstraint (Constraint.create "Max x2" (x2 <== 5.0))
     |> Model.addConstraint (Constraint.create "Max x1 and x2" (x1 + x2 <== 12.0))
 
-// Create the settings you would like the solver the use
-let settings = {
-    SolverType = SolverType.CBC
-    MaxDuration = 30_000L
-    WriteLPFile = Some "Test.lp"
-}
-
-// Solve the Model
-let result = Solver.solve settings model
+// Solve the Model using the basic settings
+let result = Solver.solve Settings.basic model
 printfn "%A" result
 ```

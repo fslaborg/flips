@@ -344,8 +344,8 @@ module Types =
 
             match initialResult, postResult with
             | Optimal sln1, Optimal sln2 ->
-                let initialRevenue = sln1.ObjectiveResult
-                let postSolutionRevenue = Solution.evaluate sln2 revenueExpr
+                let initialRevenue = Objective.evaluate sln1 revenueObjective
+                let postSolutionRevenue = Objective.evaluate sln2 revenueObjective
 
                 let revenueIsTheSame =
                     System.Math.Abs (initialRevenue - postSolutionRevenue) < 0.001

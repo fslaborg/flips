@@ -1,6 +1,7 @@
 ﻿// Learn more about F# at http://fsharp.org
 
 open System
+open Flips
 open Flips.Types
 open Flips.Examples
  
@@ -9,12 +10,7 @@ open Flips.Examples
 let main argv =
     // Create a Settings type which tells the Solver which types of underlying solver to use,
     // the time alloted for solving, and whether to write an LP file to disk
-    let settings = {
-        SolverType = SolverType.CBC
-        MaxDuration = 10_000L
-        WriteLPFile = None
-        WriteMPSFile = None
-    }
+    let settings = Settings.basic
 
     FoodTruckExample.solve { settings with WriteLPFile = Some "foodtruck.lp" }
     FoodTruckMapExample.solve { settings with WriteLPFile = Some "foodmaptruck.lp" }
