@@ -45,7 +45,6 @@
       <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>$(AssemblyName).Solver</_Parameter1>
@@ -63,30 +62,30 @@
       <_Parameter1>$(AssemblyName).Solver.Gurobi</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SliceMap" Version="0.0.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
-    <None Include="Scratchpad.fsx" />
-    <Compile Include="Types.fs" />
-    <Compile Include="Domain.fs" />
-    <Compile Include="SliceMap.Extensions.fs" />
-    <Compile Include="UnitsOfMeasure.Types.fs" />
-    <Compile Include="UnitsOfMeasure.Domain.fs" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="Google.OrTools.runtime.win-x64">
-      <NoWarn>NU1701</NoWarn>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="SliceMap" Version="0.0.2" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="AssemblyInfo.InternalsVisibleTo.fs" />
+        <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
+        <None Include="Scratchpad.fsx" />
+        <Compile Include="Types.fs" />
+        <Compile Include="Domain.fs" />
+        <Compile Include="SliceMap.fs" />
+        <Compile Include="UnitsOfMeasure.Types.fs" />
+        <Compile Include="UnitsOfMeasure.Domain.fs" />
+        <None Include="paket.references" />
+        <None Include="paket.template" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Update="Google.OrTools.runtime.win-x64">
+            <NoWarn>NU1701</NoWarn>
+        </PackageReference>
+    </ItemGroup>
+    <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
