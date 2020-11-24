@@ -2,10 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);USE_LEGACY_NAMESPACE</DefineConstants>
     <Platforms>AnyCPU;x64</Platforms>
-    <FLIPS_SOLVER_INTERNAL_VISIBLE_TO>true</FLIPS_SOLVER_INTERNAL_VISIBLE_TO>
   </PropertyGroup>
-
   <PropertyGroup>
     <OtherFlags>
     </OtherFlags>
@@ -13,23 +12,18 @@
     <NoWarn>NU1701;0052;</NoWarn>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
-
-  <!-- https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm -->
-  <!--
-  <ItemGroup Condition="$(FLIPS_SOLVER_INTERNAL_VISIBLE_TO) == 'true'">>
-    
-    <InternalsVisibleTo Include="Flips.Solver.Cplex" />
-    <InternalsVisibleTo Include="Flips.Solver.FlipsVersion2" />
-  </ItemGroup>-->
   <ItemGroup>
-    
-    <Compile Include="AssemblyInfo.InternalsVisibleTo.fs" />
-    
-    <None Include="paket.references" />
-    <None Include="paket.template" />
-    <Compile Include="ISolver.fs" />
+    <Compile Include="Internals.fs" />
+    <Compile Include="Flips.Legacy.Types.fs" />
+    <Compile Include="Flips.Legacy.Domain.fs" />
+    <Compile Include="Flips.Legacy.UnitsOfMeasure.Domain.fs" />
+    <Compile Include="Flips.Solver.Optano.fs" />
+    <Compile Include="Flips.Solver.ORTools.fs" />
+    <Compile Include="Solve.fs" />
   </ItemGroup>
-
+  <ItemGroup>
+    <None Include="paket.references" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>

@@ -12,7 +12,8 @@ open Flips.Tests.Types
 [<Measure>] type cm
 
 module UnitsOfMeasureTests =
-    open Flips.SliceMap
+    open SliceMap
+    open Flips.Legacy
     open Flips.UnitsOfMeasure
     open Flips.UnitsOfMeasure.Types
     open Flips.Tests.UnitsOfMeasure
