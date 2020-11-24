@@ -201,7 +201,7 @@ module Builders =
 [<AutoOpen>]
 module Sum =
 
-    open Flips.SliceMap
+    open SliceMap
 
     /// <summary>A function which sums the values contained in a SliceMap</summary>
     /// <param name="x">An instance of ISliceData</param>
