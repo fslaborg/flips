@@ -67,7 +67,7 @@ module Decision =
 [<RequireQualifiedAccess>]
 module Constraint =
 
-    let internal getDecisions (c:Constraint) =
+    let internal getDecisions (c: Constraint) =
         match c.Expression with
         | Inequality (lhs, _, rhs) | Equality (lhs, rhs) ->
             let lhsDecisions = LinearExpression.GetDecisions lhs
@@ -78,7 +78,7 @@ module Constraint =
     /// <param name="constraintName">The unique identifier for the Constraint</param>
     /// <param name="constraintExpr">The Constraint Expression for the Constraint</param>
     /// <returns>A new Constraint</returns>
-    let create (constraintName:string) (constraintExpr:ConstraintExpression) =
+    let create (constraintName: string) (constraintExpr: ConstraintExpression) =
         if System.String.IsNullOrEmpty(constraintName) then
             invalidArg "ConstraintName" "Cannot have Name of Constraint that is null or empty"
         {
@@ -90,7 +90,7 @@ module Constraint =
 [<RequireQualifiedAccess>]
 module Objective =
 
-    let internal getDecisions (objective:Objective) =
+    let internal getDecisions (objective: Objective) =
         LinearExpression.GetDecisions objective.Expression
 
     /// <summary>Create an Objective for an optimization model</summary>
@@ -111,7 +111,7 @@ module Objective =
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution:Solution) (objective:Objective) =
+    let evaluate (solution: Solution) (objective: Objective) =
         LinearExpression.Evaluate solution.DecisionResults objective.Expression
 
 
@@ -129,7 +129,7 @@ module Model =
         member public this.Objectives = this._Objectives
         member public this.Constraints = this._Constraints
 
-    let internal getDecisions (m:Model) =
+    let internal getDecisions (m: Model) =
         let objectiveDecisions =
             (Set.empty, m.Objectives)
             ||> List.fold (fun decs objective -> decs + (Objective.getDecisions objective))
@@ -159,7 +159,7 @@ module Model =
     /// <param name="c">The constraint to be added to the model</param>
     /// <param name="model">The model to add the constraint to</param>
     /// <returns>A new Model with the constraint added</returns>
-    let addConstraint c (model:Model) =
+    let addConstraint c (model: Model) =
 
         { model with _Constraints = [c] @ model.Constraints }
 
@@ -245,7 +245,7 @@ module Solution =
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution:Solution) (expression:LinearExpression) =
+    let evaluate (solution: Solution) (expression: LinearExpression) =
         LinearExpression.Evaluate solution.DecisionResults expression
 
 
@@ -254,7 +254,7 @@ module Builders =
 
     let internal isTuple t = t.GetType() |> Reflection.FSharpType.IsTuple
 
-    let internal getFields (t:obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
+    let internal getFields (t: obj) = t |> Reflection.FSharpValue.GetTupleFields |> Array.toList
 
     let rec internal flattenFields f =
         f
@@ -266,13 +266,13 @@ module Builders =
                     [t]
         )
 
-    let internal tupleToObjectList (t:obj) : List<obj> =
+    let internal tupleToObjectList (t: obj) : List<obj> =
         if isTuple t then
             t |> getFields |> flattenFields
         else
             [t]
 
-    let internal namer (prefix:string) (indices:obj) : string =
+    let internal namer (prefix: string) (indices: obj) : string =
         tupleToObjectList indices
         |> List.map (sprintf "%O")
         |> String.concat "_"
@@ -283,19 +283,19 @@ module Builders =
     /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
     /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
     /// <returns>A sequence of Constraints whith the given prefix and a unique name for each constraint</returns>
-    type ConstraintBuilder (constraintSetPrefix:string) =
+    type ConstraintBuilder (constraintSetPrefix: string) =
 
-        member this.Yield (cExpr:ConstraintExpression) =
+        member this.Yield (cExpr: ConstraintExpression) =
             cExpr
 
-        member this.For(source:seq<'a>, body:'a -> seq<'b * ConstraintExpression>) =
+        member this.For(source: seq<'a>, body:'a -> seq<'b * ConstraintExpression>) =
             source
             |> Seq.collect (fun x -> body x |> Seq.map (fun (idx, expr) -> (x, idx), expr))
 
-        member this.For(source:seq<'a>, body:'a -> ConstraintExpression) =
+        member this.For(source: seq<'a>, body:'a -> ConstraintExpression) =
             source |> Seq.map (fun x -> x, body x)
 
-        member this.Run(source:seq<'a * ConstraintExpression>) =
+        member this.Run(source: seq<'a * ConstraintExpression>) =
             source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
 
     // note: the param for this constructor argument is correct, to the best of my knowledge, but the validation logic inside the compiler doesn't recognize it
@@ -303,20 +303,20 @@ module Builders =
     /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
     /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
     /// <returns>A seq of type ('Key * Decision). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder (decisionSetPrefix:string) =
+    type DecisionBuilder (decisionSetPrefix: string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices
             let decision = Decision.create name decisionType
             indices, decision
 
-        member this.Yield (decisionType:DecisionType) =
+        member this.Yield (decisionType: DecisionType) =
             decisionType
 
-        member this.For(source:seq<'a>, body:'a -> 'b) =
+        member this.For(source: seq<'a>, body:'a -> 'b) =
             source |> Seq.map (fun x -> x, body x)
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>>) =
+        member this.Run(a: seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
@@ -326,7 +326,7 @@ module Builders =
             g |> Seq.collect (fun (g, h) ->
             h |> Seq.map (fun (h, i) -> createDecision (a,b,c,d,e,f,g,h) i))))))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>) =
+        member this.Run(a: seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
@@ -335,7 +335,7 @@ module Builders =
             f |> Seq.collect (fun (f, g) ->
             g |> Seq.map (fun (g, h) -> createDecision (a,b,c,d,e,f,g) h)))))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>) =
+        member this.Run(a: seq<_*seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
@@ -343,28 +343,39 @@ module Builders =
             e |> Seq.collect (fun (e, f) ->
             f |> Seq.map (fun (f, g) -> createDecision (a,b,c,d,e,f) g))))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>) =
+        member this.Run(a: seq<_*seq<_*seq<_*seq<_*seq<_*DecisionType>>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
             d |> Seq.collect (fun (d, e) ->
             e |> Seq.map (fun (e, f) -> createDecision (a,b,c,d,e) f)))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*seq<_*DecisionType>>>>) =
+        member this.Run(a: seq<_*seq<_*seq<_*seq<_*DecisionType>>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.collect (fun (c, d) ->
             d |> Seq.map (fun (d, e) -> createDecision (a,b,c,d) e))))
 
-        member this.Run(a:seq<_*seq<_*seq<_*DecisionType>>>) =
+        member this.Run(a: seq<_*seq<_*seq<_*DecisionType>>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.collect (fun (b, c) ->
             c |> Seq.map (fun (c, d) -> createDecision (a,b,c) d)))
 
-        member this.Run(a:seq<_*seq<_*DecisionType>>) =
+        member this.Run(a: seq<_*seq<_*DecisionType>>) =
             a |> Seq.collect (fun (a, b) ->
             b |> Seq.map (fun (b, c) -> createDecision (a, b) c))
 
-        member this.Run(a:seq<_*DecisionType>) =
+        member this.Run(a: seq<_*DecisionType>) =
             a |> Seq.map (fun (a, b) -> createDecision a b)
 
+
+[<AutoOpen>]
+module Sum =
+
+    open SliceMap
+
+    /// <summary>A function which sums the values contained in a SliceMap</summary>
+    /// <param name="x">An instance of ISliceData</param>
+    /// <returns>A LinearExpression with a Unit of Measure</returns>
+    let inline sum (x: ISliceData<'Key, 'Value>) : Flips.Types.LinearExpression =
+        TryFind.sum x.Keys x.TryFind
