@@ -1827,7 +1827,7 @@ NUGET
       System.Reflection.TypeExtensions (>= 4.3) - restriction: && (< net461) (>= netstandard2.0)
       System.Runtime.Loader (>= 4.0) - restriction: && (< net461) (>= netstandard2.0)
       System.ValueTuple (>= 4.4) - restriction: >= net461
-    FSharp.Core (4.7.2)
+    FSharp.Core (5.0.0)
     Meziantou.MSBuild.InternalsVisibleTo (1.0.2)
     Microsoft.CodeCoverage (16.8) - restriction: || (>= net45) (>= netcoreapp2.1)
     Microsoft.NET.Test.Sdk (16.8)
