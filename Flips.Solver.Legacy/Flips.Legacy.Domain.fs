@@ -1,7 +1,17 @@
-﻿namespace Flips.FlipsVersion2
+﻿namespace Flips.Legacy
 
 open Flips.Types
-open Flips.FlipsVersion2.Types
+open Flips.Legacy.Types
+
+[<RequireQualifiedAccess>]
+module Objective =
+
+    /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
+    /// <param name="solution">The solution used for looking up the results of Decisions</param>
+    /// <param name="objective">The Objective to evaluate the resulting value for</param>
+    /// <returns>A float which is the simplification of the LinearExpression</returns>
+    let evaluate (solution: Solution) (objective: Objective) =
+        LinearExpression.Evaluate solution.DecisionResults objective.Expression
 
 [<RequireQualifiedAccess>]
 module Solution =
@@ -91,22 +101,22 @@ module Solution =
     /// <param name="decisions">An IDictionary<'Key, Decision> that will be used for the lookups</param>
     /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
     let getValues (solution: Solution) (decisions: System.Collections.Generic.IDictionary<_,Decision>) =
-        Flips.FlipsVersion2.Solution.getValues solution decisions
+        Flips.Legacy.Solution.getValues solution decisions
 
     /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
     let evaluate (solution: Solution) (expression: LinearExpression) =
-        Flips.FlipsVersion2.Solution.evaluate solution expression
+        Flips.Legacy.Solution.evaluate solution expression
 
 
 
 [<RequireQualifiedAccess;Obsolete("Use Flips.FlipsVersion2.Settings instead")>]
 module Settings =
-  let basic = Flips.FlipsVersion2.Settings.basic
-  let setLPFile = Flips.FlipsVersion2.Settings.setLPFile
-  let setMaxDuration = Flips.FlipsVersion2.Settings.setMaxDuration
-  let setMPSFile = Flips.FlipsVersion2.Settings.setMPSFile
+  let basic = Flips.Legacy.Settings.basic
+  let setLPFile = Flips.Legacy.Settings.setLPFile
+  let setMaxDuration = Flips.Legacy.Settings.setMaxDuration
+  let setMPSFile = Flips.Legacy.Settings.setMPSFile
     
 #endif

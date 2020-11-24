@@ -1,10 +1,10 @@
-﻿namespace Flips.FlipsVersion2.Internals
+﻿namespace Flips.Legacy
 
 open System.Collections.Generic
 
 open Flips
 open Flips.Types
-open Flips.FlipsVersion2.Internals
+open Flips.Legacy.Internals
 
 module ORTools =
     open Google.OrTools.LinearSolver
@@ -105,8 +105,8 @@ module ORTools =
             |> Map.ofSeq
 
         {
-            Flips.FlipsVersion2.Types.Solution.DecisionResults = decisionMap
-            Flips.FlipsVersion2.Types.Solution.ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
+            Flips.Legacy.Types.Solution.DecisionResults = decisionMap
+            Flips.Legacy.Types.Solution.ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
         }
 
 

@@ -1,4 +1,4 @@
-﻿namespace Flips.FlipsVersion2.Internals
+﻿namespace Flips.Legacy.Internals
 
 open System.Collections.Generic
 

@@ -1,12 +1,12 @@
-﻿namespace Flips.FlipsVersion2.Internals
+﻿namespace Flips.Legacy
 
 
 open System.Collections.Generic
 
 open Flips
 open Flips.Types
-open Flips.FlipsVersion2.Types
-open Flips.FlipsVersion2.Internals
+open Flips.Legacy.Types
+open Flips.Legacy.Internals
 
 
 module Optano =
@@ -130,13 +130,13 @@ module Optano =
         exporter.Write(optanoModel)
 
 
-    let private gurobi900Solve (settings:Types.SolverSettings) (optanoModel:Model) =
+    let private gurobi900Solve (settings:Flips.Legacy.Types.SolverSettings) (optanoModel:Model) =
         use solver = new Solver.Gurobi900.GurobiSolver()
         solver.Configuration.TimeLimit <- float settings.MaxDuration / 1000.0
         solver.Solve(optanoModel)
 
 
-    let private cplex128Solve (settings:Types.SolverSettings) (optanoModel:Model) =
+    let private cplex128Solve (settings:Flips.Legacy.Types.SolverSettings) (optanoModel:Model) =
         use solver = new Solver.Cplex128.CplexSolver()
         solver.Configuration.TimeLimit <- float settings.MaxDuration / 1000.0
         solver.Solve(optanoModel)

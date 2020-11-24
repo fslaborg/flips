@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);USE_LEGACY_NAMESPACE</DefineConstants>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup>
     <OtherFlags>
@@ -13,8 +14,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Internals.fs" />
-    <Compile Include="Flips.Types.Legacy.fs" />
-    <Compile Include="Flips.Legacy.fs" />
+    <Compile Include="Flips.Legacy.Types.fs" />
+    <Compile Include="Flips.Legacy.Domain.fs" />
+    <Compile Include="Flips.Legacy.UnitsOfMeasure.Domain.fs" />
     <Compile Include="Flips.Solver.Optano.fs" />
     <Compile Include="Flips.Solver.ORTools.fs" />
     <Compile Include="Solve.fs" />
