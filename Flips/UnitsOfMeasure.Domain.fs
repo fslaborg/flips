@@ -60,7 +60,7 @@ module Objective =
     let create objectiveName sense (LinearExpression.Value expr: LinearExpression<'Measure>) =
         let objective = Objective.create objectiveName sense expr
         Objective<'Measure>.Value objective
-
+#if HAS_SOLUTION_TYPE
     /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
@@ -69,7 +69,7 @@ module Objective =
         objective.Expression
         |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
-
+#endif
 
 
 [<RequireQualifiedAccess>]
@@ -93,7 +93,7 @@ module Model =
         let (Objective.Value objective) = objective
         { model with _Objectives = [objective] @ model.Objectives }
 
-
+#if HAS_SOLUTION_TYPE
 [<RequireQualifiedAccess>]
 module Solution =
 
@@ -119,7 +119,7 @@ module Solution =
     let evaluate (solution: Types.Solution) (LinearExpression.Value expression: LinearExpression<'Measure>) =
         Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
-
+#endif
 
 [<AutoOpen>]
 module Builders =
