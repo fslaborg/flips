@@ -19,6 +19,7 @@ nuget OPTANO.Modeling.Gurobi ~> 9
 nuget System.Memory
 nuget xunit ~> 2
 nuget xunit.runner.visualstudio ~> 2
+nuget SliceMap
 
 
 
