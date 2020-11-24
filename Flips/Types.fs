@@ -14,7 +14,6 @@ type internal SignInsenstiveComparer () =
 /// An Integer type can take on any discrete value between the Upper and Lower Bound (inclusive)
 /// A Continuous type can take on any value between the Upper and Lower bound (inclusive)
 type DecisionType =
-    internal
     | Boolean
     | Integer of LowerBound: float * UpperBound: float
     | Continuous of LowerBound: float * UpperBound: float
@@ -32,11 +31,10 @@ type internal ReduceAccumulator = {
 }
 
 /// Represents a decision that must be made
-type Decision = 
-    internal {
-        Name : DecisionName
-        Type : DecisionType
-    }
+type Decision =  {
+    Name : DecisionName
+    Type : DecisionType
+}
 with
 
     static member (*) (decision: Decision, f: float) =
