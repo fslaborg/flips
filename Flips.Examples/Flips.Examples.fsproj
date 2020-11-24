@@ -72,6 +72,9 @@
   <ItemGroup>
     <PackageReference Include="SliceMap" Version="0.0.2" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Flips\Flips.fsproj" />
+  </ItemGroup>
     <ItemGroup Condition="'$(UseFlipsSolverCplex)' == 'true'">
         <Reference Include="ILOG.Concert">
             <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.Concert.dll</HintPath>
