@@ -118,6 +118,17 @@ module Objective =
 [<RequireQualifiedAccess>]
 module Model =
 
+    /// A type which represents the optimization model. It contains an Objective which represents the
+    /// goal of the model and a collection of Constraints which the model must obey.
+    [<NoComparison>]
+    type Model = internal {
+        _Objectives : Objective list
+        _Constraints : Constraint list
+    }
+    with
+        member public this.Objectives = this._Objectives
+        member public this.Constraints = this._Constraints
+
     let internal getDecisions (m: Model) =
         let objectiveDecisions =
             (Set.empty, m.Objectives)
@@ -158,6 +169,82 @@ module Model =
     /// <returns>A new Model with the constraints added</returns>
     let addConstraints constraints model =
         (model, constraints) ||> Seq.fold (fun model c -> addConstraint c model)
+
+
+[<RequireQualifiedAccess>]
+module Settings =
+
+    /// The recommended default settings for a solver instance
+    let basic =
+        {
+            SolverType = SolverType.CBC
+            MaxDuration = 10_000L
+            WriteLPFile = None
+            WriteMPSFile = None
+            // We want to enable this in a future major release
+            // EnableOutput = false
+        }
+
+    /// <summary>A function to set whether to write an LP file for the model</summary>
+    /// <param name="lpFile">The filename to be used as the output</param>
+    /// <param name="settings">The Settings type to build a new value off of</param>
+    /// <returns>A new Settings type with the WriteLPFile field updated</returns>
+    let setLPFile lpFile settings =
+        { settings with WriteLPFile = Some lpFile}
+
+    /// <summary>A function to set whether to write an MPS file for the model</summary>
+    /// <param name="mpsFile">The filename to be used as the output</param>
+    /// <param name="settings">The Settings type to build a new value off of</param>
+    /// <returns>A new Settings type with the WriteMPSFile field updated</returns>
+    let setMPSFile mpsFile settings =
+        { settings with WriteMPSFile = Some mpsFile}
+
+    /// <summary>A function to set the maximum runtime of the solver in milliseconds</summary>
+    /// <param name="maxDuration">The max solve time in milliseconds</param>
+    /// <param name="settings">The Settings type to build a new value off of</param>
+    /// <returns>A new Settings type with the MaxDuration updated</returns>
+    let setMaxDuration maxDuration settings =
+        { settings with MaxDuration = maxDuration }
+
+    /// <summary>A function for setting the SolverType to use</summary>
+    /// <param name="solverType">The SolverType case to use</param>
+    /// <param name="settings">The Settings type to build a new value off of</param>
+    /// <returns>A new Settings type with the SolverType updated</returns>
+    let setSolverType solverType settings =
+        { settings with SolverType = solverType }
+
+    // We will enable this in the next major release
+    /// <summary>A function for setting the EnableOutput flag</summary>
+    /// <param name="solverType">The bool to set the EnableOutput field to</param>
+    /// <param name="settings">The Settings type to build a new value off of</param>
+    /// <returns>A new Settings type with the EnableOutput updated</returns>
+    //let setEnableOutput enableOutput settings =
+    //  { settings with EnableOutput = enableOutput }
+
+
+[<RequireQualifiedAccess>]
+module Solution =
+
+    /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
+    /// <param name="solution">The solution that is used to look up the solver values</param>
+    /// <param name="decisions">An IDictionary<'Key, Decision> that will be used for the lookups</param>
+    /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
+    let getValues (solution: Solution) (decisions: System.Collections.Generic.IDictionary<_,Decision>) =
+        let inline getWithDefault d =
+            match Map.tryFind d solution.DecisionResults with
+            | Some v -> v
+            | None -> 0.0
+
+        seq { for kvp in decisions -> kvp.Key, getWithDefault kvp.Value}
+        |> Map.ofSeq
+
+    /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
+    /// <param name="solution">The solution used for lookup up the results of Decisions</param>
+    /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
+    /// <returns>A float which is the simplification of the LinearExpression</returns>
+    let evaluate (solution: Solution) (expression: LinearExpression) =
+        LinearExpression.Evaluate solution.DecisionResults expression
+
 
 [<AutoOpen>]
 module Builders =
@@ -278,3 +365,14 @@ module Builders =
         member this.Run(a: seq<_*DecisionType>) =
             a |> Seq.map (fun (a, b) -> createDecision a b)
 
+
+[<AutoOpen>]
+module Sum =
+
+    open SliceMap
+
+    /// <summary>A function which sums the values contained in a SliceMap</summary>
+    /// <param name="x">An instance of ISliceData</param>
+    /// <returns>A LinearExpression with a Unit of Measure</returns>
+    let inline sum (x: ISliceData<'Key, 'Value>) : Flips.Types.LinearExpression =
+        TryFind.sum x.Keys x.TryFind

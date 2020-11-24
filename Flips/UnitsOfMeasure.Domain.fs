@@ -207,4 +207,4 @@ module Sum =
     /// <param name="x">An instance of ISliceData</param>
     /// <returns>A LinearExpression with a Unit of Measure</returns>
     let inline sum (x: ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-        SliceMap.TryFind.sum x.Keys x.TryFind
+        TryFind.sum x.Keys x.TryFind
