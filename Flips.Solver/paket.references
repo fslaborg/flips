@@ -1,4 +1,4 @@
 FSharp.Core
-Google.OrTools
-OPTANO.Modeling
-OPTANO.Modeling.Gurobi
+
+group Tooling
+    Meziantou.MSBuild.InternalsVisibleTo

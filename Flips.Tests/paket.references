@@ -1,7 +1,9 @@
-FsCheck
-FsCheck.Xunit
-Microsoft.NET.Test.Sdk
-xunit
-xunit.runner.visualstudio
-coverlet.collector
-FSharp.Core
+group Tooling
+    FSharp.Core
+    FsCheck
+    FsCheck.Xunit
+    Microsoft.NET.Test.Sdk
+    xunit
+    xunit.runner.visualstudio
+    coverlet.collector
+    

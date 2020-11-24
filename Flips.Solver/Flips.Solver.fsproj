@@ -3,15 +3,29 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
+    <FLIPS_SOLVER_INTERNAL_VISIBLE_TO>true</FLIPS_SOLVER_INTERNAL_VISIBLE_TO>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NoWarn>NU1701;</NoWarn>
   </PropertyGroup>
+
+  <!-- https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm -->
+  <!--
+  <ItemGroup Condition="$(FLIPS_SOLVER_INTERNAL_VISIBLE_TO) == 'true'">>
+    
+    <InternalsVisibleTo Include="Flips.Solver.Cplex" />
+    <InternalsVisibleTo Include="Flips.Solver.FlipsVersion2" />
+  </ItemGroup>-->
   <ItemGroup>
+    
+    <Compile Include="AssemblyInfo.InternalsVisibleTo.fs" />
+    
     <None Include="paket.references" />
     <None Include="paket.template" />
-    <Compile Include="Solve.fs" />
+    <Compile Include="ISolver.fs" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>

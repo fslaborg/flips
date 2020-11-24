@@ -65,7 +65,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".project", ".project", "{2182CF11-42CF-47B9-B046-4E2F3F88A804}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		dotnet-tools.json = dotnet-tools.json
+		.config\dotnet-tools.json = .config\dotnet-tools.json
 		README.md = README.md
 		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
@@ -92,6 +92,10 @@ EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.CBC", "Flips.Solver.CBC\Flips.Solver.CBC.fsproj", "{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver", "Flips.Solver\Flips.Solver.fsproj", "{361CD3B1-812B-4EEB-A272-CDA842F9C39D}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.FlipsVersion2", "Flips.Solver.FlipsVersion2\Flips.Solver.FlipsVersion2.fsproj", "{D5521A7D-5071-4810-B835-DC288AD12B7C}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.Cplex", "Flips.Solver.Cplex\Flips.Solver.Cplex.fsproj", "{8D7F242A-AFF3-49C3-8482-E9993E99F719}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -147,6 +151,22 @@ Global
 		{361CD3B1-812B-4EEB-A272-CDA842F9C39D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{361CD3B1-812B-4EEB-A272-CDA842F9C39D}.Release|x64.ActiveCfg = Release|Any CPU
 		{361CD3B1-812B-4EEB-A272-CDA842F9C39D}.Release|x64.Build.0 = Release|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{D5521A7D-5071-4810-B835-DC288AD12B7C}.Release|x64.Build.0 = Release|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Debug|x64.Build.0 = Debug|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Release|x64.ActiveCfg = Release|Any CPU
+		{8D7F242A-AFF3-49C3-8482-E9993E99F719}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

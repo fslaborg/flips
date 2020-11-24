@@ -1,4 +1,5 @@
-FSharp.Data
-MathNet.Numerics
-MathNet.Numerics.FSharp
-FSharp.Core
+group Examples
+  FSharp.Core
+  FSharp.Data  
+  MathNet.Numerics.FSharp
+  SliceMap
