@@ -6,8 +6,12 @@
     <FLIPS_SOLVER_INTERNAL_VISIBLE_TO>true</FLIPS_SOLVER_INTERNAL_VISIBLE_TO>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NoWarn>NU1701;</NoWarn>
+  <PropertyGroup>
+    <OtherFlags>
+    </OtherFlags>
+    <WarningsAsErrors>3239;</WarningsAsErrors>
+    <NoWarn>NU1701;0052;</NoWarn>
+    <WarningLevel>5</WarningLevel>
   </PropertyGroup>
 
   <!-- https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm -->

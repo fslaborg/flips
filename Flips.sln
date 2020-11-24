@@ -93,7 +93,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.CBC", "Flips.S
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver", "Flips.Solver\Flips.Solver.fsproj", "{361CD3B1-812B-4EEB-A272-CDA842F9C39D}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.FlipsVersion2", "Flips.Solver.FlipsVersion2\Flips.Solver.FlipsVersion2.fsproj", "{D5521A7D-5071-4810-B835-DC288AD12B7C}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.Legacy", "Flips.Solver.Legacy\Flips.Solver.Legacy.fsproj", "{D5521A7D-5071-4810-B835-DC288AD12B7C}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Flips.Solver.Cplex", "Flips.Solver.Cplex\Flips.Solver.Cplex.fsproj", "{8D7F242A-AFF3-49C3-8482-E9993E99F719}"
 EndProject

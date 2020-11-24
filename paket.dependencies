@@ -25,7 +25,6 @@ group Tooling
 
   nuget FSharp.Core redirects: force
   nuget Fake.IO.FileSystem ~> 5
-  nuget FSharp.Core
   nuget FSharpLint.Core ~> 0
   
   nuget Microsoft.NET.Test.Sdk ~> 16
@@ -44,6 +43,7 @@ group Examples
 
   nuget FSharp.Core redirects: force
   nuget FSharp.Data ~> 3
+  nuget SliceMap
 
   nuget MathNet.Numerics.FSharp
 

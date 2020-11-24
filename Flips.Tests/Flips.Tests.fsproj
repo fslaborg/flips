@@ -8,10 +8,11 @@
     <Platforms>AnyCPU;x64</Platforms>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup>
     <OtherFlags>
     </OtherFlags>
-    <NoWarn>NU1701;</NoWarn>
+    <NoWarn>NU1701;0052;</NoWarn>
+    <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <WarningsAsErrors>3239;</WarningsAsErrors>
