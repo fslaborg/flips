@@ -1,5 +1,4 @@
 FSharp.Core
-SliceMap
-
-group Tooling
-    Meziantou.MSBuild.InternalsVisibleTo
+Google.OrTools
+OPTANO.Modeling
+OPTANO.Modeling.Gurobi

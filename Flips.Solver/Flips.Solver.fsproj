@@ -25,6 +25,15 @@
     <Compile Include="Domain.UnitsOfMeasure.fs" />
   </ItemGroup>
 
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <NoWarn>NU1701;</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="paket.references" />
+    <None Include="paket.template" />
+    <Compile Include="Solve.fs" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>
