@@ -201,10 +201,10 @@ module Builders =
 [<AutoOpen>]
 module Sum =
 
-    open SliceMap
+    open Flips.SliceMap
 
     /// <summary>A function which sums the values contained in a SliceMap</summary>
     /// <param name="x">An instance of ISliceData</param>
     /// <returns>A LinearExpression with a Unit of Measure</returns>
     let inline sum (x: ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-        TryFind.sum x.Keys x.TryFind
+        SliceMap.TryFind.sum x.Keys x.TryFind
