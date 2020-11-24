@@ -272,4 +272,8 @@ __pycache__/
 paket-files/
 paket.local
 .paket/load
-/Flips.Solver.CBC/Scratchpad.fsx
+**/Scratchpad.fsx
+packages
+
+# other stuff
+thirdparties
