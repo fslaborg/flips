@@ -6,6 +6,7 @@ group Tooling
     xunit
     xunit.runner.visualstudio
     coverlet.collector
+    SliceMap
     
 
 group Tooling

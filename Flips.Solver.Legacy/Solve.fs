@@ -9,7 +9,7 @@ module Solver =
     /// <param name="settings">The settings for the solver to use</param>
     /// <param name="model">A model which represents the problem</param>
     /// <returns>A solution which contains results if successful or a message in case of an error</returns>
-    let solve (settings:SolverSettings) (model:Flips.Types.Model) =
+    let solve (settings:SolverSettings) (model:Flips.Model.Model) =
         
         match settings.SolverType with
         | CBC -> Flips.Legacy.ORTools.solve Flips.Legacy.ORTools.OrToolsSolverType.CBC settings model

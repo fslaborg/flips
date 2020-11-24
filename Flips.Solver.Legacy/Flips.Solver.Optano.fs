@@ -142,7 +142,7 @@ module Optano =
         solver.Solve(optanoModel)
 
 
-    let internal solve (solverType:OptanoSolverType) (settings:SolverSettings) (model:Flips.Types.Model) =
+    let internal solve (solverType:OptanoSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
 
         let optanoModel = new Model()
         let vars = Dictionary()

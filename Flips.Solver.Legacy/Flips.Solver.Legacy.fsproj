@@ -10,6 +10,13 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
   </PropertyGroup>
+  <PropertyGroup>
+    <OtherFlags>
+    </OtherFlags>
+    <WarningsAsErrors>3239;</WarningsAsErrors>
+    <NoWarn>NU1701;0052;</NoWarn>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Internals.fs" />
     <Compile Include="Flips.Legacy.Types.fs" />

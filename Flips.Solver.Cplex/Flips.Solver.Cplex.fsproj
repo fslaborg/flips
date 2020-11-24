@@ -6,6 +6,13 @@
     <OutputPath>../bin/</OutputPath>
     <TargetFramework>net48</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup>
+    <OtherFlags>
+    </OtherFlags>
+    <WarningsAsErrors>3239;</WarningsAsErrors>
+    <NoWarn>NU1701;0052;</NoWarn>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Remove="paket-files\**" />
   </ItemGroup>
