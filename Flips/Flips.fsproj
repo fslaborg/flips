@@ -65,6 +65,7 @@
         <None Include="Scratchpad.fsx" />
         <Compile Include="Types.fs" />
         <Compile Include="Domain.fs" />
+        <Compile Include="SliceMap.fs" />
         <Compile Include="UnitsOfMeasure.Types.fs" />
         <Compile Include="UnitsOfMeasure.Domain.fs" />
         <None Include="paket.references" />

@@ -31,6 +31,7 @@
     <PackageReference Include="SliceMap" Version="0.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
