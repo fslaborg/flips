@@ -1,0 +1,6 @@
+
+group Solvers
+    FSharp.Core
+    Google.OrTools
+    OPTANO.Modeling
+    OPTANO.Modeling.Gurobi

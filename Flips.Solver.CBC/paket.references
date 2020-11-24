@@ -1,5 +1,4 @@
 FSharp.Core
-SliceMap
 
 group Solvers
     Google.OrTools

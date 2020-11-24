@@ -413,11 +413,3 @@ type Objective =
         Sense : ObjectiveSense
         Expression : LinearExpression
     }
-
-  /// A type which represents the optimization model. It contains an Objective which represents the
-  /// goal of the model and a collection of Constraints which the model must obey.
-  [<NoComparison>]
-  type Model = internal {
-      Objectives : Objective list
-      Constraints : Constraint list
-  }

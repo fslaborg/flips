@@ -1,5 +1,12 @@
-FSharp.Core
-SliceMap
+group Tooling
+    FSharp.Core
+    FsCheck
+    FsCheck.Xunit
+    Microsoft.NET.Test.Sdk
+    xunit
+    xunit.runner.visualstudio
+    coverlet.collector
+    
 
 group Tooling
     FsCheck
