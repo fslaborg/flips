@@ -166,10 +166,10 @@ and
     LinearExpression =
     internal
     | Empty
-    | AddFloat of float * LinearExpression
-    | AddDecision of (float * Decision) * LinearExpression
-    | Multiply of float * LinearExpression
-    | AddLinearExpression of LinearExpression * LinearExpression
+    | AddFloat of float:float * linearExpression:LinearExpression
+    | AddDecision of (float * Decision) * linearExpression:LinearExpression
+    | Multiply of coefficient:float * linearExpression:LinearExpression
+    | AddLinearExpression of lhsExpression:LinearExpression * rhsExpression:LinearExpression
 
 
 
@@ -373,7 +373,7 @@ and
     [<NoComparison>]
     ConstraintExpression = 
         internal
-        | Inequality of LHS: LinearExpression * Inequality * RHS: LinearExpression
+        | Inequality of LHS: LinearExpression * inequality:Inequality * RHS: LinearExpression
         | Equality of LHS: LinearExpression * RHS: LinearExpression
 
 /// A unique identified for a Constraint
