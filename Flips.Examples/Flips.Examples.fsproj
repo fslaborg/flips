@@ -9,6 +9,7 @@
     <WarningsAsErrors>3239;0044;</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CsvExport.fs" />
     <Compile Include="MultiObjective\MultiObjectiveExample.fs" />
     <Compile Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
     <Compile Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />

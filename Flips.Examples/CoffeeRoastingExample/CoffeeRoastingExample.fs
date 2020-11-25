@@ -132,7 +132,9 @@ let solve settings =
         printfn "Plan Cost: $%.2f" (Objective.evaluate solution objective)
 
         printfn "Location\tRoaster\tWarehouse"
-
+        
+        CsvExport.exportVariablesToFile "coffee.roasting" solution.DecisionResults CsvExport.csvConfig
+        
         for location in locations do
             let (Location l) = location
             printfn "%-12s\t%12A\t%12A" l roasterValues.[location] warehouseValues.[location]

@@ -103,6 +103,8 @@ let solve settings =
     | Optimal solution ->
         printfn "Objective Value - Risk: %f %%" ((Objective.evaluate solution objective) * 100.0)
     
+        CsvExport.exportVariablesToFile "stocks" solution.DecisionResults CsvExport.csvConfig
+    
         for (decision, value) in solution.DecisionResults |> Map.toSeq |> Seq.filter(fun (key, value) -> value > 0.0) do
             let (DecisionName name) = decision.Name
             printfn "Decision: %s\tValue: %f %%" name (value * 100.0)

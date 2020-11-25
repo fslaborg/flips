@@ -6,6 +6,7 @@ source https://nuget.org/api/v2
 source https://api.nuget.org/v3/index.json
 
 nuget coverlet.collector ~> 1
+nuget CsvHelper
 nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
 nuget FSharp.Core
