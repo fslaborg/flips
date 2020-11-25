@@ -22,12 +22,9 @@ module UnitsOfMeasureTests =
     let randomItemExpressionFromDecisions rng (decisions:seq<Decision<Item>>) =
         let decisionGen = Gen.elements decisions
         let numberOfElements = Gen.choose (1, 10) |> Gen.sample 0 1 |> Seq.exactlyOne
-        let expr = 
-            decisionGen 
-            |> Gen.sample 0 numberOfElements 
-            |> List.map (fun x -> (randomInRange MIN_COEFFICIENT MAX_COEFFICIENT rng) * x) 
-            |> List.sum
-        expr
+        decisionGen 
+        |> Gen.sample 0 numberOfElements 
+        |> List.sumBy (fun x -> (randomInRange MIN_COEFFICIENT MAX_COEFFICIENT rng) * x) 
 
     [<Properties(Arbitrary = [| typeof<UnitsOfMeasure.UnitOfMeasureTypes>; typeof<Types> |] )>]
     module Decision =
