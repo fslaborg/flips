@@ -5,13 +5,6 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-  <PropertyGroup>
-    <OtherFlags>
-    </OtherFlags>
-    <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>NU1701;0052;</NoWarn>
-    <WarningLevel>5</WarningLevel>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="CsvExport.fs" />
     <Compile Include="MultiObjective\MultiObjectiveExample.fs" />

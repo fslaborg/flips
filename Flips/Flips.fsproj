@@ -28,10 +28,6 @@
     <DocumentationFile>bin\x64\Debug\netstandard2.0\Flips.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <NoWarn>NU1701;0052;</NoWarn>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <WarningLevel>5</WarningLevel>
     <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
