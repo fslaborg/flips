@@ -35,9 +35,6 @@
     <InternalsVisibleTo Include="Flips.Solver.FlipsVersion2" />
   </ItemGroup>-->
   <ItemGroup>
-    
-    <Compile Include="AssemblyInfo.InternalsVisibleTo.fs" />
-    
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Compile Include="ISolver.fs" />
