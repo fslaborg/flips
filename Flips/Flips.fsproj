@@ -67,7 +67,6 @@
         <PackageReference Include="SliceMap" Version="0.0.2" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="AssemblyInfo.InternalsVisibleTo.fs" />
         <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
         <None Include="Scratchpad.fsx" />
         <Compile Include="Types.fs" />
@@ -75,6 +74,7 @@
         <Compile Include="SliceMap.Extensions.fs" />
         <Compile Include="UnitsOfMeasure.Types.fs" />
         <Compile Include="UnitsOfMeasure.Domain.fs" />
+        <Compile Include="Solver.fs" />
         <None Include="paket.references" />
         <None Include="paket.template" />
     </ItemGroup>
