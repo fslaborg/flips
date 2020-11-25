@@ -65,7 +65,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".project", ".project", "{2182CF11-42CF-47B9-B046-4E2F3F88A804}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		dotnet-tools.json = dotnet-tools.json
+		.config\dotnet-tools.json = .config\dotnet-tools.json
 		README.md = README.md
 		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
