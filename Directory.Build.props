@@ -1,0 +1,6 @@
+  <PropertyGroup>
+    <NoWarn>NU1701;0052;</NoWarn>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
