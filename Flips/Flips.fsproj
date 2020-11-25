@@ -74,7 +74,6 @@
         <Compile Include="SliceMap.Extensions.fs" />
         <Compile Include="UnitsOfMeasure.Types.fs" />
         <Compile Include="UnitsOfMeasure.Domain.fs" />
-        <Compile Include="Solver.fs" />
         <None Include="paket.references" />
         <None Include="paket.template" />
     </ItemGroup>
