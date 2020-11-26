@@ -1,4 +1,6 @@
+FSharp.Core
+SliceMap
+
 group Tooling
 	Fake.IO.FileSystem
-	FSharp.Core
 	FSharpLint.Core

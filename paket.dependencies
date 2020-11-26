@@ -3,7 +3,7 @@ storage: none
 source https://nuget.org/api/v2
 source https://api.nuget.org/v3/index.json
 
-nuget FSharp.Core redirects: force
+nuget FSharp.Core ~> 5 redirects: force
 
 nuget SliceMap
 
@@ -12,7 +12,6 @@ group Solvers
 
   source https://api.nuget.org/v3/index.json
 
-  nuget FSharp.Core redirects: force
   nuget OPTANO.Modeling ~> 3
   nuget OPTANO.Modeling.Gurobi ~> 9
   nuget Google.OrTools ~> 8
@@ -23,7 +22,6 @@ group Tooling
   source https://nuget.org/api/v2
   source https://api.nuget.org/v3/index.json
 
-  nuget FSharp.Core redirects: force
   nuget Fake.IO.FileSystem ~> 5
   nuget FSharpLint.Core ~> 0
   
@@ -41,27 +39,9 @@ group Examples
   source https://nuget.org/api/v2
   source https://api.nuget.org/v3/index.json
 
-  nuget FSharp.Core redirects: force
   nuget FSharp.Data ~> 3
   nuget SliceMap
 
   nuget MathNet.Numerics.FSharp
 
-group FakeBuild
-
-  source https://api.nuget.org/v3/index.json
-
-  nuget Fake.Core.Target ~> 5
-  nuget Fake.Core.ReleaseNotes ~> 5
-  nuget Fake.DotNet.AssemblyInfoFile ~> 5
-  nuget Fake.DotNet.Cli ~> 5
-  nuget Fake.DotNet.MSBuild ~> 5
-  nuget Fake.DotNet.Paket ~> 5
-  nuget Fake.IO.FileSystem ~> 5
-  nuget Fake.JavaScript.Yarn ~> 5
-  nuget Fake.JavaScript.Npm ~> 5
-  nuget Fake.Tools.Git ~> 5
-  nuget FSharp.Json ~> 0
-  nuget FSharpLint.Core ~> 0
-  nuget NuGet.Packaging 5.6
-
+  nuget NativeLibraryLoader storage: on
