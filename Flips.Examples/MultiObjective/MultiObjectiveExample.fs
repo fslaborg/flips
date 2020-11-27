@@ -80,10 +80,12 @@ let solve settings =
     // values for the Decision Variables
     match result with
     | Optimal solution ->
-
+        
         printfn "Revenue: %f" (Objective.evaluate solution revenueObjective)
         
         printfn "Waste: %f" (Objective.evaluate solution wasteObjective)
+
+        CsvExport.exportVariablesToFile "multiobjective" solution.DecisionResults CsvExport.csvConfig
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
             printfn "Decision: %A\tValue: %f" decision.Name value

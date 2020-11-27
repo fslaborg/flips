@@ -53,6 +53,9 @@ let solve settings =
     match result with
     | Optimal solution ->
         printfn "Objective Value: %f" (Objective.evaluate solution objective)
+                
+        CsvExport.exportVariablesToFile "foodtruck.map" solution.DecisionResults CsvExport.csvConfig
+                
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
             let (DecisionName name) = decision.Name
