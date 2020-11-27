@@ -6,7 +6,15 @@ open Flips.Solver.Cplex.Internals
 
 let model = Flips.Docs.Samples.sampleProblem()
 
-let state = CplexSolver.ICplexSolverState.create()
+let state =
+    CplexSolver.ICplexSolverState.create()
+    |> CplexSolver.ICplexSolverState.removeOption (
+            function
+            | CplexSolver.DoNotReuseState -> true // removing it allows to reuse same state object for several calls to solve
+            | _ -> false
+    )
+    |> CplexSolver.ICplexSolverState.setOption (CplexSolver.WriteToFile @"c:\tmp\flips.sample.cplex.lp") 
+    |> CplexSolver.ICplexSolverState.setOption (CplexSolver.WriteToFile @"c:\tmp\flips.sample.cplex.mps")
 
 let cplexResults = CplexSolver.Primitives.solve model state
 
