@@ -1,7 +1,6 @@
 ﻿module Flips.Examples.SimpleExample
 
 open Flips
-open Flips.Types
 
 let solve settings =
     let x1 = Decision.createContinuous "x1" 0.0 infinity

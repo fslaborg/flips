@@ -5,7 +5,8 @@ open FSharp.Data
 open MathNet.Numerics
 open MathNet.Numerics.Statistics 
 open Flips
-open Flips.Types
+open Flips.Legacy
+
 
 type YahooStocks = CsvProvider<"2020-01-01,1.11,1.22,1.33,1.44,1.55,5666777888", Schema = " Date (date), Open (float), High(float), Low(float), Close(float), Adj Close (float), Volume(int64)">
 
