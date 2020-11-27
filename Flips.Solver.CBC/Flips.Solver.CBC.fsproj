@@ -13,7 +13,6 @@
     <Compile Include="Types.fs" />
     <Compile Include="Solver.fs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
     <ProjectReference Include="..\Flips\Flips.fsproj" />
