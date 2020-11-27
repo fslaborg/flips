@@ -5,9 +5,7 @@ source https://api.nuget.org/v3/index.json
 
 
 nuget FSharp.Core redirects: force
-
 nuget SliceMap
-
 
 group Solvers
 
@@ -36,6 +34,7 @@ group Tooling
   nuget FsCheck.Xunit ~> 2
   nuget xunit ~> 2
   nuget xunit.runner.visualstudio ~> 2
+  nuget SliceMap
 
 group Examples
 
@@ -44,9 +43,9 @@ group Examples
 
   nuget FSharp.Core redirects: force
   nuget FSharp.Data ~> 3
-  nuget SliceMap
 
   nuget MathNet.Numerics.FSharp
+  nuget SliceMap
 
 group FakeBuild
 
@@ -65,4 +64,5 @@ group FakeBuild
   nuget FSharp.Json ~> 0
   nuget FSharpLint.Core ~> 0
   nuget NuGet.Packaging 5.6
+  
 
