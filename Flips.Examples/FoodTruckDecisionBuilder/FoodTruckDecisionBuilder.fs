@@ -2,7 +2,7 @@
 
 
 open Flips
-open Flips.Types
+open Flips.Legacy
 
 let solve settings =
 

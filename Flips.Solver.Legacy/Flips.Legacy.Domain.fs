@@ -112,7 +112,7 @@ module Solution =
 
 
 
-[<RequireQualifiedAccess;Obsolete("Use Flips.FlipsVersion2.Settings instead")>]
+[<RequireQualifiedAccess;Obsolete("Use Flips.Legacy.Settings instead")>]
 module Settings =
   let basic = Flips.Legacy.Settings.basic
   let setLPFile = Flips.Legacy.Settings.setLPFile

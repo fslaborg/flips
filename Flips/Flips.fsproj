@@ -26,6 +26,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <NoWarn>NU1701;0052;</NoWarn>
     <DocumentationFile>bin\x64\Debug\netstandard2.0\Flips.xml</DocumentationFile>
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>

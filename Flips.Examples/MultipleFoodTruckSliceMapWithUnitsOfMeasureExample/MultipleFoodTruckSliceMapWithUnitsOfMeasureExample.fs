@@ -1,8 +1,8 @@
 ﻿module Flips.Examples.MultipleFoodTruckSliceMapWithUnitsOfMeasureExample
 
+open SliceMap
 open Flips
-open Flips.Types
-open Flips.SliceMap
+open Flips.Legacy
 open Flips.UnitsOfMeasure
 
 type [<Measure>] USD
