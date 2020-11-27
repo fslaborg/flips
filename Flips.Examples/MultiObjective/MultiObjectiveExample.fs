@@ -1,8 +1,8 @@
 ﻿module Flips.Examples.MultiObjective
 
 open Flips
-open Flips.Types
-open Flips.SliceMap
+open Flips.Legacy
+open SliceMap
 
 type Job = Job of int
 type Machine = Machine of int

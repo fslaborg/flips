@@ -1,7 +1,7 @@
 ﻿module Flips.Examples.FoodTruckUnitsOfMeasureExample
 
 open Flips
-open Flips.Types
+open Flips.Legacy
 open Flips.UnitsOfMeasure
 
 type [<Measure>] USD

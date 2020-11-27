@@ -9,13 +9,13 @@ type Setting =
 
 type set =
 
-    static member inline maxDuration (value: int64) =
+    static member maxDuration (value: int64) =
         Setting.MaxDuration value
 
-    static member inline WriteLPFile (value: string) =
+    static member WriteLPFile (value: string) =
         Setting.WriteLPFile value
 
-    static member inline WriteMPSFile (value: string) =
+    static member WriteMPSFile (value: string) =
         Setting.WriteMPSFile value
 
 

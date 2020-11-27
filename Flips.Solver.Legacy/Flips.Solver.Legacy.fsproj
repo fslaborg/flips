@@ -5,6 +5,10 @@
     <DefineConstants>$(DefineConstants);USE_LEGACY_NAMESPACE</DefineConstants>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Internals.fs" />
     <Compile Include="Flips.Legacy.Types.fs" />
