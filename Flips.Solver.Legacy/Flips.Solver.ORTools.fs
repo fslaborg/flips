@@ -159,7 +159,7 @@ module ORTools =
             |> Result.bind (solveForObjectives vars remaining)
 
 
-    let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Model.Model) =
+    let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Types.Model) =
 
         let solver =
             match solverType with

@@ -27,6 +27,10 @@
 
     <FLIPS_SOLVER_INTERNAL_VISIBLE_TO>true</FLIPS_SOLVER_INTERNAL_VISIBLE_TO>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+  </PropertyGroup>
   <!-- https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm -->
   <!--
   <ItemGroup Condition="$(FLIPS_SOLVER_INTERNAL_VISIBLE_TO) == 'true'">>
@@ -37,7 +41,9 @@
   <ItemGroup>
     <None Include="paket.references" />
     <None Include="paket.template" />
-    <Compile Include="ISolver.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Domain.fs" />
+    <Compile Include="Domain.UnitsOfMeasure.fs" />
   </ItemGroup>
 
   <ItemGroup>

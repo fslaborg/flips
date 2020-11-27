@@ -118,17 +118,6 @@ module Objective =
 [<RequireQualifiedAccess>]
 module Model =
 
-    /// A type which represents the optimization model. It contains an Objective which represents the
-    /// goal of the model and a collection of Constraints which the model must obey.
-    [<NoComparison>]
-    type Model = internal {
-        _Objectives : Objective list
-        _Constraints : Constraint list
-    }
-    with
-        member public this.Objectives = this._Objectives
-        member public this.Constraints = this._Constraints
-
     let internal getDecisions (m: Model) =
         let objectiveDecisions =
             (Set.empty, m.Objectives)

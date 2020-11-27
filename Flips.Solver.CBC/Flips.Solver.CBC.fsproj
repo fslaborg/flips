@@ -32,7 +32,8 @@
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Settings.fs" />
+    <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
+    <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
