@@ -235,7 +235,7 @@ module Types =
 
           evaluateNode (Set.empty) expr (fun x -> x)
 
-      static member internal Evaluate (decisionMap: Map<Decision, float>) (expr: LinearExpression) : float =
+      static member internal Evaluate (decisionMap: IReadOnlyDictionary<Decision, float>) (expr: LinearExpression) : float =
 
           let rec evaluateNode (multiplier: float, state: ResizeArray<float>) (node: LinearExpression) cont =
               match node with
@@ -407,3 +407,11 @@ module Types =
           Sense : ObjectiveSense
           Expression : LinearExpression
       }
+
+  /// A type which represents the optimization model. It contains an Objective which represents the
+  /// goal of the model and a collection of Constraints which the model must obey.
+  [<NoComparison>]
+  type Model = internal {
+      Objectives : Objective list
+      Constraints : Constraint list
+  }
