@@ -78,20 +78,20 @@ module Model =
     /// <summary>Create a Model with the given objective</summary>
     /// <param name="objective">The objective for the model</param>
     /// <returns>A new Model with an Objective but no constraints</returns>
-    let create objective : Flips.Model.Model =
-        let (Objective.Value objective) = objective
+    let create (Objective.Value objective) : Flips.Types.Model =
+
         {
-            _Objectives = [objective]
-            _Constraints = []
+            Objectives = [objective]
+            Constraints = []
         }
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
     /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
-    let addObjective objective model : Flips.Model.Model =
-        let (Objective.Value objective) = objective
-        { model with _Objectives = [objective] @ model.Objectives }
+    let addObjective (Objective.Value objective) model : Flips.Types.Model =
+
+        { model with Objectives = [objective] @ model.Objectives }
 
 #if HAS_SOLUTION_TYPE
 [<RequireQualifiedAccess>]
