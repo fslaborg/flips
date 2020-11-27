@@ -10,6 +10,10 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Internals.fs" />
     <Compile Include="Flips.Legacy.Types.fs" />

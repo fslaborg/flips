@@ -28,6 +28,10 @@
     <NoWarn>NU1701;0052;</NoWarn>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="CsvExport.fs" />
     <Compile Include="Solver.CBC\CoffeeRoastingExample.fs" />
@@ -79,6 +83,7 @@
     <PackageReference Include="SliceMap" Version="0.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Flips.Solver.Legacy\Flips.Solver.Legacy.fsproj" />
     <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>
