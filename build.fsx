@@ -2,10 +2,25 @@
 // FAKE build script
 // --------------------------------------------------------------------------------------
 #nowarn "0213"
-#r "paket: groupref FakeBuild //"
+#r "paket:
+source https://api.nuget.org/v3/index.json
+storage: none
+nuget Fake.Core.Target ~> 5
+nuget Fake.Core.ReleaseNotes ~> 5
+nuget Fake.DotNet.AssemblyInfoFile ~> 5
+nuget Fake.DotNet.Cli ~> 5
+nuget Fake.DotNet.MSBuild ~> 5
+nuget Fake.DotNet.Paket ~> 5
+nuget Fake.IO.FileSystem ~> 5
+nuget Fake.JavaScript.Yarn ~> 5
+nuget Fake.JavaScript.Npm ~> 5
+nuget Fake.Tools.Git ~> 5
+nuget FSharp.Json ~> 0
+nuget FSharpLint.Core ~> 0
+nuget NuGet.Packaging 5.6
+"
 #load "./tools/FSharpLint.fs"
 #load "./.fake/build.fsx/intellisense.fsx"
-
 open Fake.Core
 open Fake.Core.TargetOperators
 open Fake.DotNet

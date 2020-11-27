@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);USE_LEGACY_NAMESPACE</DefineConstants>
     <Platforms>AnyCPU;x64</Platforms>
+    <OutputPath>../bin/</OutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <OtherFlags>
