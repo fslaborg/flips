@@ -1,18 +1,18 @@
-﻿namespace Flips.Legacy
+﻿namespace Flips.Solver.CBC
 
 open System.Collections.Generic
-
 open Flips
-open Flips.Types
-open Flips.Legacy.Internals
+open Google.OrTools.LinearSolver
 
-module ORTools =
-    open Google.OrTools.LinearSolver
-    
+module internal Dictionary =
 
-    type internal OrToolsSolverType =
-        | CBC
-        | GLOP
+    let tryFind k (d:Dictionary<_,_>) =
+        match d.TryGetValue k with
+        | true, v -> Some v
+        | false, _ -> None
+
+
+module internal ORTools =
 
     let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
         match decisionType with
@@ -94,7 +94,7 @@ module ORTools =
             addConstraint varMap c solver |> ignore
 
 
-    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
+    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (solver:Solver) : Flips.Solver.ISolution =
         
         let decisionMap =
             decisions
@@ -102,11 +102,10 @@ module ORTools =
                             match Dictionary.tryFind d.Name vars with
                             | Some (var: Variable) -> d, var.SolutionValue()
                             | None -> d, 0.0)
-            |> Map.ofSeq
+            |> readOnlyDict
 
-        {
-            Flips.Legacy.Types.Solution.DecisionResults = decisionMap
-            Flips.Legacy.Types.Solution.ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
+        { new Flips.Solver.ISolution 
+            with member _.Values = decisionMap
         }
 
 
@@ -159,20 +158,17 @@ module ORTools =
             |> Result.bind (solveForObjectives vars remaining)
 
 
-    let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Types.Model) =
+    let internal solve (settings:Settings) (model:Flips.Types.Model) : Result<Flips.Solver.ISolution, SolverError> =
 
-        let solver =
-            match solverType with
-            | CBC -> Solver.CreateSolver("CBC")
-            | GLOP -> Solver.CreateSolver("GLOP")
+        let solver = Solver.CreateSolver("CBC")
 
         solver.SetTimeLimit(settings.MaxDuration)
 
-        // We will enable this in the next major release
-        //if settings.EnableOutput then
-        //    solver.EnableOutput()
-        //else
-        //    solver.SuppressOutput()
+        // Turning console output on or off
+        if settings.EnableOutput then
+            solver.EnableOutput()
+        else
+            solver.SuppressOutput()
 
         let vars = Dictionary()
         addConstraints vars model.Constraints solver
@@ -181,15 +177,16 @@ module ORTools =
         |> List.tryHead 
         |> Option.iter (fun objective -> 
           // Write LP/MPS Formulation to file if requested with first objective
-          setObjective vars objective solver
+          // This should really be called before each call to the `solveForObjective` function
           settings.WriteLPFile |> Option.iter (writeLPFile solver)
           settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+          setObjective vars objective solver
         )
 
         let result = solveForObjectives vars (List.rev model.Objectives) solver
 
         match result with
-        | Result.Ok (solver,objective) ->
+        | Result.Ok (solver, objective) ->
             match model.Objectives with
             | firstObjective :: _ when firstObjective <> objective ->
               // Write LP/MPS Formulation to file again if requested
@@ -198,13 +195,28 @@ module ORTools =
               settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
             | [] | [_] | _ -> () 
 
-            buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
-            |> SolveResult.Optimal 
+            buildSolution (Model.getDecisions model) vars solver
+            |> Result.Ok
         | Result.Error errorStatus ->
             match errorStatus with
             | Solver.ResultStatus.INFEASIBLE ->
-                SolveResult.Infeasible "The model was found to be infeasible"
+                SolverError.Infeasible "The model was found to be infeasible"
+                |> Result.Error
             | Solver.ResultStatus.UNBOUNDED ->
-                SolveResult.Unbounded "The model was found to be unbounded"
+                SolverError.Unbounded "The model was found to be unbounded"
+                |> Result.Error
             | _ ->
-                SolveResult.Unknown "The model status is unknown. Unable to solve."
+                SolverError.Unknown "The model status is unknown. Unable to solve."
+                |> Result.Error
+
+
+type Solver (settings:Settings) =
+
+    let settings = settings
+    
+    member _.Solve (model:Flips.Types.Model) =
+      ORTools.solve settings model
+
+    interface Flips.Solver.ISolver<SolverError> with
+        member _.Solve (model:Flips.Types.Model) =
+            ORTools.solve settings model
