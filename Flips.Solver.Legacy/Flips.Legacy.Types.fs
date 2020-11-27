@@ -48,12 +48,12 @@ namespace Flips.Types
 open System
 [<AutoOpen>]
 module Obsolete =
-  [<Obsolete("Use types from `Flips.FlipsVersion2.Types` instead")>]
+  [<Obsolete("Use types from `Flips.Legacy.Types` instead")>]
   type SolverType = Flips.Legacy.Types.SolverType
-  [<Obsolete("Use types from `Flips.FlipsVersion2.Types` instead")>]
+  [<Obsolete("Use types from `Flips.Legacy.Types` instead")>]
   type SolverSettings = Flips.Legacy.Types.SolverSettings
-  [<Obsolete("Use types from `Flips.FlipsVersion2.Types` instead")>]
+  [<Obsolete("Use types from `Flips.Legacy.Types` instead")>]
   type Solution = Flips.Legacy.Types.Solution
-  [<Obsolete("Use types from `Flips.FlipsVersion2.Types` instead")>]
+  [<Obsolete("Use types from `Flips.Legacy.Types` instead")>]
   type SolveResult = Flips.Legacy.Types.SolveResult
 #endif
