@@ -6,12 +6,9 @@
     <Platforms>AnyCPU;x64</Platforms>
     <OutputPath>../bin/</OutputPath>
   </PropertyGroup>
-  <PropertyGroup>
-    <OtherFlags>
-    </OtherFlags>
-    <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>NU1701;0052;</NoWarn>
-    <WarningLevel>5</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Internals.fs" />

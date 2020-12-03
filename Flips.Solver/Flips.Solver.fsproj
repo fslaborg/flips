@@ -6,19 +6,23 @@
     <OutputPath>../bin/</OutputPath>
     <FLIPS_SOLVER_INTERNAL_VISIBLE_TO>true</FLIPS_SOLVER_INTERNAL_VISIBLE_TO>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <OtherFlags>
-    </OtherFlags>
-    <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>NU1701;0052;</NoWarn>
-    <WarningLevel>5</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
   </PropertyGroup>
-
+  <!-- https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm -->
+  <!--
+  <ItemGroup Condition="$(FLIPS_SOLVER_INTERNAL_VISIBLE_TO) == 'true'">>
+    
+    <InternalsVisibleTo Include="Flips.Solver.Cplex" />
+    <InternalsVisibleTo Include="Flips.Solver.FlipsVersion2" />
+  </ItemGroup>-->
   <ItemGroup>
     <None Include="paket.references" />
     <None Include="paket.template" />
-    <Compile Include="ISolver.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Domain.fs" />
+    <Compile Include="Domain.UnitsOfMeasure.fs" />
   </ItemGroup>
 
   <ItemGroup>

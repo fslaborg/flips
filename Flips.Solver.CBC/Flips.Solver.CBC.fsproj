@@ -4,15 +4,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-  <PropertyGroup>
-    <OtherFlags>
-    </OtherFlags>
-    <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>NU1701;0052;</NoWarn>
-    <WarningLevel>5</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Settings.fs" />
+    <None Include="paket.references" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Solver.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
+    <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

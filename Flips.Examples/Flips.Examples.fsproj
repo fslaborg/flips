@@ -5,14 +5,12 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-  <PropertyGroup>
-    <OtherFlags>
-    </OtherFlags>
-    <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>NU1701;0052;</NoWarn>
-    <WarningLevel>5</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Solver.CBC\CoffeeRoastingExample.fs" />
     <Compile Include="MultiObjective\MultiObjectiveExample.fs" />
     <Compile Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
     <Compile Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />
@@ -35,6 +33,8 @@
     <PackageReference Include="SliceMap" Version="0.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Flips.Solver.CBC\Flips.Solver.CBC.fsproj" />
+    <ProjectReference Include="..\Flips.Solver.Legacy\Flips.Solver.Legacy.fsproj" />
     <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>

@@ -1,9 +1,10 @@
-﻿module Flips.Examples.CoffeeRoastingExample
+﻿module Flips.Examples.CBC.CoffeeRoastingExample
 
 open SliceMap
 open Flips
-open Flips.Legacy
 open Flips.UnitsOfMeasure
+open Flips.Solver.UnitsOfMeasure
+open Flips.Solver.CBC
 
 type [<Measure>] USD
 type [<Measure>] ft
@@ -12,7 +13,7 @@ type [<Measure>] Build
 
 type Location = Location of string
 
-let solve settings =
+let solve () =
 
     let minRoastingCapacity = 30.0<Ton>
     let minWarehouseCapacity = 30_000.0<ft^3>
@@ -113,8 +114,10 @@ let solve settings =
         |> Model.addConstraint minWarehouseCapacityConstraint
         |> Model.addConstraints warehouseWithRoasterConstraints
 
+    let settings = Settings []
+    let solver = Solver settings
     // Call the `solve` function in the Solve module to evaluate the model
-    let result = Solver.solve settings model
+    let result = solver.Solve model
 
     printfn "-- Result --"
 
@@ -123,7 +126,7 @@ let solve settings =
     // If the model could be solved, it will print the value of the Objective Function and the
     // values for the Decision Variables
     match result with
-    | Optimal solution ->
+    | Ok solution ->
         printfn "Objective Value: %f" (Objective.evaluate solution objective)
 
         let roasterValues = Solution.getValues solution buildRoaster

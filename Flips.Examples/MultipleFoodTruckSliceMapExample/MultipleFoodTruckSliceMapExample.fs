@@ -1,8 +1,8 @@
 ﻿module Flips.Examples.MultipleFoodTruckWithSliceMapExample
 
 open Flips
-open Flips.Types
-open Flips.SliceMap
+open Flips.Legacy
+open SliceMap
 
 let solve settings =
     
