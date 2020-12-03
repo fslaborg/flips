@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
+    <OutputPath>../bin/</OutputPath>
     <FLIPS_SOLVER_INTERNAL_VISIBLE_TO>true</FLIPS_SOLVER_INTERNAL_VISIBLE_TO>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
