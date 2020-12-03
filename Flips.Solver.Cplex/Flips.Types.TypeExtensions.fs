@@ -9,7 +9,13 @@ module Extensions =
           | DecisionType.Boolean      -> NumVarType.Bool
           | DecisionType.Integer _    -> NumVarType.Int
           | DecisionType.Continuous _ -> NumVarType.Float
-    
+
+  type Flips.Types.ObjectiveSense with
+      member x.ToCplex =
+          match x with
+          | ObjectiveSense.Maximize -> ILOG.Concert.ObjectiveSense.Maximize
+          | ObjectiveSense.Minimize -> ILOG.Concert.ObjectiveSense.Minimize
+
 namespace Flips.Types.TypeExtensions
 
 

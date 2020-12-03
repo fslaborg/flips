@@ -11,7 +11,6 @@ group Solvers
 
   source https://api.nuget.org/v3/index.json
 
-  nuget FSharp.Core redirects: force
   nuget OPTANO.Modeling ~> 3
   nuget OPTANO.Modeling.Gurobi ~> 9
   nuget Google.OrTools ~> 8
@@ -22,7 +21,6 @@ group Tooling
   source https://nuget.org/api/v2
   source https://api.nuget.org/v3/index.json
 
-  nuget FSharp.Core redirects: force
   nuget Fake.IO.FileSystem ~> 5
   nuget FSharpLint.Core ~> 0
   
@@ -41,11 +39,12 @@ group Examples
   source https://nuget.org/api/v2
   source https://api.nuget.org/v3/index.json
 
-  nuget FSharp.Core redirects: force
   nuget FSharp.Data ~> 3
 
   nuget MathNet.Numerics.FSharp
   nuget SliceMap
+
+  nuget NativeLibraryLoader storage: on
 
 group FakeBuild
 
@@ -64,5 +63,3 @@ group FakeBuild
   nuget FSharp.Json ~> 0
   nuget FSharpLint.Core ~> 0
   nuget NuGet.Packaging 5.6
-  
-
