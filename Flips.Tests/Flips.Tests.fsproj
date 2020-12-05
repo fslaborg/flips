@@ -13,7 +13,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>0052;</NoWarn>
+    <NoWarn>0052;0044;</NoWarn>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <!--<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
