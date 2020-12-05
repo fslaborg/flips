@@ -9,7 +9,7 @@ nuget coverlet.collector ~> 1
 nuget CsvHelper
 nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
-nuget FSharp.Core
+nuget FSharp.Core ~> 5
 nuget FSharp.Data ~> 3
 nuget Google.OrTools ~> 8
 nuget MathNet.Numerics ~> 4
@@ -28,7 +28,7 @@ group Tooling
   source https://api.nuget.org/v3/index.json
 
   nuget Fake.IO.FileSystem ~> 5
-  nuget FSharp.Core ~> 4.7
+  nuget FSharp.Core ~> 5
   nuget FSharpLint.Core ~> 0
 
 group FakeBuild
