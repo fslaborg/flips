@@ -14,15 +14,15 @@ module Sum =
     [<AutoOpen>]
     type Summer () =
 
-        /// A function for summing the contensts of a SliceMap
+        /// A function for summing the contents of a SliceMap
         static member sum(x:ISliceData<'Key, Flips.Types.Decision>) : Flips.Types.LinearExpression =
             TryFind.sum x.Keys x.TryFind
 
-        /// A function for summing the contensts of a SliceMap
+        /// A function for summing the contents of a SliceMap
         static member sum(x:ISliceData<'Key, Flips.Types.LinearExpression>) =
             TryFind.sum x.Keys x.TryFind
 
-        /// A function for summing the contensts of a SliceMap
+        /// A function for summing the contents of a SliceMap
         static member sum(x:ISliceData<'Key, float>) : float =
             TryFind.sum x.Keys x.TryFind
 
