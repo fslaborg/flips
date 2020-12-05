@@ -439,3 +439,38 @@ module UnitsOfMeasureTests =
 
             Assert.StrictEqual(expectedResult, resultValues)
           
+        [<Fact>]
+        let ``Sum of SMap float compiles`` () =
+            let s = ["a", 1.0<cm>] |> SMap
+
+            let t = sum s
+            Assert.True(true)
+
+        [<Fact>]
+        let ``Sum of SMap2 float compiles`` () =
+            let s = [("a", "b"), 1.0<cm>] |> SMap2
+
+            let t = sum s
+            Assert.True(true)
+
+        [<Fact>]
+        let ``Sum of SMap3 float compiles`` () =
+            let s = [("a", "b", "c"), 1.0<cm>] |> SMap3
+
+            let t = sum s
+            Assert.True(true)
+
+        [<Fact>]
+        let ``Sum of SMap4 float compiles`` () =
+            let s = [("a", "b", "c", "d"), 1.0<cm>] |> SMap4
+
+            let t = sum s
+            Assert.True(true)
+
+        [<Fact>]
+        let ``Sum of SMap5 float compiles`` () =
+            let s = [("a", "b", "c", "d", "e"), 1.0<cm>] |> SMap5
+
+            let t = sum s
+            Assert.True(true)
+

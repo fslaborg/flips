@@ -7,13 +7,9 @@
     <GenerateProgramFile>false</GenerateProgramFile>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OtherFlags></OtherFlags>
-    <NoWarn>NU1701;</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup>
     <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>0052;0044;</NoWarn>
+    <NoWarn>NU1701;0052;0044;</NoWarn>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <!--<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
