@@ -16,28 +16,30 @@ module Extensions =
           | ObjectiveSense.Maximize -> ILOG.Concert.ObjectiveSense.Maximize
           | ObjectiveSense.Minimize -> ILOG.Concert.ObjectiveSense.Minimize
 
+  type Flips.Types.DecisionName with
+      member x.AsString = match x with DecisionName n -> n
 namespace Flips.Types.TypeExtensions
 
 
 open Flips.Types
 [<AutoOpen>]
-module Extensions =
+module rec Extensions =
 
+  type Flips.Types.Model with
+      member x.GetDecisions() =
+          seq {
+              for c in x.Constraints do
+                yield! c.Expression.GetDecisions()
+              for o in x.Objectives do
+                yield! o.Expression.GetDecisions()
+          }
   /// todo for matthewcrews: review if correct and can go to Flips.Solver
   type Flips.Types.LinearExpression with
       member internal x.GetDecisions() =
           seq {
-              match x with
-              | Empty -> ()
-              | AddFloat(coeff, expr) -> ()
-              | AddDecision((_,decision),expr) -> 
-                  yield decision
-                  yield! expr.GetDecisions()
-              | Multiply(coeff,expr) -> 
-                  yield! expr.GetDecisions()
-              | AddLinearExpression(left,right) ->
-                  yield! left.GetDecisions()
-                  yield! right.GetDecisions()
+              let decisions = LinearExpression.Reduce x
+              for d in decisions.Coefficients.Keys do
+                yield {Name= d; Type = decisions.DecisionTypes.[d]}
           }
 
   /// todo for matthewcrews: review if correct and can go to Flips.Solver
