@@ -6,10 +6,20 @@ open System
 [<AutoOpen>]
 module rec Types =
 
+    /// Represents the types of Decisions that can be made
+    /// A Boolean maps to a 0 or 1 value
+    /// An Integer type can take on any discrete value between the Upper and Lower Bound (inclusive)
+    /// A Continuous type can take on any value between the Upper and Lower bound (inclusive)
+    type DecisionType =
+        | Boolean
+        | Integer of LowerBound: float * UpperBound: float
+        | Continuous of LowerBound: float * UpperBound: float
+
     type IDecision =
         abstract member Name : string
         abstract member Type : DecisionType
 
+    [<RequireQualifiedAccess>]
     type LinearElement =
         | Constant of float
         | Decision of coefficient:float * decision:Decision
@@ -48,15 +58,6 @@ module rec Types =
         interface IComparer<float> with 
             member this.Compare (a: float, b: float) =
                 Math.Abs(a).CompareTo(Math.Abs(b))
-
-    /// Represents the types of Decisions that can be made
-    /// A Boolean maps to a 0 or 1 value
-    /// An Integer type can take on any discrete value between the Upper and Lower Bound (inclusive)
-    /// A Continuous type can take on any value between the Upper and Lower bound (inclusive)
-    type DecisionType =
-        | Boolean
-        | Integer of LowerBound: float * UpperBound: float
-        | Continuous of LowerBound: float * UpperBound: float
 
     /// A Name which uniquely identifies the Decision
     type DecisionName = DecisionName of string
@@ -209,7 +210,6 @@ module rec Types =
         | AddDecision of (float * Decision) * linearExpression:LinearExpression
         | Multiply of coefficient:float * linearExpression:LinearExpression
         | AddLinearExpression of lhsExpression:LinearExpression * rhsExpression:LinearExpression
-
 
 
         static member internal Reduce (expr: LinearExpression) : ReducedLinearExpression =
