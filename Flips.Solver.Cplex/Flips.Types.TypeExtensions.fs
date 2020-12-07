@@ -16,42 +16,90 @@ module Extensions =
           | ObjectiveSense.Maximize -> ILOG.Concert.ObjectiveSense.Maximize
           | ObjectiveSense.Minimize -> ILOG.Concert.ObjectiveSense.Minimize
 
-namespace Flips.Types.TypeExtensions
 
+namespace Flips.Types.TypeExtensions
 
 open Flips.Types
 [<AutoOpen>]
-module Extensions =
+module rec Extensions =
+  type Flips.Types.Decision with 
+      member x.LB = 
+        match x with 
+        | {Type = DecisionType.Continuous(v,_) } 
+        | {Type = DecisionType.Integer(v,_) } -> v
+        | {Type = DecisionType.Boolean } -> 0.
+      member x.UB = 
+        match x with 
+        | {Type = DecisionType.Continuous(_,v) } 
+        | {Type = DecisionType.Integer(_,v) } -> v
+        | {Type = DecisionType.Boolean } -> 1.
+      member x.Bounds = x.LB,x.UB
 
+  type Flips.Types.Objective with
+      member x.Name = match x with | { Name = name } -> name
+
+  type Flips.Types.ObjectiveName with
+      member x.AsString = match x with ObjectiveName n -> n
+
+  type Flips.Types.ConstraintName with
+      member x.AsString = match x with ConstraintName n -> n
+
+  type Flips.Types.DecisionName with
+      member x.AsString = match x with DecisionName n -> n
+  let uom<[<Measure>]'measure> = LanguagePrimitives.FloatWithMeasure<'measure>
+
+  type Flips.UnitsOfMeasure.Types.Objective<[<Measure>]'m> with
+      member x.Objective =
+        match (x: Flips.UnitsOfMeasure.Types.Objective<'m>) with 
+        | Flips.UnitsOfMeasure.Types.Objective.Value o -> o
+    
+  type Flips.UnitsOfMeasure.Types.Decision<[<Measure>]'m> with
+    
+      member x.Decision =
+        match (x: Flips.UnitsOfMeasure.Types.Decision<'m>) with 
+        | Flips.UnitsOfMeasure.Types.Value x -> x
+
+      member x.LB = x.Decision.LB * (uom<'m> 1.)
+      member x.UB = x.Decision.UB * (uom<'m> 1.)
+
+  type Flips.Types.Objective with
+      static member getName       (x: Flips.Types.Objective) = match x with | { Name = n } -> n
+      static member getExpression (x: Flips.Types.Objective) = match x with | { Expression = e } -> e
+
+  type Flips.Types.Constraint with
+      static member getName       (x: Flips.Types.Constraint) = match x with | { Name = n } -> n
+      static member getExpression (x: Flips.Types.Constraint) = match x with | { Expression = e } -> e
+  type Flips.Types.LinearExpression with
+      static member evaluate valMap expr = Flips.Types.LinearExpression.Evaluate valMap expr
+  type Flips.Types.Model with
+      member x.GetDecisions() =
+          seq {
+              for c in x.Constraints do
+                yield! c.Expression.GetDecisions()
+              for o in x.Objectives do
+                yield! o.Expression.GetDecisions()
+          }
   /// todo for matthewcrews: review if correct and can go to Flips.Solver
   type Flips.Types.LinearExpression with
       member internal x.GetDecisions() =
           seq {
-              match x with
-              | Empty -> ()
-              | AddFloat(coeff, expr) -> ()
-              | AddDecision((_,decision),expr) -> 
-                  yield decision
-                  yield! expr.GetDecisions()
-              | Multiply(coeff,expr) -> 
-                  yield! expr.GetDecisions()
-              | AddLinearExpression(left,right) ->
-                  yield! left.GetDecisions()
-                  yield! right.GetDecisions()
+              let decisions = LinearExpression.Reduce x
+              for d in decisions.Coefficients.Keys do
+                yield {Name= d; Type = decisions.DecisionTypes.[d]}
           }
 
   /// todo for matthewcrews: review if correct and can go to Flips.Solver
   type Flips.Types.ConstraintExpression with
-      member internal x.LHS =
+      member x.LHS =
           match x with
           | ConstraintExpression.Inequality(LHS=lhs)
           | ConstraintExpression.Equality(LHS=lhs) -> lhs
-      member internal x.RHS =
+      member x.RHS =
           match x with
           | ConstraintExpression.Inequality(RHS=rhs)
           | ConstraintExpression.Equality(RHS=rhs) -> rhs
 
-      member internal x.GetDecisions () =
+      member x.GetDecisions () =
           seq {
               match x with
               | ConstraintExpression.Equality(lhs,rhs) 
@@ -59,3 +107,42 @@ module Extensions =
                   yield! lhs.GetDecisions()
                   yield! rhs.GetDecisions()            
           }
+
+  type Printer =
+    static member print (expr: Flips.Types.Objective) =
+      let t =
+        match expr.Sense with
+        | ObjectiveSense.Maximize -> "max"
+        | ObjectiveSense.Minimize -> "min"
+      $"{t} {expr.Name.AsString} such as: {Printer.print expr.Expression}"
+
+    static member print (expr: Flips.Types.Constraint) =
+      $"{expr.Name.AsString} : {Printer.print expr.Expression}"
+
+    static member print (expr: Flips.Types.ConstraintExpression) =
+      let op = 
+        match expr with
+        | Inequality(inequality=GreaterOrEqual) -> ">="
+        | Inequality(inequality=LessOrEqual) -> "<="
+        | Equality _ -> "="
+      match expr with
+      | Inequality(lhs,_ ,rhs)
+      | Equality (lhs, rhs) -> $"{Printer.print lhs} {op} {Printer.print rhs}"
+
+    static member print (expr: Flips.Types.LinearExpression) =
+      match expr with
+      | LinearExpression.Empty -> ""
+      | LinearExpression.AddDecision((1.,d),Empty) -> $"{d.Name.AsString}"
+      | LinearExpression.AddDecision((coef,d),Empty) -> $"(%f{coef} * {d.Name.AsString})"
+      | LinearExpression.AddDecision((1.,d),expr) -> $"{d.Name.AsString} + {Printer.print expr}"
+      | LinearExpression.AddDecision((coef,d),expr) -> $"%f{coef} * {d.Name.AsString} + {Printer.print expr}"
+      | LinearExpression.Multiply(coef,Empty) -> ""
+      | LinearExpression.Multiply(1.,expr) -> $"{Printer.print expr}"
+      | LinearExpression.Multiply(coef,expr) -> $"%f{coef} * ({Printer.print expr})"
+      | LinearExpression.AddFloat(k,Empty) -> $"%f{k}"
+      | LinearExpression.AddFloat(0.,expr) -> $"{expr}"
+      | LinearExpression.AddFloat(k,expr) -> $"%f{k} + ({expr})"
+      | LinearExpression.AddLinearExpression(l,Empty) -> $"{Printer.print l}"
+      | LinearExpression.AddLinearExpression(Empty,r) -> $"{Printer.print r}"
+      | LinearExpression.AddLinearExpression(l,r) -> $"{Printer.print l} + {Printer.print r}"
+      
