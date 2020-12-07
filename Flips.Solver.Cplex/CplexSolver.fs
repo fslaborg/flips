@@ -55,25 +55,36 @@ module rec CplexSolver =
 
         let addObjective (vars: Vars) (objective: Flips.Types.Objective) state =
             let expr = buildExpression vars objective.Expression state
-            let (ObjectiveName(name)) = objective.Name
+            
             match state.cplex.GetObjective() with
-            | null -> state.cplex.AddObjective(objective.Sense.ToCplex, expr, name)
+            | null ->
+              let obfuscateNames = state.toCplexContext.obfuscateVarNames
+              if obfuscateNames then
+                state.cplex.AddObjective(objective.Sense.ToCplex, expr)
+              else
+                let (ObjectiveName(name)) = objective.Name
+                state.cplex.AddObjective(objective.Sense.ToCplex, expr, name)
             | cplexObjective ->
                 if state.options.HasDoNotReuseState then
                     failwithf "shouldn't reuse cplex state"
                 else
                     cplexObjective.Expr <- expr
-                    cplexObjective.Name <- name
+                    let obfuscateNames = state.toCplexContext.obfuscateVarNames
+                    if not obfuscateNames then
+                      let (ObjectiveName(name)) = objective.Name
+                      cplexObjective.Name <- name
                     cplexObjective.Sense <- objective.Sense.ToCplex
                     cplexObjective
 
         let addConstraint (vars: Vars) (c: Flips.Types.Constraint) state =
+            
             let lhs = buildExpression vars c.Expression.LHS state
             let rhs = buildExpression vars c.Expression.RHS state
+            let obfuscateNames = state.toCplexContext.obfuscateConstraintNames 
             match c.Expression with
-            | Equality (_, _)                  -> state.cplex.AddEq(lhs, rhs)
-            | Inequality(_, GreaterOrEqual, _) -> state.cplex.AddGe(lhs, rhs)
-            | Inequality(_, LessOrEqual, _)    -> state.cplex.AddLe(lhs, rhs)
+            | Equality (_, _)                  -> if obfuscateNames then state.cplex.AddEq(lhs, rhs) else state.cplex.AddEq(lhs, rhs, c.Name.AsString)
+            | Inequality(_, GreaterOrEqual, _) -> if obfuscateNames then state.cplex.AddGe(lhs, rhs) else state.cplex.AddGe(lhs, rhs, c.Name.AsString)
+            | Inequality(_, LessOrEqual, _)    -> if obfuscateNames then state.cplex.AddLe(lhs, rhs) else state.cplex.AddLe(lhs, rhs, c.Name.AsString)
         
         let addConstraints vars constraints state =
             [
@@ -125,7 +136,7 @@ module rec CplexSolver =
                   state.problem <- {state.problem with flipsDecisionToCplexNumVar = d }
                   d
               | _ ->
-                  let d = Dictionary<_,_>()
+                  let d = Dictionary<_,_>(decisionsByName.Count)
                   state.problem <- {state.problem with flipsDecisionToCplexNumVar = d }
                   d
 
@@ -262,6 +273,7 @@ module rec CplexSolver =
             mutable problem: CPlexProblemState
             lock: obj
             ofCplexContext: OfCplexContext
+            toCplexContext: ToCplexContext
             options       : CplexOptions
         }
 
@@ -275,7 +287,8 @@ module rec CplexSolver =
             problem        = createEmpty()
             lock           = obj()
             ofCplexContext = { unknownDecisionTurnsToZero = true }
-            options        = {options =  Set.ofList [DoNotReuseState] }
+            toCplexContext = { obfuscateConstraintNames = false; obfuscateVarNames = false }
+            options        = { options =  Set.ofList [DoNotReuseState] }
           }
         
         static member create () = ICplexSolverState.createWithCplex(new Cplex())
