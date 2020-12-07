@@ -19,13 +19,10 @@ module rec Types =
         abstract member Name : string
         abstract member Type : DecisionType
 
-    [<RequireQualifiedAccess>]
-    type LinearElement =
-        | Constant of float
-        | Decision of coefficient:float * decision:Decision
-
     type ILinearExpression =
-        abstract member Elements : seq<LinearElement>
+        abstract member Decisions : ISet<IDecision>
+        abstract member Coefficients : IReadOnlyDictionary<IDecision, float>
+        abstract member Offset : float
 
     type Relationship =
         | LessOrEqual
