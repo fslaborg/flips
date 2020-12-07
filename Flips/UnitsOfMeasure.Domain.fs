@@ -199,8 +199,17 @@ module Sum =
 
     open SliceMap
 
-    /// <summary>A function which sums the values contained in a SliceMap</summary>
-    /// <param name="x">An instance of ISliceData</param>
-    /// <returns>A LinearExpression with a Unit of Measure</returns>
-    let inline sum (x: ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-        SliceMap.TryFind.sum x.Keys x.TryFind
+    [<AutoOpen>]
+    type Summer () =
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+            TryFind.sum x.Keys x.TryFind
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, Flips.UnitsOfMeasure.Types.LinearExpression<_>>) =
+            TryFind.sum x.Keys x.TryFind
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, float<_>>) : float<_> =
+            TryFind.sum x.Keys x.TryFind
