@@ -26,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C3221202-C
 		docs\package.json = docs\package.json
 		docs\README.md = docs\README.md
 		docs\WhatIsOptimization.md = docs\WhatIsOptimization.md
+		docs\solver-samples\cplex.fsx = docs\solver-samples\cplex.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "example-problems", "example-problems", "{4693BB0E-197B-4B9D-9B2B-F25E9FA939DA}"
