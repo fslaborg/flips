@@ -5,6 +5,7 @@ module rec Types =
 
     open Flips
     
+
     /// A Decision with a UnitOfMeasure
     type Decision<[<Measure>] 'Measure> =
         | Value of Types.Decision
@@ -14,6 +15,16 @@ module rec Types =
           let (Value d) = this
           d.Name
     
+        interface IDecision with
+            member this.Name =
+                let (Value d) = this
+                let (DecisionName name) = d.Name
+                name
+
+            member this.Type =
+                let (Value d) = this
+                d.Type
+
         static member (+) (Value lD: Decision<'Measure>, Value rD: Decision<'Measure>) =
           LinearExpression<'Measure>.Value (lD + rD)
     
