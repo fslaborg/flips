@@ -11,7 +11,7 @@ type internal SignInsenstiveComparer () =
             Math.Abs(a).CompareTo(Math.Abs(b))
 
 type ISolution = 
-    abstract member Values : IReadOnlyDictionary<Decision, float>
+    abstract member Values : IReadOnlyDictionary<IDecision, float>
 
 type ISolver<'TError> =
     abstract member Solve : model:Model -> Result<ISolution, 'TError>

@@ -13,7 +13,7 @@ module Decision =
     /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
     let evaluate (solution: ISolution) (Objective.Value objective: Objective<'Measure>) =
         objective.Expression
-        |> Flips.Types.LinearExpression.Evaluate solution.Values
+        |> LinearExpression.Evaluate solution
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 
 
