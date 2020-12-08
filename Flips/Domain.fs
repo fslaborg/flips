@@ -67,12 +67,12 @@ module Decision =
 [<RequireQualifiedAccess>]
 module Constraint =
 
-    let internal getDecisions (c: Constraint) =
-        match c.Expression with
-        | Inequality (lhs, _, rhs) | Equality (lhs, rhs) ->
-            let lhsDecisions = LinearExpression.GetDecisions lhs
-            let rhsDecisions = LinearExpression.GetDecisions rhs
-            lhsDecisions + rhsDecisions
+    //let internal getDecisions (c: IConstraint) =
+    //    match c.Expression with
+    //    | Inequality (lhs, _, rhs) | Equality (lhs, rhs) ->
+    //        let lhsDecisions = LinearExpression.GetDecisions lhs
+    //        let rhsDecisions = LinearExpression.GetDecisions rhs
+    //        lhsDecisions + rhsDecisions
 
     /// <summary>Create a Constraint</summary>
     /// <param name="constraintName">The unique identifier for the Constraint</param>
@@ -90,8 +90,11 @@ module Constraint =
 [<RequireQualifiedAccess>]
 module Objective =
 
-    let internal getDecisions (objective: Objective) =
-        LinearExpression.GetDecisions objective.Expression
+    let internal getDecisions (objective: IObjective) =
+        //LinearExpression.GetDecisions objective.Expression
+        objective.Expression.Terms
+        |> Seq.choose (fun x -> match x with | LinearTerm.Constant _ -> None | LinearTerm.LinearElement (_, d) -> Some d)
+        |> Set
 
     /// <summary>Create an Objective for an optimization model</summary>
     /// <param name="objectiveName">The name which describes the goal of the objective function</param>
@@ -118,13 +121,13 @@ module Objective =
 [<RequireQualifiedAccess>]
 module Model =
 
-    let internal getDecisions (m: Model) =
-        let objectiveDecisions =
-            (Set.empty, m.Objectives)
-            ||> List.fold (fun decs objective -> decs + (Objective.getDecisions objective))
+    //let internal getDecisions (m: Model) =
+    //    let objectiveDecisions =
+    //        (Set.empty, m.Objectives)
+    //        ||> List.fold (fun decs objective -> decs + (Objective.getDecisions objective))
 
-        (objectiveDecisions, m.Constraints)
-        ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
+    //    (objectiveDecisions, m.Constraints)
+    //    ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
 
     /// <summary>Create a Model with the given objective</summary>
     /// <param name="objective">The objective for the model</param>
@@ -147,7 +150,7 @@ module Model =
     /// <param name="c">The constraint to be added to the model</param>
     /// <param name="model">The model to add the constraint to</param>
     /// <returns>A new Model with the constraint added</returns>
-    let addConstraint c (model: Model) =
+    let addConstraint c model =
 
         { model with Constraints = [c] @ model.Constraints }
 

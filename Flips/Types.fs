@@ -16,13 +16,20 @@ module rec Types =
         | Continuous of LowerBound: float * UpperBound: float
 
     type IDecision =
+        inherit IComparable
         abstract member Name : string
         abstract member Type : DecisionType
 
-    type ILinearExpression =
-        abstract member Decisions : ISet<IDecision>
-        abstract member Coefficients : IReadOnlyDictionary<IDecision, float>
-        abstract member Offset : float
+    type LinearTerm =
+        | Constant of float
+        | LinearElement of coefficient:float * decision:IDecision
+
+    type ILinearExpression = 
+        abstract member Terms : seq<LinearTerm>
+
+    //type IReducedLinearExpression =
+    //    abstract member ReducedTerms : IReadOnlyDictionary<IDecision, float>
+    //    abstract member Offset : float
 
     type Relationship =
         | LessOrEqual
@@ -30,6 +37,7 @@ module rec Types =
         | Equal
 
     type IConstraint =
+        abstract member Name : string
         abstract member LHSExpression : ILinearExpression
         abstract member RHSExpression : ILinearExpression
         abstract member Relationship : Relationship
@@ -47,7 +55,7 @@ module rec Types =
 
     type IModel =
         abstract member Constraints : seq<IConstraint>
-        abstract member Objectives : seq<Objective>
+        abstract member Objectives : seq<IObjective>
 
 
     /// Comparer used for the reduction of LinearExpression due to float addition
@@ -61,12 +69,6 @@ module rec Types =
 
     /// Used for the reduction of a LinearExpression to a form used for mapping to 
     /// underlying solvers.
-    [<NoComparison>]
-    type internal ReduceAccumulator = {
-        DecisionTypes : Dictionary<DecisionName, DecisionType>
-        Coefficients : Dictionary<DecisionName, List<float>>
-        Offsets : List<float>
-    }
 
     /// Represents a decision that must be made
     type Decision =  {
@@ -74,6 +76,13 @@ module rec Types =
         Type : DecisionType
     }
     with
+
+        interface IDecision with
+            member this.Name =
+                let (DecisionName name) = this.Name
+                name
+
+            member this.Type = this.Type
 
         static member (*) (decision: Decision, f: float) =
             LinearExpression.AddDecision ((f, decision), LinearExpression.Zero)
@@ -127,13 +136,18 @@ module rec Types =
             LinearExpression.OfDecision decision >== rhsDecision
 
 
+    [<NoComparison>]
+    type private ReduceAccumulator = {
+        Terms : Dictionary<Decision, ResizeArray<float>>
+        Offsets : ResizeArray<float>
+    }
    
       /// A type used for mapping a LinearExpression to a form which a Solver can use
     [<NoComparison;CustomEquality>] 
-    type internal ReducedLinearExpression =
+    type private ReducedLinearExpression =
         {
-            DecisionTypes : Dictionary<DecisionName, DecisionType>
-            Coefficients : Dictionary<DecisionName, float>
+            //DecisionTypes : Dictionary<DecisionName, DecisionType>
+            Terms : Dictionary<Decision, float>
             Offset : float
         } with
         static member private NearlyEquals (a: float) (b: float) : bool =
@@ -157,43 +171,42 @@ module rec Types =
                   |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
                   |> Map.ofSeq
 
-                let thisCoefficients = asMap this.Coefficients
-                let otherCoefficients = asMap otherExpr.Coefficients
+                let thisTerms = asMap this.Terms
+                let otherTerms = asMap otherExpr.Terms
+                let termsMatch = (thisTerms = otherTerms)
+                //let leftMatchesRight =
+                //    (true, thisTerms)
+                //    ||> Map.fold (fun b k thisCoef -> 
+                //                    match Map.tryFind k otherTerms with
+                //                    | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
+                //                    | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
 
-                let leftMatchesRight =
-                    (true, thisCoefficients)
-                    ||> Map.fold (fun b k thisCoef -> 
-                                    match Map.tryFind k otherCoefficients with
-                                    | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
-                                    | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
+                //let evaluateRightElement b n otherCoef =
+                //    if this.Coefficients.ContainsKey(n) then
+                //        b
+                //    else
+                //        let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
+                //        b && essentiallyZero
 
-                let evaluateRightElement b n otherCoef =
-                    if this.Coefficients.ContainsKey(n) then
-                        b
-                    else
-                        let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
-                        b && essentiallyZero
+                //let rightNonMatchesAreZero =
+                //    (true, otherTerms)
+                //    ||> Map.fold evaluateRightElement
 
-                let rightNonMatchesAreZero =
-                    (true, otherCoefficients)
-                    ||> Map.fold evaluateRightElement
-
-                let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
+                let allPassing = offsetSame && termsMatch
                 allPassing
             | _ -> false
 
         static member internal OfReduceAccumulator (acc: ReduceAccumulator) =
             let offset = acc.Offsets |> Seq.sortBy Math.Abs |> Seq.sum
       
-            let coefficients = Dictionary()
-            for elem in acc.Coefficients do
-                elem.Value.Sort(SignInsenstiveComparer())
-                let coefficient = Seq.sum elem.Value
-                coefficients.Add(elem.Key, coefficient)
+            let terms = Dictionary()
+            for KeyValue (decision, coefficients) in acc.Terms do
+                coefficients.Sort(SignInsenstiveComparer())
+                let coefficient = Seq.sum coefficients
+                terms.Add(decision, coefficient)
 
             {
-                DecisionTypes = acc.DecisionTypes
-                Coefficients = coefficients
+                Terms = terms
                 Offset = offset
             }
         
@@ -209,10 +222,9 @@ module rec Types =
         | AddLinearExpression of lhsExpression:LinearExpression * rhsExpression:LinearExpression
 
 
-        static member internal Reduce (expr: LinearExpression) : ReducedLinearExpression =
+        static member private Reduce (expr: LinearExpression) : ReducedLinearExpression =
             let initialState = {
-                DecisionTypes = Dictionary()
-                Coefficients = Dictionary()
+                Terms = Dictionary()
                 Offsets = ResizeArray()
             }
 
@@ -228,18 +240,14 @@ module rec Types =
                     state.Offsets.Add(multiplier * addToOffset)
                     evaluateNode (multiplier, state) nodeExpr cont
                 | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
-                    match tryFind nodeDecision.Name state.DecisionTypes with
+                    match tryFind nodeDecision state.Terms with
                     | Some existingType ->
-                        if existingType <> nodeDecision.Type then
-                            invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
-                        else
-                            state.Coefficients.[nodeDecision.Name].Add(nodeCoef * multiplier)
-                            evaluateNode (multiplier, state) nodeExpr cont
+                        state.Terms.[nodeDecision].Add(nodeCoef * multiplier)
+                        evaluateNode (multiplier, state) nodeExpr cont
                     | None ->
                         let newCoefArray = ResizeArray()
                         newCoefArray.Add(multiplier * nodeCoef)
-                        state.DecisionTypes.Add(nodeDecision.Name, nodeDecision.Type)
-                        state.Coefficients.Add(nodeDecision.Name, newCoefArray)
+                        state.Terms.Add(nodeDecision, newCoefArray)
                         evaluateNode (multiplier, state) nodeExpr cont
                 | Multiply (nodeMultiplier, nodeExpr) ->
                     let newMultiplier = multiplier * nodeMultiplier
@@ -251,22 +259,22 @@ module rec Types =
 
             ReducedLinearExpression.OfReduceAccumulator reduceResult
 
-        static member internal GetDecisions (expr: LinearExpression) : Set<Decision> =
+        //static member internal GetDecisions (expr: LinearExpression) : Set<Decision> =
 
-            let rec evaluateNode (decisions: Set<Decision>) (node: LinearExpression) cont : Set<Decision> =
-                match node with
-                | Empty -> cont decisions
-                | AddFloat (_, nodeExpr) -> 
-                  evaluateNode decisions nodeExpr cont
-                | Multiply (_, nodeExpr) -> 
-                  evaluateNode decisions nodeExpr cont
-                | AddDecision ((_, nodeDecision), nodeExpr) ->
-                    let newDecisions = decisions.Add nodeDecision
-                    evaluateNode newDecisions nodeExpr cont
-                | AddLinearExpression (lExpr, rExpr) ->
-                    evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
+        //    let rec evaluateNode (decisions: Set<Decision>) (node: LinearExpression) cont : Set<Decision> =
+        //        match node with
+        //        | Empty -> cont decisions
+        //        | AddFloat (_, nodeExpr) -> 
+        //          evaluateNode decisions nodeExpr cont
+        //        | Multiply (_, nodeExpr) -> 
+        //          evaluateNode decisions nodeExpr cont
+        //        | AddDecision ((_, nodeDecision), nodeExpr) ->
+        //            let newDecisions = decisions.Add nodeDecision
+        //            evaluateNode newDecisions nodeExpr cont
+        //        | AddLinearExpression (lExpr, rExpr) ->
+        //            evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
 
-            evaluateNode (Set.empty) expr (fun x -> x)
+        //    evaluateNode (Set.empty) expr (fun x -> x)
 
         static member internal Evaluate (decisionMap: IReadOnlyDictionary<Decision, float>) (expr: LinearExpression) : float =
         
@@ -294,6 +302,15 @@ module rec Types =
             let total = Seq.sum reduceResult
             total
         
+        interface ILinearExpression with
+            member this.Terms =
+                let reducedForm = LinearExpression.Reduce this
+                seq { 
+                    for KeyValue (decision, coefficient) in reducedForm.Terms do
+                        yield LinearTerm.LinearElement (coefficient, decision)
+                    yield LinearTerm.Constant reducedForm.Offset
+                }
+                
         
         override this.GetHashCode () =
             hash this
@@ -422,6 +439,25 @@ module rec Types =
             Expression : ConstraintExpression
         }
 
+        interface IConstraint with
+            member this.Name =
+                let (ConstraintName name) = this.Name
+                name
+            member this.LHSExpression: ILinearExpression = 
+                match this.Expression with
+                | Inequality (lhs, _, _) -> lhs :> ILinearExpression
+                | Equality (lhs, _) -> lhs :> ILinearExpression
+            member this.RHSExpression: ILinearExpression = 
+                match this.Expression with
+                | Inequality (_, _, rhs) -> rhs :> ILinearExpression
+                | Equality (_, rhs) -> rhs :> ILinearExpression
+            member this.Relationship: Relationship = 
+                match this.Expression with
+                | Inequality (_, c, _) ->
+                    match c with
+                    | LessOrEqual -> Relationship.LessOrEqual
+                    | GreaterOrEqual -> Relationship.GreaterOrEqual
+                | Equality (_, _) -> Relationship.Equal
 
 
     /// A name for the Objective to document what the function is meant to represent
@@ -433,13 +469,25 @@ module rec Types =
         internal {
             Name : ObjectiveName
             Sense : ObjectiveSense
-            Expression : LinearExpression
+            Expression : ILinearExpression
         }
+
+        interface IObjective with
+            member this.Expression = this.Expression
+            member this.Sense = this.Sense
+            member this.Name =
+                let (ObjectiveName name) = this.Name
+                name
 
     /// A type which represents the optimization model. It contains an Objective which represents the
     /// goal of the model and a collection of Constraints which the model must obey.
     [<NoComparison>]
-    type Model = internal {
-        Objectives : Objective list
-        Constraints : Constraint list
-    }
+    type Model = 
+        internal {
+            Constraints : IConstraint list
+            Objectives : IObjective list
+        }
+
+        interface IModel with
+            member this.Constraints = this.Constraints :> seq<IConstraint>
+            member this.Objectives = this.Objectives :> seq<IObjective>
