@@ -30,9 +30,15 @@ let main argv =
     //MultiObjective.solve { settings with WriteMPSFile = Some "multiobjective.mps" }
 
 
+#if USE_FLIPS_SOLVER_LEGACY
     // CBC Solver Examples
     Flips.Examples.CBC.CoffeeRoastingExample.solve ()
-
+#endif
+#if USE_FLIPS_SOLVER_CPLEX
+    Flips.Examples.Cplex.Samples.runFoodTruckExample ()
+    Flips.Examples.Cplex.Samples.runMultiobjectiveModel ()
+    Flips.Examples.Cplex.Samples.runCoffeeRoastingModel ()
+#endif
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
     0 // return an integer exit code
