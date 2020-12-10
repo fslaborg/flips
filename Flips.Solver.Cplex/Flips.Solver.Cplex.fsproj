@@ -12,6 +12,14 @@
     <Compile Include="Flips.Types.TypeExtensions.fs" />
      <Compile Include="CplexSolver.fs" />
   </ItemGroup>
+    <ItemGroup>
+        <None Include="..\thirdparties\ilog.cplex\bin\x64\cplex121.dll" Link="cplex121.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\thirdparties\ilog.cplex\bin\x64\cplex1260.dll" Link="cplex1260.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
   <ItemGroup>
     <None Include="paket.references" />
   </ItemGroup>
