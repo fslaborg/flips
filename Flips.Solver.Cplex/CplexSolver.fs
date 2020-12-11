@@ -27,7 +27,6 @@ module rec CplexSolver =
                 var.UB <- ub
             else
                 failwithf "can't change type of decision %A from %A to %A" name decisionType var.Type
-            
 
         let createVariable ({Type = decisionType; Name = DecisionName name }) state =
 
@@ -87,16 +86,17 @@ module rec CplexSolver =
             | Inequality(_, LessOrEqual, _)    -> if obfuscateNames then state.cplex.AddLe(lhs, rhs) else state.cplex.AddLe(lhs, rhs, c.Name.AsString)
         
         let addConstraints vars constraints state =
-            [
+            [|
                 for c in constraints do
                     addConstraint vars c state
-            ]
+            |]
 
-        let buildSolution (decisions: Decision seq) (vars:Vars) state (objective: Flips.Types.Objective) =
+        let buildSolution formulation state =
+            let decisions = formulation.decisions.Values
             let decisionMap =
                 decisions
                 |> Seq.map (fun d ->
-                    match vars.TryGetValue d.Name with
+                    match formulation.vars.TryGetValue d.Name with
                     | true, v -> d, state.cplex.GetValue v 
                     | false, _ ->
                         if state.ofCplexContext.unknownDecisionTurnsToZero then
@@ -104,60 +104,77 @@ module rec CplexSolver =
                         else
                             raise (System.Exception(sprintf "Decision %A was somehow not setup" d.Name))
                 )
-                |> Map.ofSeq
-            {|
-                DecisionResults = decisionMap
-                ObjectiveValue = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
-            |}
+                |> readOnlyDict
 
-        let runSolverWithCallbacks (model: Flips.Types.Model) state (callbackHandler: Cplex.Callback array) =
+            { new Flips.Solver.ISolution with 
+                member x.Values = decisionMap }
+
+        type CplexFormulation = 
+            {
+                decisions : IReadOnlyDictionary<DecisionName,Decision>
+                vars: IReadOnlyDictionary<DecisionName,INumVar>
+                constraints: IReadOnlyDictionary<Constraint, IConstraint>
+                objective: Objective * IObjective
+            }
+
+        let formulateWithCplex (model: Flips.Types.Model) state =
+            let decisionsByName = 
+                [for d in model.GetDecisions() -> d]
+                |> HashSet
+                |> Seq.map (fun d -> d.Name, d)
+                |> readOnlyDict
+            
+            let vars =
+                match state.problem.flipsDecisionToCplexNumVar with
+                | :? Dictionary<_,_> as d -> d
+                | :? IReadOnlyDictionary<_,_> as d ->
+                    let d =
+                        [for (KeyValue(k,v)) in d -> k,v]
+                        |> dict 
+                        |> Dictionary
+                    state.problem <- {state.problem with flipsDecisionToCplexNumVar = d }
+                    d
+                | _ ->
+                    let d = Dictionary<_,_>(decisionsByName.Count)
+                    state.problem <- {state.problem with flipsDecisionToCplexNumVar = d }
+                    d
+            
+            for KeyValue(name,decision) in decisionsByName do
+                match vars.TryGetValue name with
+                | false, _ ->
+                    vars.[name] <- 
+                        let cplexVar = createVariable decision state
+                        state.cplex.Add cplexVar |> ignore
+                        cplexVar
+                | true, var ->
+                    if state.options.HasDoNotReuseState then
+                        failwithf "using the same solver more than once is not an option"
+                    else
+                        printfn "variable %A already exists, removing before re-adding" name
+                        setVariable decision var
+            
+            let cx = addConstraints vars model.Constraints state
+            let cx = 
+                Seq.zip model.Constraints cx
+                |> readOnlyDict
+            let objective = model.Objectives.Head
+            
+            let cplexObjective = addObjective vars objective state
+            { decisions = decisionsByName
+              vars = vars
+              objective = objective, cplexObjective
+              constraints = cx }
+
+        let runSolverWithCallbacks (model: Flips.Types.Model) state (callbackHandler: Cplex.Callback seq) =
+          
           state.cplex.ClearCallbacks()
+
+          let cplexFormulation = formulateWithCplex model state
+          
           if not (isNull callbackHandler) then
             for callback in callbackHandler do
               if not (isNull callback) then
                 state.cplex.Use callback
-          let decisionsByName = 
-              [
-                  for d in model.GetDecisions() do
-                    d
-              ]
-              |> HashSet
-              |> Seq.map (fun d -> d.Name, d)
-              |> readOnlyDict
-
-          let vars =
-              match state.problem.flipsDecisionToCplexNumVar with
-              | :? Dictionary<_,_> as d -> d
-              | :? IReadOnlyDictionary<_,_> as d ->
-                  let d =
-                      [for (KeyValue(k,v)) in d -> k,v]
-                      |> dict 
-                      |> Dictionary
-                  state.problem <- {state.problem with flipsDecisionToCplexNumVar = d }
-                  d
-              | _ ->
-                  let d = Dictionary<_,_>(decisionsByName.Count)
-                  state.problem <- {state.problem with flipsDecisionToCplexNumVar = d }
-                  d
-
-          for KeyValue(name,decision) in decisionsByName do
-              match vars.TryGetValue name with
-              | false, _ ->
-                  vars.[name] <- 
-                      let cplexVar = createVariable decision state
-                      state.cplex.Add cplexVar |> ignore
-                      cplexVar
-              | true, var ->
-                  if state.options.HasDoNotReuseState then
-                      failwithf "using the same solver more than once is not an option"
-                  else
-                      printfn "variable %A already exists, removing before re-adding" name
-                      setVariable decision var
-
-          let cx = addConstraints vars model.Constraints state
-          let objective = model.Objectives.Head
-
-          let _ = addObjective vars objective state
 
           // look for WriteToFile option
           state.options.ExportToFiles 
@@ -170,11 +187,10 @@ module rec CplexSolver =
             } 
 
           if state.cplex.Solve() then
-              let solution = buildSolution decisionsByName.Values vars state objective
-              Ok solution
+              let solution = buildSolution cplexFormulation state
+              Ok (solution,cplexFormulation)
           else
               Error ""
-
           
         let runSolverWithCallback (model: Flips.Types.Model) state (callbackHandler: Cplex.Callback) =
             runSolverWithCallbacks model state [|callbackHandler|]
@@ -202,9 +218,9 @@ module rec CplexSolver =
               match other with
               | NativeParam other -> 
                 let (NativeParam x) = x
-                let nameCompare = x.GetType().Name.CompareTo (other.GetType().Name)
+                let nameCompare = x.GetType().Name.CompareTo(other.GetType().Name)
                 if nameCompare = 0 then
-                  x.GetValue().CompareTo( other.GetValue())
+                  x.GetValue().CompareTo(other.GetValue())
                 else
                   nameCompare
             | _ -> 1

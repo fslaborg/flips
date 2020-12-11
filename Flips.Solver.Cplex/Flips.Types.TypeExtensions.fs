@@ -20,6 +20,7 @@ module Extensions =
 namespace Flips.Types.TypeExtensions
 
 open Flips.Types
+open System.Collections.Generic
 [<AutoOpen>]
 module rec Extensions =
   type Flips.Types.Decision with 
@@ -116,6 +117,18 @@ module rec Extensions =
         | ObjectiveSense.Minimize -> "min"
       $"{t} {expr.Name.AsString} such as: {Printer.print expr.Expression}"
 
+    static member printWithLiterals (expr: Flips.Types.Constraint) (values:IReadOnlyDictionary<_,_>) =
+      let d = 
+        [for d in expr.Expression.GetDecisions() do 
+          d.Name, d] |> dict
+      let printed = Printer.print expr
+      let r =
+        d.Values 
+        |> Seq.fold (fun (state:string) d -> 
+          let value = string values.[d]
+          state.Replace(d.Name.AsString, value)
+        ) printed
+      r
     static member print (expr: Flips.Types.Constraint) =
       $"{expr.Name.AsString} : {Printer.print expr.Expression}"
 
@@ -130,19 +143,21 @@ module rec Extensions =
       | Equality (lhs, rhs) -> $"{Printer.print lhs} {op} {Printer.print rhs}"
 
     static member print (expr: Flips.Types.LinearExpression) =
-      match expr with
-      | LinearExpression.Empty -> ""
-      | LinearExpression.AddDecision((1.,d),Empty) -> $"{d.Name.AsString}"
-      | LinearExpression.AddDecision((coef,d),Empty) -> $"(%f{coef} * {d.Name.AsString})"
-      | LinearExpression.AddDecision((1.,d),expr) -> $"{d.Name.AsString} + {Printer.print expr}"
-      | LinearExpression.AddDecision((coef,d),expr) -> $"%f{coef} * {d.Name.AsString} + {Printer.print expr}"
-      | LinearExpression.Multiply(coef,Empty) -> ""
-      | LinearExpression.Multiply(1.,expr) -> $"{Printer.print expr}"
-      | LinearExpression.Multiply(coef,expr) -> $"%f{coef} * ({Printer.print expr})"
-      | LinearExpression.AddFloat(k,Empty) -> $"%f{k}"
-      | LinearExpression.AddFloat(0.,expr) -> $"{expr}"
-      | LinearExpression.AddFloat(k,expr) -> $"%f{k} + ({expr})"
-      | LinearExpression.AddLinearExpression(l,Empty) -> $"{Printer.print l}"
-      | LinearExpression.AddLinearExpression(Empty,r) -> $"{Printer.print r}"
-      | LinearExpression.AddLinearExpression(l,r) -> $"{Printer.print l} + {Printer.print r}"
+        let rec doIt expr =
+          match expr with
+          | LinearExpression.Empty -> ""
+          | LinearExpression.AddDecision((1.,d),Empty) -> $"{d.Name.AsString}"
+          | LinearExpression.AddDecision((coef,d),Empty) -> $"(%f{coef} * {d.Name.AsString})"
+          | LinearExpression.AddDecision((1.,d),expr) -> $"{d.Name.AsString} + {doIt expr}"
+          | LinearExpression.AddDecision((coef,d),expr) -> $"%f{coef} * {d.Name.AsString} + {doIt expr}"
+          | LinearExpression.Multiply(coef,Empty) -> ""
+          | LinearExpression.Multiply(1.,expr) -> doIt expr
+          | LinearExpression.Multiply(coef,expr) -> $"%f{coef} * ({doIt expr})"
+          | LinearExpression.AddFloat(k,Empty) -> $"%f{k}"
+          | LinearExpression.AddFloat(0.,expr) -> doIt expr
+          | LinearExpression.AddFloat(k,expr) -> $"%f{k} + ({doIt expr})"
+          | LinearExpression.AddLinearExpression(l,Empty) -> $"{doIt l}"
+          | LinearExpression.AddLinearExpression(Empty,r) -> $"{doIt r}"
+          | LinearExpression.AddLinearExpression(l,r) -> $"{doIt l} + {doIt r}"
+        doIt expr
       
