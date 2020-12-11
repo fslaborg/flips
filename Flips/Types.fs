@@ -67,9 +67,6 @@ module rec Types =
     /// A Name which uniquely identifies the Decision
     type DecisionName = DecisionName of string
 
-    /// Used for the reduction of a LinearExpression to a form used for mapping to 
-    /// underlying solvers.
-
     /// Represents a decision that must be made
     type Decision =  {
         Name : DecisionName
@@ -174,23 +171,6 @@ module rec Types =
                 let thisTerms = asMap this.Terms
                 let otherTerms = asMap otherExpr.Terms
                 let termsMatch = (thisTerms = otherTerms)
-                //let leftMatchesRight =
-                //    (true, thisTerms)
-                //    ||> Map.fold (fun b k thisCoef -> 
-                //                    match Map.tryFind k otherTerms with
-                //                    | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
-                //                    | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
-
-                //let evaluateRightElement b n otherCoef =
-                //    if this.Coefficients.ContainsKey(n) then
-                //        b
-                //    else
-                //        let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
-                //        b && essentiallyZero
-
-                //let rightNonMatchesAreZero =
-                //    (true, otherTerms)
-                //    ||> Map.fold evaluateRightElement
 
                 let allPassing = offsetSame && termsMatch
                 allPassing
@@ -259,22 +239,6 @@ module rec Types =
 
             ReducedLinearExpression.OfReduceAccumulator reduceResult
 
-        //static member internal GetDecisions (expr: LinearExpression) : Set<Decision> =
-
-        //    let rec evaluateNode (decisions: Set<Decision>) (node: LinearExpression) cont : Set<Decision> =
-        //        match node with
-        //        | Empty -> cont decisions
-        //        | AddFloat (_, nodeExpr) -> 
-        //          evaluateNode decisions nodeExpr cont
-        //        | Multiply (_, nodeExpr) -> 
-        //          evaluateNode decisions nodeExpr cont
-        //        | AddDecision ((_, nodeDecision), nodeExpr) ->
-        //            let newDecisions = decisions.Add nodeDecision
-        //            evaluateNode newDecisions nodeExpr cont
-        //        | AddLinearExpression (lExpr, rExpr) ->
-        //            evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
-
-        //    evaluateNode (Set.empty) expr (fun x -> x)
 
         static member internal Evaluate (decisionMap: IReadOnlyDictionary<Decision, float>) (expr: LinearExpression) : float =
         

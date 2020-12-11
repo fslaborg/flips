@@ -4,6 +4,7 @@ open Flips
 open Flips.UnitsOfMeasure.Types
 open Flips.Solver
 
+
 [<RequireQualifiedAccess>]
 module LinearExpression =
 
@@ -37,11 +38,11 @@ module Solution =
     /// <param name="solution">The solution that is used to look up the solver values</param>
     /// <param name="decisions">An IDictionary<'Key, Decision<'Measure>> that will be used for the lookups</param>
     /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>
-    let getValues (solution: ISolution) (decisions: System.Collections.Generic.IDictionary<_,Decision<'Measure>>) =
+    let getValues (solution: ISolution) (decisions: System.Collections.Generic.IDictionary<_, Decision<'Measure>>) =
         let getWithDefault (Decision.Value d: Decision<'Measure>) =
             match solution.Values.TryGetValue d with
             | true, v -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> v
             | false, _ -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0
 
-        seq { for kvp in decisions -> kvp.Key, getWithDefault kvp.Value}
+        seq { for KeyValue (key, value) in decisions -> key, getWithDefault value }
         |> Map
