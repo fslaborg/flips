@@ -33,7 +33,7 @@
     <ItemGroup>
     <Compile Include="SampleProblems.fs" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="Solver.CBC\CoffeeRoastingExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverCplex)' == 'true'" Include="Solver.CBC\Cplex.Samples.fs" />
+    <Compile Condition="'$(UseFlipsSolverCplex)' == 'true'" Include="Solver.Cplex\Cplex.Samples.fs" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultiObjective\MultiObjectiveExample.fs" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />
@@ -47,6 +47,7 @@
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="CoffeeRoastingExample\CoffeeRoastingExample.fs" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
+    
     <None Include="StocksExample\README.md" />
     <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="StocksExample\StocksExample.fs" />
     <Compile Include="Program.fs" />
@@ -69,6 +70,9 @@
         <ProjectReference Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="..\Flips.Solver.Legacy\Flips.Solver.Legacy.fsproj" />
         <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
         <ProjectReference Include="..\Flips\Flips.fsproj" />
+    </ItemGroup>    
+    <ItemGroup>
+      <Folder Include="Solver.CBC\" />
     </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

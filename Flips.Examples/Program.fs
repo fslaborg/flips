@@ -9,10 +9,10 @@ open Flips.Examples
 [<EntryPoint>]
 let main argv =
 
+#if USE_FLIPS_SOLVER_LEGACY
     // Legacy Examples
     // Create a Settings type which tells the Solver which types of underlying solver to use,
     // the time alloted for solving, and whether to write an LP file to disk
-#if USE_FLIPS_SOLVER_LEGACY
     let settings = Settings.basic
     FoodTruckExample.solve { settings with WriteLPFile = Some "foodtruck.lp" }
     FoodTruckMapExample.solve { settings with WriteLPFile = Some "foodmaptruck.lp" }
