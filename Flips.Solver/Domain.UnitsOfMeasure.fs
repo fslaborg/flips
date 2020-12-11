@@ -5,15 +5,15 @@ open Flips.UnitsOfMeasure.Types
 open Flips.Solver
 
 [<RequireQualifiedAccess>]
-module Decision =
+module LinearExpression =
 
-    /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
+    /// <summary>A function for evaluating the resulting value of an LinearExpression after solving</summary>
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
-    /// <param name="objective">The Objective to evaluate the resulting value for</param>
+    /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
     /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: ISolution) (Objective.Value objective: Objective<'Measure>) =
-        objective.Expression
-        |> LinearExpression.Evaluate solution
+    let evaluate (solution: ISolution) (LinearExpression.Value expression: LinearExpression<'Measure>) =
+        expression
+        |> Flips.Solver.LinearExpression.evaluate solution
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 
 
@@ -23,10 +23,10 @@ module Objective =
     /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
-    /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
+    /// <returns>A float<'Measure> which is the simplification of the LinearExpression for the Objective</returns>
     let evaluate (solution: ISolution) (Objective.Value objective: Objective<'Measure>) =
         objective.Expression
-        |> Flips.Types.LinearExpression.Evaluate solution.Values
+        |> Flips.Solver.LinearExpression.evaluate solution
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 
 
