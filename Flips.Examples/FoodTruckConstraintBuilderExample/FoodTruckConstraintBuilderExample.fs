@@ -5,8 +5,6 @@ open Flips.Legacy
 
 
 let solve settings =
-
-let solve settings =
     let model, objective = SampleProblems.FoodTruckConstraintBuilderExample.model
     // Call the `solve` function in the Solve module to evaluate the model
     let result = Solver.solve settings model

@@ -5,18 +5,6 @@ open Flips.Legacy
 
 
 let solve settings =
-    
-    // Declare the parameters for our model
-    let items = ["Hamburger"; "HotDog"; "Pizza"]
-    let locations = ["Woodstock"; "Sellwood"; "Portland"]
-    let profit = 
-        [
-            (("Woodstock", "Hamburger"), 1.50); (("Sellwood", "Hamburger"), 1.40); (("Portland", "Hamburger"), 1.90)
-            (("Woodstock", "HotDog"   ), 1.20); (("Sellwood", "HotDog"   ), 1.50); (("Portland", "HotDog"   ), 1.80)
-            (("Woodstock", "Pizza"    ), 2.20); (("Sellwood", "Pizza"    ), 1.70); (("Portland", "Pizza"    ), 2.00)
-        ] |> Map.ofList
-
-let solve settings =
     let model, objective = SampleProblems.MultipleFoodTruckExample.model
     // Call the `solve` function in the Solve module to evaluate the model
     let result = Solver.solve settings model
