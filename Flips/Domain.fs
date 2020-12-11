@@ -67,13 +67,6 @@ module Decision =
 [<RequireQualifiedAccess>]
 module Constraint =
 
-    //let internal getDecisions (c: IConstraint) =
-    //    match c.Expression with
-    //    | Inequality (lhs, _, rhs) | Equality (lhs, rhs) ->
-    //        let lhsDecisions = LinearExpression.GetDecisions lhs
-    //        let rhsDecisions = LinearExpression.GetDecisions rhs
-    //        lhsDecisions + rhsDecisions
-
     /// <summary>Create a Constraint</summary>
     /// <param name="constraintName">The unique identifier for the Constraint</param>
     /// <param name="constraintExpr">The Constraint Expression for the Constraint</param>
@@ -90,12 +83,6 @@ module Constraint =
 [<RequireQualifiedAccess>]
 module Objective =
 
-    let internal getDecisions (objective: IObjective) =
-        //LinearExpression.GetDecisions objective.Expression
-        objective.Expression.Terms
-        |> Seq.choose (fun x -> match x with | LinearTerm.Constant _ -> None | LinearTerm.LinearElement (_, d) -> Some d)
-        |> Set
-
     /// <summary>Create an Objective for an optimization model</summary>
     /// <param name="objectiveName">The name which describes the goal of the objective function</param>
     /// <param name="objectiveSense">The goal of the objective: Maximize or Minimize</param>
@@ -109,25 +96,10 @@ module Objective =
             Sense = objectiveSense
             Expression = objectiveExpression
         }
-#if HAS_SOLUTION_TYPE
-    /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
-    /// <param name="solution">The solution used for looking up the results of Decisions</param>
-    /// <param name="objective">The Objective to evaluate the resulting value for</param>
-    /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Solution) (objective: Objective) =
-        LinearExpression.Evaluate solution.DecisionResults objective.Expression
-#endif
+
 
 [<RequireQualifiedAccess>]
 module Model =
-
-    //let internal getDecisions (m: Model) =
-    //    let objectiveDecisions =
-    //        (Set.empty, m.Objectives)
-    //        ||> List.fold (fun decs objective -> decs + (Objective.getDecisions objective))
-
-    //    (objectiveDecisions, m.Constraints)
-    //    ||> List.fold (fun decs c -> decs + (Constraint.getDecisions c))
 
     /// <summary>Create a Model with the given objective</summary>
     /// <param name="objective">The objective for the model</param>
@@ -160,6 +132,7 @@ module Model =
     /// <returns>A new Model with the constraints added</returns>
     let addConstraints constraints model =
         (model, constraints) ||> Seq.fold (fun model c -> addConstraint c model)
+
 
 [<AutoOpen>]
 module Builders =
@@ -278,3 +251,23 @@ module Builders =
         member this.Run(a: seq<_*DecisionType>) =
             a |> Seq.map (fun (a, b) -> createDecision a b)
 
+
+[<AutoOpen>]
+module SliceMap =
+
+    open SliceMap
+  
+    [<AutoOpen>]
+    type Summer () =
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, Flips.Types.Decision>) : Flips.Types.LinearExpression =
+            TryFind.sum x.Keys x.TryFind
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, Flips.Types.LinearExpression>) =
+            TryFind.sum x.Keys x.TryFind
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, float>) : float =
+            TryFind.sum x.Keys x.TryFind
