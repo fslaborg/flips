@@ -2,7 +2,7 @@
 
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
-> Full Documenation can be found [here].
+> Full Documenation can be found [here](https://flipslibrary.com/).
 
 Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. 
 It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the 
