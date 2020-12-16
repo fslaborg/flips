@@ -27,10 +27,6 @@ module rec Types =
     type ILinearExpression = 
         abstract member Terms : seq<LinearTerm>
 
-    //type IReducedLinearExpression =
-    //    abstract member ReducedTerms : IReadOnlyDictionary<IDecision, float>
-    //    abstract member Offset : float
-
     type Relationship =
         | LessOrEqual
         | GreaterOrEqual
@@ -260,7 +256,7 @@ module rec Types =
                     evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
               
         
-            let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
+            let (_, reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
         
             reduceResult.Sort(SignInsenstiveComparer())
             let total = Seq.sum reduceResult
@@ -277,7 +273,7 @@ module rec Types =
                 
         
         override this.GetHashCode () =
-            hash this
+            hash (LinearExpression.Reduce this)
 
         override this.Equals(obj) =
             match obj with
