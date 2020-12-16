@@ -160,8 +160,8 @@ module Builders =
     let internal namer (prefix: string) (indices: obj) : string =
         tupleToObjectList indices
         |> List.map (sprintf "%O")
-        |> String.concat "_"
-        |> (sprintf "%s_%s" prefix)
+        |> String.concat ","
+        |> (sprintf "%s[%s]" prefix)
 
 
     /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
