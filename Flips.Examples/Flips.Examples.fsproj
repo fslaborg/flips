@@ -38,6 +38,17 @@
     <Compile Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
     <Compile Include="CoffeeRoastingExample\CoffeeRoastingExample.fs" />
     <Compile Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UseFlipsSolverCbc)' == 'true'">
+      <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_CBC</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UseFlipsSolverLegacy)' == 'true'">
+      <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_LEGACY</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+  </PropertyGroup>
     <ItemGroup Condition="'$(UseFlipsSolverCplex)' == 'true'">
         <None Include="..\thirdparties\ilog.cplex\bin\x64\cplex121.dll" Link="cplex121.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
