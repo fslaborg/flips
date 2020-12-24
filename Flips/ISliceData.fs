@@ -18,7 +18,7 @@ module Sum =
         TryFind.sum x.Keys x.TryFind
 
     /// <summary>A function which sums a sequence of SliceMaps</summary>
-    /// <param name="x">A sequence of SliceMaps</param>
+    /// <param name="k1">A sequence of SliceMaps</param>
     /// <returns>A LinearExpression</returns>
     let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> Flips.Types.LinearExpression)
                               and ^a: (static member (+): ^a * ^a -> ^a)
