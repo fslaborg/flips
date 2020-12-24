@@ -3,13 +3,15 @@
 //#r @"C:\Users\matth\.nuget\packages\google.ortools\7.5.7466\lib\netstandard2.1\Google.OrTools.dll"
 //#r @"C:\Users\matth\.nuget\packages\google.ortools.runtime.win-x64\7.5.7466\runtimes\win-x64\native\google-ortools-native.dll"
 
+#r "nuget: SliceMap"
+
 #load "Types.fs"
 #load "Domain.fs"
-#load "UnitsOfMeasure.Types.fs"
+//#load "UnitsOfMeasure.Types.fs"
 //#load "UnitsOfMeasure.Domain.fs"
 //#load "SliceMap.fs"
 
-//open Flips
+open Flips
 //open Flips.Types
 //open Flips.SliceMap
 //open Flips.UnitsOfMeasure
@@ -42,3 +44,5 @@
 //let x1 = Scalar<sec>.Value (Domain.Scalar.Value 1.5)
 //x1 * 1.0<1/sec> + (Domain.Scalar.Value 1.5)
 //let x2 = x1 * (Domain.Scalar.Value 1.5)
+
+let 
