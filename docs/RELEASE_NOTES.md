@@ -1,3 +1,6 @@
+### 2.4.3 - Wednesday, December 23rd, 2020
+* Fixed code comments
+
 ### 2.4.2 - Thursday, November 16th, 2020
 * Added Settings.basic type for default values for the solver
 * Added functions for adjusting the settings for the solver
