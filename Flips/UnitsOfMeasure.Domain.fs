@@ -10,7 +10,7 @@ module Decision =
     /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
     /// <typeparam name="'Measure">The Unit of Measure for the Decision</typeparam>
     /// <param name="decisionName">The unique identifier for the Decision</param>
-    /// <param name="decitionType">The type of the decision</param>
+    /// <param name="decisionType">The type of the decision</param>
     /// <returns>A new Decision with the given DecisionType</returns>
     let create<[<Measure>] 'Measure> decisionName decisionType =
         let d = Decision.create decisionName decisionType
@@ -57,15 +57,18 @@ module Objective =
     /// <param name="objectiveSense">The goal of the objective: Maximize or Minimize</param>
     /// <param name="objectiveExpression">The Linear Expression which describes the goal of the model</param>
     /// <returns>A new Objective</returns>
-    let create objectiveName sense (LinearExpression.Value expr:LinearExpression<'Measure>) =
-        let objective = Objective.create objectiveName sense expr
+    let create objectiveName objectiveSense (objectiveExpression: LinearExpression<'Measure>) =
+        let (LinearExpression.Value objectiveExpression) = objectiveExpression
+        let objective = Objective.create objectiveName objectiveSense objectiveExpression
         Objective<'Measure>.Value objective
 
     /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
-    /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
-    let evaluate (solution:Types.Solution) (Objective.Value objective:Objective<'Measure>) =
+    /// <typeparam name="'Measure"></typeparam>
+    /// <returns>A float&lt;<typeparamref name="'Measure"/>&gt; which is the simplification of the LinearExpression</returns>
+    let evaluate (solution:Types.Solution) (objective: Objective<'Measure>) =
+        let (Objective.Value objective) = objective
         objective.Expression
         |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
@@ -78,8 +81,8 @@ module Model =
     /// <summary>Create a Model with the given objective</summary>
     /// <param name="objective">The objective for the model</param>
     /// <returns>A new Model with an Objective but no constraints</returns>
-    let create (Objective.Value objective) : Flips.Model.Model =
-
+    let create objective : Flips.Model.Model =
+        let (Objective.Value objective) = objective
         {
             _Objectives = [objective]
             _Constraints = []
@@ -87,9 +90,10 @@ module Model =
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
+    /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
-    let addObjective (Objective.Value objective) model : Flips.Model.Model =
-
+    let addObjective objective model : Flips.Model.Model =
+        let (Objective.Value objective) = objective
         { model with _Objectives = [objective] @ model.Objectives }
 
 
@@ -97,12 +101,14 @@ module Model =
 module Solution =
 
     /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
+    /// <typeparam name="'Key"></typeparam>
+    /// <typeparam name="'Measure"></typeparam>
     /// <param name="solution">The solution that is used to look up the solver values</param>
-    /// <param name="decisions">An IDictionary<'Key, Decision<'Measure>> that will be used for the lookups</param>
-    /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>
-    let getValues (s:Types.Solution) (decisions:System.Collections.Generic.IDictionary<_,Decision<'Measure>>) =
+    /// <param name="decisions">An IDictionary&lt;<typeparamref name="'Key"/>, Decision&lt;<typeparamref name="'Measure"/>&gt;&gt; that will be used for the lookups</param>
+    /// <returns>A new Map&lt;<typeparamref name="'Key"/>,float&lt;<typeparamref name="'Measure"/>&gt;&gt; where the values are the recommendations from the solver</returns>
+    let getValues (solution:Types.Solution) (decisions:System.Collections.Generic.IDictionary<_,Decision<'Measure>>) =
         let getWithDefault (Decision.Value d:Decision<'Measure>) =
-            match Map.tryFind d s.DecisionResults with
+            match Map.tryFind d solution.DecisionResults with
             | Some v -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> v
             | None -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0
 
@@ -113,18 +119,20 @@ module Solution =
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression with a Unit of Measure to evaluate the resulting value for</param>
     /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
-    let evaluate (solution:Types.Solution) (LinearExpression.Value expression:LinearExpression<'Measure>) =
+    let evaluate (solution:Types.Solution) (expression:LinearExpression<'Measure>) =
+        let (LinearExpression.Value expression) = expression
         Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 
 
 [<AutoOpen>]
 module Builders =
+    // Note: this warning is because the compiler's detection for parameters is off for constructors. This is ok until that logic is fixed.
 
-    /// <summary>A Computation Expression for creating tuples of type ('Key * Decision<'Measure>)</summary>
+    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
     /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns>
+    /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
     type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
@@ -206,7 +214,7 @@ module Sum =
         TryFind.sum x.Keys x.TryFind
 
     /// <summary>A function which sums a sequence of SliceMaps</summary>
-    /// <param name="x">A sequence of SliceMaps</param>
+    /// <param name="k1">A sequence of SliceMaps</param>
     /// <returns>A LinearExpression with a Unit of Measure</returns>
     let inline sumAll< ^a, ^b when ^a: (static member Sum: ^a -> Flips.Types.LinearExpression)
                               and ^a: (static member (+): ^a * ^a -> ^a)

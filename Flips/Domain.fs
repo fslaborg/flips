@@ -9,7 +9,7 @@ module Decision =
     /// <summary>Create a Decision with a given Name and Type</summary>
     /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
     /// <param name="decisionName">The unique identifier for the Decision</param>
-    /// <param name="decitionType">The type of the decision</param>
+    /// <param name="decisionType">The type of the decision</param>
     /// <returns>A new Decision with the given DecisionType</returns>
     let create decisionName decisionType =
         if System.String.IsNullOrEmpty(decisionName) then
@@ -149,6 +149,7 @@ module Model =
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
+    /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
     let addObjective objective model =
 
@@ -213,12 +214,14 @@ module Settings =
         { settings with SolverType = solverType }
 
     // We will enable this in the next major release
+    (**
     /// <summary>A function for setting the EnableOutput flag</summary>
     /// <param name="solverType">The bool to set the EnableOutput field to</param>
     /// <param name="settings">The Settings type to build a new value off of</param>
     /// <returns>A new Settings type with the EnableOutput updated</returns>
     //let setEnableOutput enableOutput settings =
     //  { settings with EnableOutput = enableOutput }
+    *)
 
 
 [<RequireQualifiedAccess>]
@@ -226,8 +229,9 @@ module Solution =
 
     /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
     /// <param name="solution">The solution that is used to look up the solver values</param>
-    /// <param name="decisions">An IDictionary<'Key, Decision> that will be used for the lookups</param>
-    /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
+    /// <param name="decisions">An IDictionary&lt;<typeparamref name="'Key" />, Decision&gt; that will be used for the lookups</param>
+    /// <typeparam name="'Key">The key to the map</typeparam>
+    /// <returns>A new Map&lt;<typeparamref name="'Key"/>,float&gt; where the values are the recommendations from the solver</returns>
     let getValues (solution:Solution) (decisions:System.Collections.Generic.IDictionary<_,Decision>) =
         let inline getWithDefault d =
             match Map.tryFind d solution.DecisionResults with
@@ -274,6 +278,7 @@ module Builders =
         |> String.concat "_"
         |> (sprintf "%s_%s" prefix)
 
+    // note: the param for this constructor argument is correct, to the best of my knowledge, but the validation logic inside the compiler doesn't recognize it
 
     /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
     /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
@@ -293,6 +298,7 @@ module Builders =
         member this.Run(source:seq<'a * ConstraintExpression>) =
             source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
 
+    // note: the param for this constructor argument is correct, to the best of my knowledge, but the validation logic inside the compiler doesn't recognize it
 
     /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
     /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
