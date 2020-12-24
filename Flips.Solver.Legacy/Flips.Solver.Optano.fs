@@ -30,8 +30,8 @@ module Optano =
             vars.[decisionName] <- var
 
 
-    let private buildExpression (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
-        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
+    let private buildExpression (vars:Dictionary<DecisionName,Variable>) (expr:ILinearExpression) =
+        let reducedExpr = LinearExpression.Reduce expr
 
         let constantExpr = Expression.Sum([reducedExpr.Offset])
         let decisionExpr =

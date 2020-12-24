@@ -104,7 +104,7 @@ module Model =
     /// <summary>Create a Model with the given objective</summary>
     /// <param name="objective">The objective for the model</param>
     /// <returns>A new Model with an Objective but no constraints</returns>
-    let create objective =
+    let create (objective: #IObjective) =
 
         {
             Objectives = [objective]
@@ -114,7 +114,7 @@ module Model =
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
     /// <returns>A new Model with the Objective added</returns>
-    let addObjective objective model =
+    let addObjective (objective: #IObjective) model =
 
         { model with Objectives = [objective] @ model.Objectives }
 
@@ -122,7 +122,7 @@ module Model =
     /// <param name="c">The constraint to be added to the model</param>
     /// <param name="model">The model to add the constraint to</param>
     /// <returns>A new Model with the constraint added</returns>
-    let addConstraint c model =
+    let addConstraint (c: #IConstraint) model =
 
         { model with Constraints = [c] @ model.Constraints }
 
