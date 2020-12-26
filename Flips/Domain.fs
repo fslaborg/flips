@@ -278,12 +278,12 @@ module Builders =
         |> String.concat "_"
         |> (sprintf "%s_%s" prefix)
 
-    // note: the param for this constructor argument is correct, to the best of my knowledge, but the validation logic inside the compiler doesn't recognize it
-
     /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
-    /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
-    /// <returns>A sequence of Constraints whith the given prefix and a unique name for each constraint</returns>
-    type ConstraintBuilder (constraintSetPrefix:string) =
+    type ConstraintBuilder
+        /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
+        /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
+        /// <returns>A sequence of Constraints whith the given prefix and a unique name for each constraint</returns>
+         (constraintSetPrefix:string) =
 
         member this.Yield (cExpr:ConstraintExpression) =
             cExpr
@@ -298,12 +298,12 @@ module Builders =
         member this.Run(source:seq<'a * ConstraintExpression>) =
             source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
 
-    // note: the param for this constructor argument is correct, to the best of my knowledge, but the validation logic inside the compiler doesn't recognize it
-
     /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder (decisionSetPrefix:string) =
+    type DecisionBuilder
+        /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type ('Key * Decision). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices
