@@ -127,13 +127,15 @@ module Solution =
 
 [<AutoOpen>]
 module Builders =
-    // Note: this warning is because the compiler's detection for parameters is off for constructors. This is ok until that logic is fixed.
 
-    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * <c>Decision</c>&lt;<typeparamref name="'Measure" />&gt;)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix:string) =
+    type DecisionBuilder<[<Measure>] 'Measure>
+        /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+        /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices
