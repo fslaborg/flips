@@ -200,6 +200,11 @@ module Types =
             let r = expr + d - d
             Assert.Equal(expr, r)
 
+        [<Fact>]
+        let ``GetHashCode works correctly`` () =
+            LinearExpression.Empty.GetHashCode() |> ignore
+            (LinearExpression.OfFloat 1.0).GetHashCode() |> ignore
+
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module ModelTests =
