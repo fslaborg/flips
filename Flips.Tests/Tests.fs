@@ -54,13 +54,13 @@ module Types =
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of Decisions and float is associative`` (d:Decision) (SmallFloat f) =
+        let ``Addition of Decision and float is commutative`` (d:Decision) (SmallFloat f) =
             let e1 = d + f
             let e2 = f + d
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
+        let ``Addition of Decisions and floats is associative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
             let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 + f1) + (d2 + f2)
             let e2 = d1 + (f1 + d2) + f2
@@ -101,13 +101,13 @@ module Types =
             Assert.Equal(e, r)
 
         [<Property>]
-        let ``Multiplication of Decisions and float is associative`` (d:Decision) (SmallFloat f) =
+        let ``Multiplication of Decision and float is commutative`` (d:Decision) (SmallFloat f) =
             let e1 = d * f
             let e2 = f * d
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Multiplication of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
+        let ``Addition of LinearExpressions from multiplication of Decisions and floats is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
             let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 * f1) + (d2 * f2)
             let e2 = (d2 * f2) + (d1 * f1)
@@ -118,7 +118,7 @@ module Types =
     module LinearExpression =
 
         [<Property>]
-        let ``Addition of LinearExpression is associative`` () =
+        let ``Addition of LinearExpression is commutative`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
             let expr1 = randomExpressionFromDecisions rng decisions
@@ -128,7 +128,7 @@ module Types =
             Assert.Equal(r1, r2)
 
         [<Property>]
-        let ``Addition of LinearExpression is commutative`` () =
+        let ``Addition of LinearExpression is associative`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
             let expr1 = randomExpressionFromDecisions rng decisions
