@@ -9,7 +9,7 @@
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
     <Copyright>2020</Copyright>
     <PackageProjectUrl></PackageProjectUrl>
-    <RepositoryUrl>https://github.com/matthewcrews/flips</RepositoryUrl>
+    <RepositoryUrl>https://github.com/fslaborg/flips</RepositoryUrl>
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
