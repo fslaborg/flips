@@ -259,7 +259,12 @@ and
 
 
     override this.GetHashCode () =
-        hash this
+        match this with
+        | Empty -> 0
+        | AddFloat (f, le) -> hash (f, le)
+        | AddDecision (f, d) -> hash (f, d)
+        | Multiply (f, le) -> hash (f, le)
+        | AddLinearExpression (le1, le2) -> hash (le1, le2)
 
     override this.Equals(obj) =
         match obj with
