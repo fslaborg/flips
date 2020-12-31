@@ -234,7 +234,7 @@ and
             | AddLinearExpression (lExpr, rExpr) ->
                 evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
 
-        evaluateNode (Set.empty) expr id
+        evaluateNode Set.empty expr id
 
     static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
 
