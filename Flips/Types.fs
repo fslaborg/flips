@@ -5,11 +5,11 @@ open System
 
 /// Comparer used for the reduction of LinearExpression due to float addition
 type SignInsenstiveComparer private () =
-  static let instance = SignInsenstiveComparer ()
-  static member Instance = instance
-  interface IComparer<float> with 
-    member _.Compare (a:float, b:float) =
-      Math.Abs(a).CompareTo(Math.Abs(b))
+    static let instance = SignInsenstiveComparer ()
+    static member Instance = instance
+    interface IComparer<float> with 
+        member _.Compare (a:float, b:float) =
+            Math.Abs(a).CompareTo(Math.Abs(b))
 
 /// Represents the types of Decisions that can be made
 /// A Boolean maps to a 0 or 1 value
