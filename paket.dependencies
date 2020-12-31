@@ -45,6 +45,7 @@ group Examples
   nuget SliceMap
 
   nuget NativeLibraryLoader storage: on
+  nuget CsvHelper
 
 group FakeBuild
 
