@@ -8,6 +8,7 @@
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
     <Copyright>2020</Copyright>
+    <PackageVersion>2.9999-alpha-1</PackageVersion>
     <PackageProjectUrl></PackageProjectUrl>
     <RepositoryUrl>https://github.com/matthewcrews/flips</RepositoryUrl>
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
