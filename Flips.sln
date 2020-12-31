@@ -82,7 +82,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{5ED4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{4D5C661A-E91C-4B9E-8167-DE8AC931F87C}"
 	ProjectSection(SolutionItems) = preProject
-		dev-release.yml = dev-release.yml
+		.github\workflows\dev-release.yml = .github\workflows\dev-release.yml
 		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
 		.github\workflows\secrets.yml = .github\workflows\secrets.yml
 	EndProjectSection
