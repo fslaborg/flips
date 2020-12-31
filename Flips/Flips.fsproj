@@ -46,7 +46,6 @@
   <ItemGroup>
     <Compile Include="Utility.fs" />
     <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
-    <None Include="Scratchpad.fsx" />
     <Compile Include="Types.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="SliceSet.fs" />
