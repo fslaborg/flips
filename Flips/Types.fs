@@ -2,13 +2,14 @@
 
 open System.Collections.Generic
 open System
-open System.Collections
 
 /// Comparer used for the reduction of LinearExpression due to float addition
-type SignInsenstiveComparer () =
-  interface IComparer<float> with 
-    member this.Compare (a:float, b:float) =
-      Math.Abs(a).CompareTo(Math.Abs(b))
+type SignInsenstiveComparer private () =
+    static let instance = SignInsenstiveComparer ()
+    static member Instance = instance
+    interface IComparer<float> with 
+        member _.Compare (a:float, b:float) =
+            Math.Abs(a).CompareTo(Math.Abs(b))
 
 /// Represents the types of Decisions that can be made
 /// A Boolean maps to a 0 or 1 value
@@ -30,6 +31,11 @@ type internal ReduceAccumulator = {
     Coefficients : Dictionary<DecisionName, List<float>>
     Offsets : List<float>
 }
+
+/// Represents the type of comparison between two LinearExpression
+type Inequality =
+    | LessOrEqual
+    | GreaterOrEqual
 
 /// Represents a decision that must be made
 type Decision = {
@@ -112,34 +118,26 @@ and
 
     override this.Equals(obj) =
         match obj with
-        | :? ReducedLinearExpression as otherExpr ->
-            let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
+        | :? ReducedLinearExpression as that ->
+            let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset that.Offset
 
-            let asMap (d:Dictionary<_,_>) =
-              d
-              |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-              |> Map.ofSeq
-
-            let thisCoefficients = asMap this.Coefficients
-            let otherCoefficients = asMap otherExpr.Coefficients
+            let thisCoefficients = Map.ofDictionary this.Coefficients
+            let thatCoefficients = Map.ofDictionary that.Coefficients
 
             let leftMatchesRight =
-                (true, thisCoefficients)
-                ||> Map.fold (fun b k thisCoef -> 
-                                match Map.tryFind k otherCoefficients with
-                                | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
-                                | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
-
-            let evaluateRightElement b n otherCoef =
-                if this.Coefficients.ContainsKey(n) then
-                    b
-                else
-                    let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
-                    b && essentiallyZero
+                thisCoefficients
+                |> Map.toSeq
+                |> Seq.forall (fun (k, thisCoef) -> 
+                                match Map.tryFind k thatCoefficients with
+                                | Some thatCoef -> ReducedLinearExpression.NearlyEquals thisCoef thatCoef
+                                | None -> ReducedLinearExpression.NearlyEquals thisCoef 0.0)
 
             let rightNonMatchesAreZero =
-                (true, otherCoefficients)
-                ||> Map.fold evaluateRightElement
+                thatCoefficients
+                |> Map.toSeq
+                |> Seq.forall (fun (n, thatCoef) ->
+                                this.Coefficients.ContainsKey n
+                                || ReducedLinearExpression.NearlyEquals thatCoef 0.0)
 
             let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
             allPassing
@@ -150,7 +148,7 @@ and
         
         let coefficients = Dictionary()
         for elem in acc.Coefficients do
-            elem.Value.Sort(SignInsenstiveComparer())
+            elem.Value.Sort SignInsenstiveComparer.Instance
             let coefficient = Seq.sum elem.Value
             coefficients.Add(elem.Key, coefficient)
 
@@ -179,11 +177,6 @@ and
             Offsets = ResizeArray()
         }
 
-        let tryFind k (d:Dictionary<_,_>) =
-          match d.TryGetValue(k) with
-          | (true, v) -> Some v
-          | (false, _) -> None
-
         let rec evaluateNode (multiplier:float, state:ReduceAccumulator) (node:LinearExpression) cont =
             match node with
             | Empty -> cont (multiplier, state)
@@ -191,7 +184,7 @@ and
                 state.Offsets.Add(multiplier * addToOffset)
                 evaluateNode (multiplier, state) nodeExpr cont
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
-                match tryFind nodeDecision.Name state.DecisionTypes with
+                match Dictionary.tryFind nodeDecision.Name state.DecisionTypes with
                 | Some existingType ->
                     if existingType <> nodeDecision.Type then
                         invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
@@ -210,26 +203,18 @@ and
             | AddLinearExpression (lExpr, rExpr) ->
                 evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
 
-        let (_,reduceResult) = evaluateNode (1.0, initialState) expr (fun x -> x)
+        let (_,reduceResult) = evaluateNode (1.0, initialState) expr id
 
         ReducedLinearExpression.OfReduceAccumulator reduceResult
 
     static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
-
-        let rec evaluateNode (decisions:Set<Decision>) (node:LinearExpression) cont : Set<Decision> =
-            match node with
+        let rec getRec cont (decisions: Set<Decision>) = function
             | Empty -> cont decisions
-            | AddFloat (_, nodeExpr) -> 
-              evaluateNode decisions nodeExpr cont
-            | Multiply (_, nodeExpr) -> 
-              evaluateNode decisions nodeExpr cont
-            | AddDecision ((_, nodeDecision), nodeExpr) ->
-                let newDecisions = decisions.Add nodeDecision
-                evaluateNode newDecisions nodeExpr cont
-            | AddLinearExpression (lExpr, rExpr) ->
-                evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
-
-        evaluateNode (Set.empty) expr (fun x -> x)
+            | AddFloat (_, expr) -> getRec cont decisions expr
+            | Multiply (_, expr) -> getRec cont decisions expr
+            | AddDecision ((_, decision), expr) -> getRec cont (decisions.Add decision) expr
+            | AddLinearExpression (lExpr, rExpr) -> getRec (fun l -> getRec cont l rExpr) decisions lExpr
+        getRec id Set.empty expr
 
     static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
 
@@ -251,9 +236,9 @@ and
                 evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
             
 
-        let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
+        let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr id
 
-        reduceResult.Sort(SignInsenstiveComparer())
+        reduceResult.Sort SignInsenstiveComparer.Instance
         let total = Seq.sum reduceResult
         total
 
@@ -268,10 +253,10 @@ and
 
     override this.Equals(obj) =
         match obj with
-        | :? LinearExpression as otherExpr -> 
+        | :? LinearExpression as that -> 
             let thisReduced = LinearExpression.Reduce this
-            let otherReduced = LinearExpression.Reduce otherExpr
-            thisReduced = otherReduced
+            let thatReduced = LinearExpression.Reduce that
+            thisReduced = thatReduced
         | _ -> false
 
     static member Zero =
@@ -363,13 +348,6 @@ and
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         Inequality (lhs, GreaterOrEqual, rhs)
-
-
-and 
-    /// Represents the type of comparison between two LinearExpression
-    Inequality =
-    | LessOrEqual
-    | GreaterOrEqual
 
 and 
     /// The representation of how two LinearExpressions must relate to one another
