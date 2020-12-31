@@ -101,10 +101,9 @@ module internal ORTools =
     let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
         let decisionMap =
             decisions
-            |> Seq.map (fun d ->
-                            match Dictionary.tryFind d.Name vars with
-                            | Some var -> d, var.SolutionValue()
-                            | None -> d, 0.0)
+            |> Seq.map (fun d -> d, Dictionary.tryFind d.Name vars
+                                    |> Option.map (fun var -> var.SolutionValue ())
+                                    |> Option.defaultValue 0.0)
             |> Map.ofSeq
 
         {
