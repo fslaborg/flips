@@ -121,13 +121,8 @@ and
         | :? ReducedLinearExpression as otherExpr ->
             let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
 
-            let asMap (d:Dictionary<_,_>) =
-              d
-              |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-              |> Map.ofSeq
-
-            let thisCoefficients = asMap this.Coefficients
-            let otherCoefficients = asMap otherExpr.Coefficients
+            let thisCoefficients = Map.ofDictionary this.Coefficients
+            let otherCoefficients = Map.ofDictionary otherExpr.Coefficients
 
             let leftMatchesRight =
                 (true, thisCoefficients)
