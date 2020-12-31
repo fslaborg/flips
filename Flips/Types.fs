@@ -132,9 +132,9 @@ and
             let leftMatchesRight =
                 (true, thisCoefficients)
                 ||> Map.fold (fun b k thisCoef -> 
-                                match Map.tryFind k otherCoefficients with
-                                | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
-                                | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
+                                b && match Map.tryFind k otherCoefficients with
+                                     | Some otherCoef -> ReducedLinearExpression.NearlyEquals thisCoef otherCoef
+                                     | None -> ReducedLinearExpression.NearlyEquals thisCoef 0.0)
 
             let evaluateRightElement b n otherCoef =
                 if this.Coefficients.ContainsKey(n) then
