@@ -139,6 +139,16 @@ module Types =
             Assert.Equal(r1, r2)
 
         [<Property>]
+        let ``Multiplication then Addition of LinearExpression is associative`` () =
+          let numberOfDecisions = rng.Next(1, 100)
+          let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+          let expr1 = randomExpressionFromDecisions rng decisions
+          let expr2 = randomExpressionFromDecisions rng decisions
+          let r1 = 2.0 * (expr1 + expr2)
+          let r2 = 2.0 * expr2 + 2.0 * expr1
+          Assert.Equal(r1, r2)
+
+        [<Property>]
         let ``Addition of LinearExpression and float is commutative`` (SmallFloat f) =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
