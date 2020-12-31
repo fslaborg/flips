@@ -208,21 +208,13 @@ and
         ReducedLinearExpression.OfReduceAccumulator reduceResult
 
     static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
-
-        let rec evaluateNode (decisions:Set<Decision>) (node:LinearExpression) cont : Set<Decision> =
-            match node with
+        let rec getRec cont (decisions: Set<Decision>) = function
             | Empty -> cont decisions
-            | AddFloat (_, nodeExpr) -> 
-              evaluateNode decisions nodeExpr cont
-            | Multiply (_, nodeExpr) -> 
-              evaluateNode decisions nodeExpr cont
-            | AddDecision ((_, nodeDecision), nodeExpr) ->
-                let newDecisions = decisions.Add nodeDecision
-                evaluateNode newDecisions nodeExpr cont
-            | AddLinearExpression (lExpr, rExpr) ->
-                evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
-
-        evaluateNode Set.empty expr id
+            | AddFloat (_, expr) -> getRec cont decisions expr
+            | Multiply (_, expr) -> getRec cont decisions expr
+            | AddDecision ((_, decision), expr) -> getRec cont (decisions.Add decision) expr
+            | AddLinearExpression (lExpr, rExpr) -> getRec (flip23 getRec cont rExpr) decisions lExpr
+        getRec id Set.empty expr
 
     static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
 

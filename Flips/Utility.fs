@@ -4,6 +4,9 @@ module internal Utility
 open System.Collections.Generic
 
 
+let flip23 f a c b = f a b c
+
+
 [<RequireQualifiedAccess>]
 module Map =
 
