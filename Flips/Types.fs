@@ -4,7 +4,9 @@ open System.Collections.Generic
 open System
 
 /// Comparer used for the reduction of LinearExpression due to float addition
-type SignInsenstiveComparer () =
+type SignInsenstiveComparer private () =
+  static let instance = SignInsenstiveComparer ()
+  static member Instance = instance
   interface IComparer<float> with 
     member this.Compare (a:float, b:float) =
       Math.Abs(a).CompareTo(Math.Abs(b))
@@ -154,7 +156,7 @@ and
         
         let coefficients = Dictionary()
         for elem in acc.Coefficients do
-            elem.Value.Sort(SignInsenstiveComparer())
+            elem.Value.Sort SignInsenstiveComparer.Instance
             let coefficient = Seq.sum elem.Value
             coefficients.Add(elem.Key, coefficient)
 
@@ -257,7 +259,7 @@ and
 
         let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr id
 
-        reduceResult.Sort(SignInsenstiveComparer())
+        reduceResult.Sort SignInsenstiveComparer.Instance
         let total = Seq.sum reduceResult
         total
 
