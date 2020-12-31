@@ -2,7 +2,6 @@
 
 open System.Collections.Generic
 open System
-open System.Collections
 
 /// Comparer used for the reduction of LinearExpression due to float addition
 type SignInsenstiveComparer () =
