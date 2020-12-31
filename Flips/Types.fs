@@ -125,21 +125,19 @@ and
             let thatCoefficients = Map.ofDictionary that.Coefficients
 
             let leftMatchesRight =
-                (true, thisCoefficients)
-                ||> Map.fold (fun b k thisCoef -> 
-                                b && match Map.tryFind k thatCoefficients with
-                                     | Some thatCoef -> ReducedLinearExpression.NearlyEquals thisCoef thatCoef
-                                     | None -> ReducedLinearExpression.NearlyEquals thisCoef 0.0)
-
-            let evaluateRightElement b n thatCoef =
-                b && (if this.Coefficients.ContainsKey n then
-                          true
-                      else
-                          ReducedLinearExpression.NearlyEquals thatCoef 0.0)
+                thisCoefficients
+                |> Map.toSeq
+                |> Seq.forall (fun (k, thisCoef) -> 
+                                match Map.tryFind k thatCoefficients with
+                                | Some thatCoef -> ReducedLinearExpression.NearlyEquals thisCoef thatCoef
+                                | None -> ReducedLinearExpression.NearlyEquals thisCoef 0.0)
 
             let rightNonMatchesAreZero =
-                (true, thatCoefficients)
-                ||> Map.fold evaluateRightElement
+                thatCoefficients
+                |> Map.toSeq
+                |> Seq.forall (fun (n, thatCoef) ->
+                                this.Coefficients.ContainsKey n
+                                || ReducedLinearExpression.NearlyEquals thatCoef 0.0)
 
             let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
             allPassing
