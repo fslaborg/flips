@@ -1,4 +1,4 @@
-namespace Flips.Types
+﻿namespace Flips.Types
 
 open System.Collections.Generic
 open System
@@ -215,7 +215,7 @@ and
             | AddLinearExpression (lExpr, rExpr) ->
                 evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
 
-        let (_,reduceResult) = evaluateNode (1.0, initialState) expr (fun x -> x)
+        let (_,reduceResult) = evaluateNode (1.0, initialState) expr id
 
         ReducedLinearExpression.OfReduceAccumulator reduceResult
 
@@ -234,7 +234,7 @@ and
             | AddLinearExpression (lExpr, rExpr) ->
                 evaluateNode decisions lExpr (fun l -> evaluateNode l rExpr cont)
 
-        evaluateNode (Set.empty) expr (fun x -> x)
+        evaluateNode (Set.empty) expr id
 
     static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
 
@@ -256,7 +256,7 @@ and
                 evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
             
 
-        let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
+        let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr id
 
         reduceResult.Sort(SignInsenstiveComparer())
         let total = Seq.sum reduceResult
