@@ -177,11 +177,6 @@ and
             Offsets = ResizeArray()
         }
 
-        let tryFind k (d:Dictionary<_,_>) =
-          match d.TryGetValue(k) with
-          | (true, v) -> Some v
-          | (false, _) -> None
-
         let rec evaluateNode (multiplier:float, state:ReduceAccumulator) (node:LinearExpression) cont =
             match node with
             | Empty -> cont (multiplier, state)
@@ -189,7 +184,7 @@ and
                 state.Offsets.Add(multiplier * addToOffset)
                 evaluateNode (multiplier, state) nodeExpr cont
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
-                match tryFind nodeDecision.Name state.DecisionTypes with
+                match Dictionary.tryFind nodeDecision.Name state.DecisionTypes with
                 | Some existingType ->
                     if existingType <> nodeDecision.Type then
                         invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
