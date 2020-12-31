@@ -132,7 +132,7 @@ and
                                      | None -> ReducedLinearExpression.NearlyEquals thisCoef 0.0)
 
             let evaluateRightElement b n otherCoef =
-                if this.Coefficients.ContainsKey(n) then
+                if this.Coefficients.ContainsKey n then
                     b
                 else
                     let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
