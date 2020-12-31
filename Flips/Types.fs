@@ -118,27 +118,27 @@ and
 
     override this.Equals(obj) =
         match obj with
-        | :? ReducedLinearExpression as otherExpr ->
-            let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
+        | :? ReducedLinearExpression as that ->
+            let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset that.Offset
 
             let thisCoefficients = Map.ofDictionary this.Coefficients
-            let otherCoefficients = Map.ofDictionary otherExpr.Coefficients
+            let thatCoefficients = Map.ofDictionary that.Coefficients
 
             let leftMatchesRight =
                 (true, thisCoefficients)
                 ||> Map.fold (fun b k thisCoef -> 
-                                b && match Map.tryFind k otherCoefficients with
-                                     | Some otherCoef -> ReducedLinearExpression.NearlyEquals thisCoef otherCoef
+                                b && match Map.tryFind k thatCoefficients with
+                                     | Some thatCoef -> ReducedLinearExpression.NearlyEquals thisCoef thatCoef
                                      | None -> ReducedLinearExpression.NearlyEquals thisCoef 0.0)
 
-            let evaluateRightElement b n otherCoef =
+            let evaluateRightElement b n thatCoef =
                 b && (if this.Coefficients.ContainsKey n then
                           true
                       else
-                          ReducedLinearExpression.NearlyEquals otherCoef 0.0)
+                          ReducedLinearExpression.NearlyEquals thatCoef 0.0)
 
             let rightNonMatchesAreZero =
-                (true, otherCoefficients)
+                (true, thatCoefficients)
                 ||> Map.fold evaluateRightElement
 
             let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
@@ -268,10 +268,10 @@ and
 
     override this.Equals(obj) =
         match obj with
-        | :? LinearExpression as otherExpr -> 
+        | :? LinearExpression as that -> 
             let thisReduced = LinearExpression.Reduce this
-            let otherReduced = LinearExpression.Reduce otherExpr
-            thisReduced = otherReduced
+            let thatReduced = LinearExpression.Reduce that
+            thisReduced = thatReduced
         | _ -> false
 
     static member Zero =
