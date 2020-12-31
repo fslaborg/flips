@@ -8,7 +8,7 @@ type SignInsenstiveComparer private () =
   static let instance = SignInsenstiveComparer ()
   static member Instance = instance
   interface IComparer<float> with 
-    member this.Compare (a:float, b:float) =
+    member _.Compare (a:float, b:float) =
       Math.Abs(a).CompareTo(Math.Abs(b))
 
 /// Represents the types of Decisions that can be made
