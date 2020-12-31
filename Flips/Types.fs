@@ -1,4 +1,4 @@
-﻿namespace Flips.Types
+namespace Flips.Types
 
 open System.Collections.Generic
 open System
@@ -30,6 +30,11 @@ type internal ReduceAccumulator = {
     Coefficients : Dictionary<DecisionName, List<float>>
     Offsets : List<float>
 }
+
+/// Represents the type of comparison between two LinearExpression
+type Inequality =
+    | LessOrEqual
+    | GreaterOrEqual
 
 /// Represents a decision that must be made
 type Decision = {
@@ -363,13 +368,6 @@ and
 
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
         Inequality (lhs, GreaterOrEqual, rhs)
-
-
-and 
-    /// Represents the type of comparison between two LinearExpression
-    Inequality =
-    | LessOrEqual
-    | GreaterOrEqual
 
 and 
     /// The representation of how two LinearExpressions must relate to one another
