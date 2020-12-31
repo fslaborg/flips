@@ -213,7 +213,7 @@ and
             | AddFloat (_, expr) -> getRec cont decisions expr
             | Multiply (_, expr) -> getRec cont decisions expr
             | AddDecision ((_, decision), expr) -> getRec cont (decisions.Add decision) expr
-            | AddLinearExpression (lExpr, rExpr) -> getRec (flip23 getRec cont rExpr) decisions lExpr
+            | AddLinearExpression (lExpr, rExpr) -> getRec (fun l -> getRec cont l rExpr) decisions lExpr
         getRec id Set.empty expr
 
     static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
