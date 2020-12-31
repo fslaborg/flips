@@ -1,3 +1,6 @@
+### 2.9999-alpha-1 - Thursday, December 31st, 2020
+* Setting up auto-release of alpha builds for `dev`
+
 ### 2.4.2 - Thursday, November 16th, 2020
 * Added Settings.basic type for default values for the solver
 * Added functions for adjusting the settings for the solver
