@@ -67,7 +67,15 @@ module Types =
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of same Decisions is linear`` (d:Decision) =
+        let ``Left multiplication of decisions is additive for LinearExpression addition`` (d:Decision) =
+            let x1 = randomFloat rng
+            let x2 = randomFloat rng
+            let r1 = (d * x1) + (d * x2)
+            let r2 = d * (x1 + x2)
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Right multiplication of decisions is additive for LinearExpression addition`` (d:Decision) =
             let x1 = randomFloat rng
             let x2 = randomFloat rng
             let r1 = (x1 * d) + (x2 * d)
@@ -139,13 +147,23 @@ module Types =
             Assert.Equal(r1, r2)
 
         [<Property>]
-        let ``Multiplication then Addition of LinearExpression is associative`` () =
+        let ``Left multiplication of floats is additive for LinearExpression addition`` (SmallFloat f) =
           let numberOfDecisions = rng.Next(1, 100)
           let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
           let expr1 = randomExpressionFromDecisions rng decisions
           let expr2 = randomExpressionFromDecisions rng decisions
-          let r1 = 2.0 * (expr1 + expr2)
-          let r2 = 2.0 * expr2 + 2.0 * expr1
+          let r1 = f * (expr1 + expr2)
+          let r2 = f * expr2 + f * expr1
+          Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Right multiplication of floats is additive for LinearExpression addition`` (SmallFloat f) =
+          let numberOfDecisions = rng.Next(1, 100)
+          let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+          let expr1 = randomExpressionFromDecisions rng decisions
+          let expr2 = randomExpressionFromDecisions rng decisions
+          let r1 = (expr1 + expr2) * f
+          let r2 = expr2 * f + expr1 * f
           Assert.Equal(r1, r2)
 
         [<Property>]
