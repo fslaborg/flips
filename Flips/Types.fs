@@ -233,7 +233,7 @@ and
                 let newState = (multiplier * nodeMultiplier, state)
                 evaluateNode newState nodeExpr cont
             | AddLinearExpression (lExpr, rExpr) ->
-                evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
+                evaluateNode (multiplier, state) lExpr (fun (_, lState) -> evaluateNode (multiplier, lState) rExpr cont)
             
 
         let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr id
