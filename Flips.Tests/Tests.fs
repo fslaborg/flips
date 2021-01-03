@@ -148,23 +148,23 @@ module Types =
 
         [<Property>]
         let ``Left multiplication of floats is additive for LinearExpression addition`` (SmallFloat f) =
-          let numberOfDecisions = rng.Next(1, 100)
-          let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
-          let expr1 = randomExpressionFromDecisions rng decisions
-          let expr2 = randomExpressionFromDecisions rng decisions
-          let r1 = f * (expr1 + expr2)
-          let r2 = f * expr2 + f * expr1
-          Assert.Equal(r1, r2)
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr1 = randomExpressionFromDecisions rng decisions
+            let expr2 = randomExpressionFromDecisions rng decisions
+            let r1 = f * (expr1 + expr2)
+            let r2 = f * expr2 + f * expr1
+            Assert.Equal(r1, r2)
 
         [<Property>]
         let ``Right multiplication of floats is additive for LinearExpression addition`` (SmallFloat f) =
-          let numberOfDecisions = rng.Next(1, 100)
-          let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
-          let expr1 = randomExpressionFromDecisions rng decisions
-          let expr2 = randomExpressionFromDecisions rng decisions
-          let r1 = (expr1 + expr2) * f
-          let r2 = expr2 * f + expr1 * f
-          Assert.Equal(r1, r2)
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr1 = randomExpressionFromDecisions rng decisions
+            let expr2 = randomExpressionFromDecisions rng decisions
+            let r1 = (expr1 + expr2) * f
+            let r2 = expr2 * f + expr1 * f
+            Assert.Equal(r1, r2)
 
         [<Property>]
         let ``Addition of LinearExpression and float is commutative`` (SmallFloat f) =
