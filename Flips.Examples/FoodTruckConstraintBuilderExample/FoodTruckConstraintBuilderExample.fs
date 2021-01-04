@@ -18,7 +18,9 @@ let solve settings =
     match result with
     | Optimal solution ->
         printfn "Objective Value: %f" (Objective.evaluate solution objective)
-
+        
+        CsvExport.exportVariablesToFile "foodtruck.constraintbuilder" solution.DecisionResults CsvExport.csvConfig
+        
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
             printfn "Decision: %A\tValue: %f" decision.Name value
     | errorCase -> 
