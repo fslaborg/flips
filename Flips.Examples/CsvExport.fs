@@ -8,7 +8,7 @@ open Flips.Types
 
 let csvConfig = CsvConfiguration(CultureInfo.InvariantCulture, Delimiter = "\t")
 
-let exportVariablesToFile problemName (results: Map<Decision, float>) (csvConfig: CsvConfiguration) =
+let exportVariablesToFile problemName (results: Map<#IDecision, float>) (csvConfig: CsvConfiguration) =
 
     let outputFolder = Path.Combine(__SOURCE_DIRECTORY__, "output") |> DirectoryInfo
     outputFolder.Create()
@@ -25,8 +25,6 @@ let exportVariablesToFile problemName (results: Map<Decision, float>) (csvConfig
         csvWriter
     
     for (decision, value) in results |> Map.toSeq do
-        let (DecisionName name) = decision.Name
-        
-        csvWriter.WriteField(name)
+        csvWriter.WriteField(decision.Name)
         csvWriter.WriteField(string value)
         csvWriter.NextRecord()
