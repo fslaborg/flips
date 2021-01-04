@@ -95,7 +95,6 @@ module ORTools =
         | GreaterOrEqual -> addInequalityConstraint decisions vars c.Name c.LHSExpression c.RHSExpression Inequality.GreaterOrEqual solver
 
 
-
     let private addConstraints (decisions: Dictionary<string, _>) (varMap: Dictionary<string, Variable>) (constraints: #IConstraint list) (solver:Solver) =
         for c in constraints do
             addConstraint decisions varMap c solver |> ignore
@@ -138,7 +137,6 @@ module ORTools =
             Result.Ok (solver,objective)
         | _ ->
             Result.Error resultStatus
-
 
 
     let internal addObjectiveAsConstraint (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (objectiveValue: float) (solver: Solver) =
