@@ -70,7 +70,7 @@ module Objective =
     let evaluate (solution:Types.Solution) (objective: Objective<'Measure>) =
         let (Objective.Value objective) = objective
         objective.Expression
-        |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
+        |> Flips.Types.LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d])
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 
 
@@ -121,7 +121,7 @@ module Solution =
     /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
     let evaluate (solution:Types.Solution) (expression:LinearExpression<'Measure>) =
         let (LinearExpression.Value expression) = expression
-        Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
+        Flips.Types.LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d]) expression
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 
 

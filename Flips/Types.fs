@@ -216,7 +216,7 @@ and
             | AddLinearExpression (lExpr, rExpr) -> getRec (fun l -> getRec cont l rExpr) decisions lExpr
         getRec id Set.empty expr
 
-    static member internal Evaluate (decisionMap:Map<Decision, float>) (expr:LinearExpression) : float =
+    static member internal Evaluate (getDecisionCoef: Decision -> float) (expr:LinearExpression) : float =
 
         let rec evaluateNode (multiplier:float, state:ResizeArray<float>) (node:LinearExpression) cont =
             match node with
@@ -226,14 +226,14 @@ and
                 let newState = (multiplier, state) 
                 evaluateNode newState nodeExpr cont
             | AddDecision ((nodeCoef, nodeDecision), nodeExpr) ->
-                state.Add(multiplier * nodeCoef * decisionMap.[nodeDecision])
+                state.Add(multiplier * nodeCoef * getDecisionCoef nodeDecision)
                 let newState = (multiplier, state)
                 evaluateNode newState nodeExpr cont
             | Multiply (nodeMultiplier, nodeExpr) ->
                 let newState = (multiplier * nodeMultiplier, state)
                 evaluateNode newState nodeExpr cont
             | AddLinearExpression (lExpr, rExpr) ->
-                evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
+                evaluateNode (multiplier, state) lExpr (fun (_, lState) -> evaluateNode (multiplier, lState) rExpr cont)
             
 
         let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr id

@@ -112,7 +112,7 @@ module Objective =
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
     let evaluate (solution:Solution) (objective:Objective) =
-        LinearExpression.Evaluate solution.DecisionResults objective.Expression
+        LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d]) objective.Expression
 
 
 [<RequireQualifiedAccess>]
@@ -246,7 +246,7 @@ module Solution =
     /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
     let evaluate (solution:Solution) (expression:LinearExpression) =
-        LinearExpression.Evaluate solution.DecisionResults expression
+        LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d]) expression
 
 
 [<AutoOpen>]

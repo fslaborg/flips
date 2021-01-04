@@ -108,7 +108,7 @@ module internal ORTools =
 
         {
             DecisionResults = decisionMap
-            ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
+            ObjectiveResult = Flips.Types.LinearExpression.Evaluate (fun d -> decisionMap.[d]) objective.Expression
         }
 
 
@@ -314,7 +314,7 @@ module internal Optano =
 
         {
             DecisionResults = decisionMap
-            ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
+            ObjectiveResult = Flips.Types.LinearExpression.Evaluate (fun d -> decisionMap.[d]) objective.Expression
         }
 
 
