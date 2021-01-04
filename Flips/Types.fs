@@ -28,9 +28,9 @@ module rec Types =
         abstract member Terms : seq<LinearTerm>
 
     type Relationship =
+        | Equal
         | LessOrEqual
         | GreaterOrEqual
-        | Equal
 
     type IConstraint =
         abstract member Name : string
@@ -229,38 +229,12 @@ module rec Types =
                     let newMultiplier = multiplier * nodeMultiplier
                     evaluateNode (newMultiplier, state) nodeExpr cont
                 | AddLinearExpression (lExpr, rExpr) ->
-                    evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
+                    evaluateNode (multiplier, state) lExpr (fun (_, lState) -> evaluateNode (multiplier, lState) rExpr cont)
 
             let (_,reduceResult) = evaluateNode (1.0, initialState) expr (fun x -> x)
 
             ReducedLinearExpression.OfReduceAccumulator reduceResult
 
-
-        //static member private Evaluate (decisionMap: IReadOnlyDictionary<Decision, float>) (expr: LinearExpression) : float =
-        
-        //    let rec evaluateNode (multiplier: float, state: ResizeArray<float>) (node: LinearExpression) cont =
-        //        match node with
-        //        | Empty -> cont (multiplier, state)
-        //        | AddFloat (f, nodeExpr) ->
-        //            state.Add(multiplier * f)
-        //            let newState = (multiplier, state) 
-        //            evaluateNode newState nodeExpr cont
-        //        | AddDecision ((nodeCoef, nodeDecision), nodeExpr) ->
-        //            state.Add(multiplier * nodeCoef * decisionMap.[nodeDecision])
-        //            let newState = (multiplier, state)
-        //            evaluateNode newState nodeExpr cont
-        //        | Multiply (nodeMultiplier, nodeExpr) ->
-        //            let newState = (multiplier * nodeMultiplier, state)
-        //            evaluateNode newState nodeExpr cont
-        //        | AddLinearExpression (lExpr, rExpr) ->
-        //            evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
-              
-        
-        //    let (_, reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
-        
-        //    reduceResult.Sort(SignInsenstiveComparer())
-        //    let total = Seq.sum reduceResult
-        //    total
         
         interface ILinearExpression with
             member this.Terms =
@@ -329,64 +303,55 @@ module rec Types =
             LinearExpression.AddDecision((1.0, d), LinearExpression.Zero)
         
         static member (<==) (lhs: LinearExpression, rhs: float) =
-            Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
+            ConstraintExpression (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
         
         static member (<==) (lhs: float, rhs: LinearExpression) =
-            Inequality (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
+            ConstraintExpression (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
         
         static member (<==) (lhs: LinearExpression, rhs: Decision) =
-            Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
+            ConstraintExpression (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
         
         static member (<==) (decision: Decision, expr: LinearExpression) =
             LinearExpression.OfDecision decision <== expr
         
         static member (<==) (lhs: LinearExpression, rhs: LinearExpression) =
-            Inequality (lhs, LessOrEqual, rhs)
+            ConstraintExpression (lhs, LessOrEqual, rhs)
         
         static member (==) (lhs: LinearExpression, rhs: float) =
-            Equality (lhs, LinearExpression.OfFloat rhs)
+            ConstraintExpression (lhs, Equal, LinearExpression.OfFloat rhs)
         
         static member (==) (lhs: float, rhs: LinearExpression) =
-            Equality (LinearExpression.OfFloat lhs, rhs)
+            ConstraintExpression (LinearExpression.OfFloat lhs, Equal, rhs)
         
         static member (==) (lhs: LinearExpression, rhs: Decision) =
-            Equality (lhs, LinearExpression.OfDecision rhs)
+            ConstraintExpression (lhs, Equal, LinearExpression.OfDecision rhs)
         
         static member (==) (decision: Decision, expr: LinearExpression) =
             LinearExpression.OfDecision decision == expr
         
         static member (==) (lhs: LinearExpression, rhs: LinearExpression) =
-            Equality (lhs, rhs)
+            ConstraintExpression (lhs, Equal, rhs)
         
         static member (>==) (lhs: LinearExpression, rhs: float) =
-            Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
+            ConstraintExpression (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
         
         static member (>==) (lhs: float, rhs: LinearExpression) =
-            Inequality (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
+            ConstraintExpression (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
         
         static member (>==) (lhs: LinearExpression, rhs: Decision) =
-            Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
+            ConstraintExpression (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
         
         static member (>==) (decision: Decision, expr: LinearExpression) =
             LinearExpression.OfDecision decision >== expr
         
         static member (>==) (lhs: LinearExpression, rhs: LinearExpression) =
-            Inequality (lhs, GreaterOrEqual, rhs)
-
-
-    /// Represents the type of comparison between two LinearExpression
-    type Inequality =
-        internal
-        | LessOrEqual
-        | GreaterOrEqual
+            ConstraintExpression (lhs, GreaterOrEqual, rhs)
 
    
     /// The representation of how two LinearExpressions must relate to one another
     [<NoComparison>]
     type ConstraintExpression = 
-            internal
-            | Inequality of LHS: LinearExpression * inequality:Inequality * RHS: LinearExpression
-            | Equality of LHS: LinearExpression * RHS: LinearExpression
+        ConstraintExpression of lhs:LinearExpression * relationship:Relationship * rhs:LinearExpression
 
     /// A unique identified for a Constraint
     type ConstraintName = ConstraintName of string
@@ -396,7 +361,7 @@ module rec Types =
     type Constraint = 
         internal {
             Name : ConstraintName
-            Expression : ConstraintExpression
+            ConstraintExpression : ConstraintExpression
         }
 
         interface IConstraint with
@@ -404,20 +369,14 @@ module rec Types =
                 let (ConstraintName name) = this.Name
                 name
             member this.LHSExpression: ILinearExpression = 
-                match this.Expression with
-                | Inequality (lhs, _, _) -> lhs :> ILinearExpression
-                | Equality (lhs, _) -> lhs :> ILinearExpression
+                let (ConstraintExpression (lhs, _, _)) = this.ConstraintExpression
+                lhs :> ILinearExpression
             member this.RHSExpression: ILinearExpression = 
-                match this.Expression with
-                | Inequality (_, _, rhs) -> rhs :> ILinearExpression
-                | Equality (_, rhs) -> rhs :> ILinearExpression
+                let (ConstraintExpression (_, _, rhs)) = this.ConstraintExpression
+                rhs :> ILinearExpression
             member this.Relationship: Relationship = 
-                match this.Expression with
-                | Inequality (_, c, _) ->
-                    match c with
-                    | LessOrEqual -> Relationship.LessOrEqual
-                    | GreaterOrEqual -> Relationship.GreaterOrEqual
-                | Equality (_, _) -> Relationship.Equal
+                let (ConstraintExpression (_, relationship, _)) = this.ConstraintExpression
+                relationship
 
 
     /// A name for the Objective to document what the function is meant to represent
