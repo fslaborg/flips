@@ -76,7 +76,7 @@ module Constraint =
             invalidArg "ConstraintName" "Cannot have Name of Constraint that is null or empty"
         {
             Name = ConstraintName constraintName
-            Expression = constraintExpr
+            ConstraintExpression = constraintExpr
         }
 
 
