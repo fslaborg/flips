@@ -51,7 +51,7 @@ module rec Types =
 
     type IModel =
         abstract member Constraints : seq<IConstraint>
-        abstract member Objectives : seq<IObjective>
+        abstract member Objectives : IObjective list // TODO: This is wrong. Objectives should be in the order of priority
 
 
     /// Comparer used for the reduction of LinearExpression due to float addition
@@ -156,19 +156,31 @@ module rec Types =
 
         override this.Equals(obj) =
             match obj with
-            | :? ReducedLinearExpression as otherExpr ->
-                let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
+            | :? ReducedLinearExpression as that ->
+                let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset that.Offset
 
-                let asMap (d: Dictionary<_,_>) =
-                  d
-                  |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-                  |> Map.ofSeq
+                //let asMap (d: Dictionary<_,_>) =
+                //  d
+                //  |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
+                //  |> Map.ofSeq
 
-                let thisTerms = asMap this.Terms
-                let otherTerms = asMap otherExpr.Terms
-                let termsMatch = (thisTerms = otherTerms)
+                //let thisTerms = asMap this.Terms
+                //let otherTerms = asMap otherExpr.Terms
+                //let termsMatch = (thisTerms = otherTerms)
 
-                let allPassing = offsetSame && termsMatch
+                let thatValuesMatchThis =
+                    this.Terms
+                    |> Seq.forall (fun (KeyValue(decision, thisCoefficient)) ->
+                                    match that.Terms.TryGetValue decision with
+                                    | true, thatCoefficient -> ReducedLinearExpression.NearlyEquals thisCoefficient thatCoefficient
+                                    | false, _ -> false
+                    )
+
+                let thatHasNoAdditionalTerms =
+                    that.Terms
+                    |> Seq.forall (fun (KeyValue(decision, _)) -> this.Terms.ContainsKey decision)
+
+                let allPassing = offsetSame && thatValuesMatchThis && thatHasNoAdditionalTerms
                 allPassing
             | _ -> false
 
@@ -179,7 +191,8 @@ module rec Types =
             for KeyValue (decision, coefficients) in acc.Terms do
                 coefficients.Sort(SignInsenstiveComparer())
                 let coefficient = Seq.sum coefficients
-                terms.Add(decision, coefficient)
+                if coefficient <> 0.0 then // NOTE: Note sure if we need to test for -0.0
+                    terms.Add(decision, coefficient)
 
             {
                 Terms = terms
@@ -409,4 +422,4 @@ module rec Types =
 
         interface IModel with
             member this.Constraints = this.Constraints :> seq<IConstraint>
-            member this.Objectives = this.Objectives :> seq<IObjective>
+            member this.Objectives = this.Objectives // TODO: This is wrong
