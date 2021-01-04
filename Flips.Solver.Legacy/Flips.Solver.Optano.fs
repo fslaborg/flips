@@ -37,8 +37,8 @@ module Optano =
 
         for term in expr.Terms do
             match term with
-            | Constant c ->
-                exprAccumulator <- exprAccumulator + c
+            | Constant constant ->
+                exprAccumulator <- exprAccumulator + constant
             | LinearElement (coefficient, decision) ->
                 addVariable decisions decision vars
                 exprAccumulator <- exprAccumulator + (coefficient * vars.[decision.Name])
