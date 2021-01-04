@@ -342,98 +342,98 @@ module UnitsOfMeasureTests =
           let c : SMap5<NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString,NonEmptyString, Scalar<Item>> = a + b
           ()
 
-        [<Property>]
-        let ``SMap works with Solution.getValues`` (d:List<(NonEmptyString * Scalar<cm>)>) =
-            let uniqueValues = d |> List.distinctBy fst
-            let expectedResult = uniqueValues |> Map.ofList
-            let names = uniqueValues |> List.map fst
-            let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap
-            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
-                                                                                         d, float s) |> Map.ofList
-            let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
-            }
+        //[<Property>]
+        //let ``SMap works with Solution.getValues`` (d:List<(NonEmptyString * Scalar<cm>)>) =
+        //    let uniqueValues = d |> List.distinctBy fst
+        //    let expectedResult = uniqueValues |> Map.ofList
+        //    let names = uniqueValues |> List.map fst
+        //    let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap
+        //    let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
+        //                                                                                 d, float s) |> Map.ofList
+        //    let solution = {
+        //        ObjectiveResult = 0.0
+        //        DecisionResults = decisionResults
+        //    }
 
-            let resultValues = 
-                Solution.getValues solution decisions
-                |> Map.map (fun k v -> Scalar<cm>.Value v)
+        //    let resultValues = 
+        //        Solution.getValues solution decisions
+        //        |> Map.map (fun k v -> Scalar<cm>.Value v)
 
-            Assert.StrictEqual(expectedResult, resultValues)
+        //    Assert.StrictEqual(expectedResult, resultValues)
 
-        [<Property>]
-        let ``SMap2 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
-            let uniqueValues = d |> List.distinctBy fst
-            let expectedResult = uniqueValues |> Map.ofList
-            let names = uniqueValues |> List.map fst
-            let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap2
-            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
-                                                                                         d, float s) |> Map.ofList
-            let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
-            }
+        //[<Property>]
+        //let ``SMap2 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
+        //    let uniqueValues = d |> List.distinctBy fst
+        //    let expectedResult = uniqueValues |> Map.ofList
+        //    let names = uniqueValues |> List.map fst
+        //    let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap2
+        //    let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
+        //                                                                                 d, float s) |> Map.ofList
+        //    let solution = {
+        //        ObjectiveResult = 0.0
+        //        DecisionResults = decisionResults
+        //    }
 
-            let resultValues = 
-                Solution.getValues solution decisions
-                |> Map.map (fun k v -> Scalar<cm>.Value v)
+        //    let resultValues = 
+        //        Solution.getValues solution decisions
+        //        |> Map.map (fun k v -> Scalar<cm>.Value v)
 
-            Assert.StrictEqual(expectedResult, resultValues)
+        //    Assert.StrictEqual(expectedResult, resultValues)
 
-        [<Property>]
-        let ``SMap3 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
-            let uniqueValues = d |> List.distinctBy fst
-            let expectedResult = uniqueValues |> Map.ofList
-            let names = uniqueValues |> List.map fst
-            let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap3
-            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
-                                                                                         d, float s) |> Map.ofList
-            let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
-            }
+        //[<Property>]
+        //let ``SMap3 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
+        //    let uniqueValues = d |> List.distinctBy fst
+        //    let expectedResult = uniqueValues |> Map.ofList
+        //    let names = uniqueValues |> List.map fst
+        //    let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap3
+        //    let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
+        //                                                                                 d, float s) |> Map.ofList
+        //    let solution = {
+        //        ObjectiveResult = 0.0
+        //        DecisionResults = decisionResults
+        //    }
 
-            let resultValues = 
-                Solution.getValues solution decisions
-                |> Map.map (fun k v -> Scalar<cm>.Value v)
+        //    let resultValues = 
+        //        Solution.getValues solution decisions
+        //        |> Map.map (fun k v -> Scalar<cm>.Value v)
 
-            Assert.StrictEqual(expectedResult, resultValues)
+        //    Assert.StrictEqual(expectedResult, resultValues)
 
-        [<Property>]
-        let ``SMap4 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
-            let uniqueValues = d |> List.distinctBy fst |> fun x -> x.[..6]
-            let expectedResult = uniqueValues |> Map.ofList
-            let names = uniqueValues |> List.map fst
-            let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap4
-            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
-                                                                                         d, float s) |> Map.ofList
-            let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
-            }
+        //[<Property>]
+        //let ``SMap4 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
+        //    let uniqueValues = d |> List.distinctBy fst |> fun x -> x.[..6]
+        //    let expectedResult = uniqueValues |> Map.ofList
+        //    let names = uniqueValues |> List.map fst
+        //    let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap4
+        //    let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
+        //                                                                                 d, float s) |> Map.ofList
+        //    let solution = {
+        //        ObjectiveResult = 0.0
+        //        DecisionResults = decisionResults
+        //    }
 
-            let resultValues = 
-                Solution.getValues solution decisions
-                |> Map.map (fun k v -> Scalar<cm>.Value v)
+        //    let resultValues = 
+        //        Solution.getValues solution decisions
+        //        |> Map.map (fun k v -> Scalar<cm>.Value v)
 
-            Assert.StrictEqual(expectedResult, resultValues)
+        //    Assert.StrictEqual(expectedResult, resultValues)
 
-        [<Property>]
-        let ``SMap5 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
-            let uniqueValues = d |> List.distinctBy fst |> fun x -> x.[..6]
-            let expectedResult = uniqueValues |> Map.ofList
-            let names = uniqueValues |> List.map fst
-            let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap5
-            let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
-                                                                                         d, float s) |> Map.ofList
-            let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
-            }
+        //[<Property>]
+        //let ``SMap5 works with Solution.getValues`` (d:List<((NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString * NonEmptyString) * Scalar<cm>)>) =
+        //    let uniqueValues = d |> List.distinctBy fst |> fun x -> x.[..6]
+        //    let expectedResult = uniqueValues |> Map.ofList
+        //    let names = uniqueValues |> List.map fst
+        //    let decisions = DecisionBuilder<cm> "Test" { for n in names -> Boolean } |> SMap5
+        //    let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
+        //                                                                                 d, float s) |> Map.ofList
+        //    let solution = {
+        //        ObjectiveResult = 0.0
+        //        DecisionResults = decisionResults
+        //    }
 
-            let resultValues = 
-                Solution.getValues solution decisions
-                |> Map.map (fun k v -> Scalar<cm>.Value v)
+        //    let resultValues = 
+        //        Solution.getValues solution decisions
+        //        |> Map.map (fun k v -> Scalar<cm>.Value v)
 
-            Assert.StrictEqual(expectedResult, resultValues)
+        //    Assert.StrictEqual(expectedResult, resultValues)
           

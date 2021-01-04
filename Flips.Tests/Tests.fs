@@ -208,14 +208,14 @@ module Types =
     module ModelTests =
 
         [<Property>]
-        let ``Adding Constraint to Model yields a new Model with Constraint`` (sense:ObjectiveSense) (inequality:Inequality) =
+        let ``Adding Constraint to Model yields a new Model with Constraint`` (sense:ObjectiveSense) (relationship: Relationship) =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
             let objExpr = randomExpressionFromDecisions rng decisions
             let objective = Objective.create "Test" sense objExpr
             let lhs = (randomExpressionFromDecisions rng decisions)
             let rhs = (randomExpressionFromDecisions rng decisions)
-            let cnst = Constraint.create "Test" (Inequality (lhs, inequality, rhs))
+            let cnst = Constraint.create "Test" (ConstraintExpression (lhs, relationship, rhs)) :> IConstraint
             let m = 
                 Model.create objective
                 |> Model.addConstraint cnst
