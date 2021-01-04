@@ -1,8 +1,10 @@
 ﻿namespace Flips.Legacy
 
+open System.Collections.Generic
 open Flips
 open Flips.Solver
 open Flips.Legacy.Types
+open Flips.Legacy.Internals
 
 
 [<RequireQualifiedAccess>]
