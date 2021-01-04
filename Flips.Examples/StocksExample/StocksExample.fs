@@ -105,8 +105,7 @@ let solve settings =
         printfn "Objective Value - Risk: %f %%" ((Objective.evaluate solution objective) * 100.0)
     
         for (decision, value) in solution.DecisionResults |> Map.toSeq |> Seq.filter(fun (key, value) -> value > 0.0) do
-            let (DecisionName name) = decision.Name
-            printfn "Decision: %s\tValue: %f %%" name (value * 100.0)
+            printfn "Decision: %s\tValue: %f %%" decision.Name (value * 100.0)
     | errorCase -> 
         printfn "Unable to solve. Error: %A" errorCase
     
