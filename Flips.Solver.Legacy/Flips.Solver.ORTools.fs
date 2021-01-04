@@ -14,26 +14,26 @@ module ORTools =
         | CBC
         | GLOP
 
-    let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
+    let private createVariable (solver:Solver) (DecisionName name: DecisionName) (decisionType: DecisionType) =
         match decisionType with
         | Boolean -> solver.MakeBoolVar(name)
         | Integer (lb, ub) -> solver.MakeIntVar(float lb, float ub, name)
         | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, name)
 
 
-    let addVariable (solver:Solver) decisionName (decisionType:DecisionType) (vars:Dictionary<DecisionName, Variable>) =
+    let addVariable (solver:Solver) decisionName (decisionType: DecisionType) (vars: Dictionary<DecisionName, Variable>) =
         if not (vars.ContainsKey(decisionName)) then
             let var = createVariable solver decisionName decisionType
             vars.[decisionName] <- var
 
-    let private buildExpression solver (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
-        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
+    let private buildExpression solver (vars: Dictionary<DecisionName, Variable>) (expr: #ILinearExpression) =
+        //let reducedExpr = LinearExpression.Reduce expr
 
         let decisionExpr =
             reducedExpr.Coefficients
-            |> Seq.map (fun kvp ->
-                          addVariable solver kvp.Key reducedExpr.DecisionTypes.[kvp.Key] vars
-                          kvp.Value * vars.[kvp.Key])
+            |> Seq.map (fun (KeyValue(decisionName, coefficient)) ->
+                          addVariable solver decisionName reducedExpr.DecisionTypes.[decisionName] vars
+                          coefficient * vars.[decisionName])
             |> Array.ofSeq
 
         let offsetExpr = LinearExpr() + reducedExpr.Offset
