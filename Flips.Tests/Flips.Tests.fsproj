@@ -8,6 +8,10 @@
     <Platforms>AnyCPU;x64</Platforms>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      <Optimize>false</Optimize>
+      <Tailcalls>false</Tailcalls>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Scalar.fs" />
     <Compile Include="Gens.fs" />
