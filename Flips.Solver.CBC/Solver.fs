@@ -69,23 +69,23 @@ module internal ORTools =
 
 
     let private addInequalityConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (constraintName: string) (lhs: #ILinearExpression) (rhs: #ILinearExpression) (inequality: Inequality) (solver:Solver) =
-         let lhsExpr = buildExpression solver decisions vars lhs
-         let rhsExpr = buildExpression solver decisions vars rhs
-         let constraintExpr = lhsExpr - rhsExpr
+        let lhsExpr = buildExpression solver decisions vars lhs
+        let rhsExpr = buildExpression solver decisions vars rhs
+        let constraintExpr = lhsExpr - rhsExpr
      
-         let lb, ub =
-             match inequality with
-             | Inequality.LessOrEqual -> System.Double.NegativeInfinity, 0.0
-             | Inequality.GreaterOrEqual -> 0.0, System.Double.PositiveInfinity
+        let lb, ub =
+            match inequality with
+            | Inequality.LessOrEqual -> System.Double.NegativeInfinity, 0.0
+            | Inequality.GreaterOrEqual -> 0.0, System.Double.PositiveInfinity
 
-         // note: this is work around for
-         // https://github.com/google/or-tools/issues/2231
-         // https://github.com/matthewcrews/flips/issues/104
-         let dictionary = new Dictionary<_, _>()
-         let num = constraintExpr.Visit(dictionary)
-         let c = solver.MakeConstraint(lb - num, ub - num, constraintName)
-         for item in dictionary do
-             c.SetCoefficient(item.Key, item.Value)
+        // note: this is work around for
+        // https://github.com/google/or-tools/issues/2231
+        // https://github.com/matthewcrews/flips/issues/104
+        let dictionary = new Dictionary<_, _>()
+        let num = constraintExpr.Visit(dictionary)
+        let c = solver.MakeConstraint(lb - num, ub - num, constraintName)
+        for item in dictionary do
+            c.SetCoefficient(item.Key, item.Value)
 
 
     let private addConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (c: #IConstraint) (solver:Solver) =
