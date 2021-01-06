@@ -40,37 +40,34 @@
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
-      <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All" />
-      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Examples</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
-    <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
-    <None Include="Scratchpad.fsx" />
-    <Compile Include="Types.fs" />
-    <Compile Include="Domain.fs" />
-    <Compile Include="SliceSet.fs" />
-    <Compile Include="TryFind.fs" />
-    <Compile Include="ISliceData.fs" />
-    <Compile Include="Seq.fs" />
-    <Compile Include="SMap.fs" />
-    <Compile Include="SMap2.fs" />
-    <Compile Include="SMap3.fs" />
-    <Compile Include="SMap4.fs" />
-    <Compile Include="SMap5.fs" />
-    <Compile Include="UnitsOfMeasure.Types.fs" />
-    <Compile Include="UnitsOfMeasure.Domain.fs" />
-    <Compile Include="Solve.fs" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="Google.OrTools.runtime.win-x64">
-      <NoWarn>NU1701</NoWarn>
-    </PackageReference>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Solver</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Solver.CBC</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Solver.Cplex</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Solver.Legacy</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Solver.Gurobi</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
     <PropertyGroup>

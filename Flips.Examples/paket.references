@@ -6,8 +6,3 @@ group Examples
   FSharp.Data  
   MathNet.Numerics.FSharp
   CsvHelper
-
-group Examples
-
-  FSharp.Data  
-  MathNet.Numerics.FSharp
