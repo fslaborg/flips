@@ -67,7 +67,7 @@ module Objective =
     /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
     let evaluate (solution: Types.Solution) (Objective.Value objective: Objective<'Measure>) =
         objective.Expression
-        |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
+        |> Flips.Types.LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d])
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 #endif
 
@@ -116,20 +116,23 @@ module Solution =
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression with a Unit of Measure to evaluate the resulting value for</param>
     /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Types.Solution) (LinearExpression.Value expression: LinearExpression<'Measure>) =
-        Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
+    let evaluate (solution:Types.Solution) (expression:LinearExpression<'Measure>) =
+        let (LinearExpression.Value expression) = expression
+        Flips.Types.LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d]) expression
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 #endif
 
 [<AutoOpen>]
 module Builders =
-    // Note: this warning is because the compiler's detection for parameters is off for constructors. This is ok until that logic is fixed.
 
-    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * <c>Decision</c>&lt;<typeparamref name="'Measure" />&gt;)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix: string) =
+    type DecisionBuilder<[<Measure>] 'Measure>
+        /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+        /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices
