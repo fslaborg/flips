@@ -1,40 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Platforms>AnyCPU;x64</Platforms>
-    <OutputPath>../bin/</OutputPath>
-    <TargetFramework>net48</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="paket-files\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Flips.Types.TypeExtensions.fs" />
-     <Compile Include="CplexSolver.fs" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Platforms>AnyCPU;x64</Platforms>
+        <OutputPath>../bin/</OutputPath>
+    </PropertyGroup>
     <ItemGroup>
-        <None Include="..\thirdparties\ilog.cplex\bin\x64\cplex121.dll" Link="cplex121.dll">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\thirdparties\ilog.cplex\bin\x64\cplex1260.dll" Link="cplex1260.dll">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+        <EmbeddedResource Remove="paket-files\**" />
     </ItemGroup>
-  <ItemGroup>
-    <None Include="paket.references" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="ILOG.Concert">
-      <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.Concert.dll</HintPath>
-    </Reference>
-    <Reference Include="ILOG.CPLEX">
-      <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.CPLEX.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
-    <ProjectReference Include="..\Flips\Flips.fsproj" />
-  </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+    <ItemGroup>
+        <Compile Include="Flips.Types.TypeExtensions.fs" />
+        <Compile Include="CplexSolver.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="paket.references" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="ILOG.Concert">
+            <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.Concert.dll</HintPath>
+        </Reference>
+        <Reference Include="ILOG.CPLEX">
+            <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.CPLEX.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
+        <ProjectReference Include="..\Flips\Flips.fsproj" />
+    </ItemGroup>
+    <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

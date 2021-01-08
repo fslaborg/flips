@@ -1,104 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Platforms>x64</Platforms>
-    <Authors>Matthew Crews</Authors>
-    <Company>Matthew Crews</Company>
-    <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
-    <Copyright>2020</Copyright>
-    <PackageProjectUrl></PackageProjectUrl>
-    <RepositoryUrl>https://github.com/fslaborg/flips</RepositoryUrl>
-    <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>icon.png</PackageIcon>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>embedded</DebugType>
-    <OtherFlags>$(OtherFlags) --warnon:3390</OtherFlags>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <OutputPath>../bin/</OutputPath>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <OutputPath>../bin/</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NoWarn>NU1701;0052;</NoWarn>
-    <DocumentationFile>bin\x64\Debug\netstandard2.0\Flips.xml</DocumentationFile>
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Examples</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.CBC</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.Cplex</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.Legacy</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.Gurobi</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Flips.Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-  <ItemGroup>
-      <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All" />
-      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Utility.fs" />
-    <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
-    <Compile Include="Types.fs" />
-    <Compile Include="Domain.fs" />
-    <Compile Include="SliceSet.fs" />
-    <Compile Include="TryFind.fs" />
-    <Compile Include="ISliceData.fs" />
-    <Compile Include="Seq.fs" />
-    <Compile Include="SMap.fs" />
-    <Compile Include="SMap2.fs" />
-    <Compile Include="SMap3.fs" />
-    <Compile Include="SMap4.fs" />
-    <Compile Include="SMap5.fs" />
-    <Compile Include="UnitsOfMeasure.Types.fs" />
-    <Compile Include="UnitsOfMeasure.Domain.fs" />
-    <Compile Include="Solve.fs" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
-  </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <Platforms>x64</Platforms>
@@ -120,16 +21,15 @@
         <DebugSymbols>true</DebugSymbols>
         <DebugType>embedded</DebugType>
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <OutputPath>../bin/</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
         <NoWarn>NU1701;0052;</NoWarn>
         <DocumentationFile>bin\x64\Debug\netstandard2.0\Flips.xml</DocumentationFile>
+        <Optimize>false</Optimize>
+        <Tailcalls>false</Tailcalls>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-        <NoWarn>NU1701;0052;</NoWarn>
-        <Optimize>true</Optimize>
-        <Tailcalls>true</Tailcalls>
-        <WarningLevel>5</WarningLevel>
         <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>
     </PropertyGroup>
     <PropertyGroup>
@@ -141,50 +41,21 @@
             <_Parameter1>$(AssemblyName).Tests</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>$(AssemblyName).Solver</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>$(AssemblyName).Solver.CBC</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>$(AssemblyName).Solver.Cplex</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>$(AssemblyName).Solver.Legacy</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-
-    <ItemGroup>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>$(AssemblyName).Solver</_Parameter1>
-        </AssemblyAttribute>
-    </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Examples</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.CBC</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.Cplex</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.Legacy</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>$(AssemblyName).Solver.Gurobi</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-        <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-        <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
@@ -199,7 +70,6 @@
         <Compile Include="Types.fs" />
         <Compile Include="Domain.fs" />
         <Compile Include="SliceMap.Extensions.fs" />
-        <Compile Include="SliceMap.fs" />
         <Compile Include="UnitsOfMeasure.Types.fs" />
         <Compile Include="UnitsOfMeasure.Domain.fs" />
         <None Include="paket.references" />
