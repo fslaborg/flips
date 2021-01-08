@@ -11,7 +11,7 @@ module Decision =
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
     /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: ISolution) (Objective.Value objective: Objective<'Measure>) =
+    let evaluate (solution: #ISolution) (Objective.Value objective: Objective<'Measure>) =
         objective.Expression
         |> Flips.Types.LinearExpression.Evaluate solution.Values
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>

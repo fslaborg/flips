@@ -3,7 +3,6 @@
 module Gens =
 
     open Flips
-    open Flips.Types
     open FsCheck
 
     type SmallFloat = SmallFloat of float

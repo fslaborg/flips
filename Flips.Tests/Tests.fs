@@ -173,9 +173,10 @@ module Types =
         let ``Left multiplication of floats is additive for LinearExpression addition when evaluated`` (SmallFloat f) =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let lookup = decisions |> Seq.map (fun x -> x, 1.0) |> Map
             let expr1 = randomExpressionFromDecisions rng decisions
             let expr2 = randomExpressionFromDecisions rng decisions
-            let evaluate = LinearExpression.Evaluate (fun _ -> 1.0)
+            let evaluate = LinearExpression.Evaluate lookup
             let r1 = evaluate <| f * (expr1 + expr2)
             let r2 = evaluate <| f * expr2 + f * expr1
             Assert.Equal(r1, r2)
@@ -184,9 +185,10 @@ module Types =
         let ``Right multiplication of floats is additive for LinearExpression addition when evaluated`` (SmallFloat f) =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let lookup = decisions |> Seq.map (fun x -> x, 1.0) |> Map
             let expr1 = randomExpressionFromDecisions rng decisions
             let expr2 = randomExpressionFromDecisions rng decisions
-            let evaluate = LinearExpression.Evaluate (fun _ -> 1.0)
+            let evaluate = LinearExpression.Evaluate lookup
             let r1 = evaluate <| (expr1 + expr2) * f
             let r2 = evaluate <| expr2 * f + expr1 * f
             Assert.Equal(r1, r2)
