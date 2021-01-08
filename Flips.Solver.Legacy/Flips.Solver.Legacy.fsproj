@@ -27,4 +27,31 @@
     <ProjectReference Include="..\Flips\Flips.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <DefineConstants>$(DefineConstants);USE_LEGACY_NAMESPACE</DefineConstants>
+        <Platforms>x64</Platforms>
+        <OutputPath>../bin/</OutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <Optimize>false</Optimize>
+        <Tailcalls>false</Tailcalls>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Internals.fs" />
+        <Compile Include="Flips.Legacy.Types.fs" />
+        <Compile Include="Flips.Legacy.Domain.fs" />
+        <Compile Include="Flips.Legacy.UnitsOfMeasure.Domain.fs" />
+        <Compile Include="Flips.Solver.Optano.fs" />
+        <Compile Include="Flips.Solver.ORTools.fs" />
+        <Compile Include="Solve.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="paket.references" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
+        <ProjectReference Include="..\Flips\Flips.fsproj" />
+    </ItemGroup>
+    <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

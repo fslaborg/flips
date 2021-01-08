@@ -10,7 +10,7 @@ module Decision =
     /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
     /// <typeparam name="'Measure">The Unit of Measure for the Decision</typeparam>
     /// <param name="decisionName">The unique identifier for the Decision</param>
-    /// <param name="decitionType">The type of the decision</param>
+    /// <param name="decisionType">The type of the decision</param>
     /// <returns>A new Decision with the given DecisionType</returns>
     let create<[<Measure>] 'Measure> decisionName decisionType =
         let d = Decision.create decisionName decisionType
@@ -77,6 +77,7 @@ module Model =
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
+    /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
     let addObjective (Objective.Value objective) model : Flips.Types.Model =
 
@@ -86,11 +87,14 @@ module Model =
 [<AutoOpen>]
 module Builders =
 
-    /// <summary>A Computation Expression for creating tuples of type ('Key * Decision<'Measure>)</summary>
+    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * <c>Decision</c>&lt;<typeparamref name="'Measure" />&gt;)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix: string) =
+    type DecisionBuilder<[<Measure>] 'Measure>
+        /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+        /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices

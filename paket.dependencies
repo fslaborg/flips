@@ -22,16 +22,13 @@ group Tooling
 
   nuget Fake.IO.FileSystem ~> 5
   nuget FSharpLint.Core ~> 0
-  
   nuget Microsoft.NET.Test.Sdk ~> 16
   nuget Meziantou.MSBuild.InternalsVisibleTo
-  
   nuget coverlet.collector ~> 1
   nuget FsCheck ~> 2
   nuget FsCheck.Xunit ~> 2
   nuget xunit ~> 2
   nuget xunit.runner.visualstudio ~> 2
-  nuget SliceMap
 
 group Examples
 
@@ -39,10 +36,7 @@ group Examples
   source https://api.nuget.org/v3/index.json
 
   nuget FSharp.Data ~> 3
-
   nuget MathNet.Numerics.FSharp
-  nuget SliceMap
-
   nuget NativeLibraryLoader storage: on
   nuget CsvHelper
 

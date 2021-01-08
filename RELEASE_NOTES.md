@@ -1,5 +1,10 @@
-### 2.9999-alpha-1 - Thursday, December 31st, 2020
-* Setting up auto-release of alpha builds for `dev`
+### 2.4.4 - Thursday, December 31st, 2020
+* Bug fixes for LinearExpression
+* Updated to Google.ORTools 8.1.8487
+* Code cleaning
+
+### 2.4.3 - Wednesday, December 23rd, 2020
+* Fixed code comments
 
 ### 2.4.2 - Thursday, November 16th, 2020
 * Added Settings.basic type for default values for the solver

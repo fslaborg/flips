@@ -9,7 +9,7 @@ module Decision =
     /// <summary>Create a Decision with a given Name and Type</summary>
     /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
     /// <param name="decisionName">The unique identifier for the Decision</param>
-    /// <param name="decitionType">The type of the decision</param>
+    /// <param name="decisionType">The type of the decision</param>
     /// <returns>A new Decision with the given DecisionType</returns>
     let create decisionName decisionType =
         if System.String.IsNullOrEmpty(decisionName) then
@@ -113,6 +113,7 @@ module Model =
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
+    /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
     let addObjective (objective: #IObjective) model =
 
@@ -163,11 +164,12 @@ module Builders =
         |> String.concat ","
         |> (sprintf "%s[%s]" prefix)
 
-
     /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
-    /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
-    /// <returns>A sequence of Constraints whith the given prefix and a unique name for each constraint</returns>
-    type ConstraintBuilder (constraintSetPrefix: string) =
+    type ConstraintBuilder
+        /// <summary>A Computation Expression for creating constraints with a predefined naming convention</summary>
+        /// <param name="constraintSetPrefix">The string which will be the prefix for all of the constraints</param>
+        /// <returns>A sequence of Constraints whith the given prefix and a unique name for each constraint</returns>
+         (constraintSetPrefix:string) =
 
         member this.Yield (cExpr: ConstraintExpression) =
             cExpr
@@ -182,11 +184,12 @@ module Builders =
         member this.Run(source: seq<'a * ConstraintExpression>) =
             source |> Seq.map (fun (n, c) -> Constraint.create (namer constraintSetPrefix n) c)
 
-
     /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder (decisionSetPrefix: string) =
+    type DecisionBuilder
+        /// <summary>A Computation Expression for creating tuples of type ('Key * Decision)</summary>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type ('Key * Decision). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices
