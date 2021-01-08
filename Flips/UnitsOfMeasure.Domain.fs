@@ -10,7 +10,7 @@ module Decision =
     /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
     /// <typeparam name="'Measure">The Unit of Measure for the Decision</typeparam>
     /// <param name="decisionName">The unique identifier for the Decision</param>
-    /// <param name="decitionType">The type of the decision</param>
+    /// <param name="decisionType">The type of the decision</param>
     /// <returns>A new Decision with the given DecisionType</returns>
     let create<[<Measure>] 'Measure> decisionName decisionType =
         let d = Decision.create decisionName decisionType
@@ -67,7 +67,7 @@ module Objective =
     /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
     let evaluate (solution: Types.Solution) (Objective.Value objective: Objective<'Measure>) =
         objective.Expression
-        |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
+        |> Flips.Types.LinearExpression.Evaluate (fun d -> solution.DecisionResults.[d])
         |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
 #endif
 
@@ -87,6 +87,7 @@ module Model =
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
+    /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
     let addObjective (Objective.Value objective) model : Flips.Types.Model =
 
@@ -97,12 +98,14 @@ module Model =
 module Solution =
 
     /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
+    /// <typeparam name="'Key"></typeparam>
+    /// <typeparam name="'Measure"></typeparam>
     /// <param name="solution">The solution that is used to look up the solver values</param>
-    /// <param name="decisions">An IDictionary<'Key, Decision<'Measure>> that will be used for the lookups</param>
-    /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>
-    let getValues (s: Types.Solution) (decisions: System.Collections.Generic.IDictionary<_,Decision<'Measure>>) =
-        let getWithDefault (Decision.Value d: Decision<'Measure>) =
-            match Map.tryFind d s.DecisionResults with
+    /// <param name="decisions">An IDictionary&lt;<typeparamref name="'Key"/>, Decision&lt;<typeparamref name="'Measure"/>&gt;&gt; that will be used for the lookups</param>
+    /// <returns>A new Map&lt;<typeparamref name="'Key"/>,float&lt;<typeparamref name="'Measure"/>&gt;&gt; where the values are the recommendations from the solver</returns>
+    let getValues (solution:Types.Solution) (decisions:System.Collections.Generic.IDictionary<_,Decision<'Measure>>) =
+        let getWithDefault (Decision.Value d:Decision<'Measure>) =
+            match Map.tryFind d solution.DecisionResults with
             | Some v -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> v
             | None -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0
 
@@ -121,11 +124,14 @@ module Solution =
 [<AutoOpen>]
 module Builders =
 
-    /// <summary>A Computation Expression for creating tuples of type ('Key * Decision<'Measure>)</summary>
+    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * <c>Decision</c>&lt;<typeparamref name="'Measure" />&gt;)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix: string) =
+    type DecisionBuilder<[<Measure>] 'Measure>
+        /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+        /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices

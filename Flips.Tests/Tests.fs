@@ -57,20 +57,28 @@ module Types =
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of Decisions and float is associative`` (d:Decision) (SmallFloat f) =
+        let ``Addition of Decision and float is commutative`` (d:Decision) (SmallFloat f) =
             let e1 = d + f
             let e2 = f + d
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
+        let ``Addition of Decisions and floats is associative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
             let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 + f1) + (d2 + f2)
             let e2 = d1 + (f1 + d2) + f2
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Addition of same Decisions is linear`` (d:Decision) =
+        let ``Left multiplication of decisions is additive for LinearExpression addition`` (d:Decision) =
+            let x1 = randomFloat rng
+            let x2 = randomFloat rng
+            let r1 = (d * x1) + (d * x2)
+            let r2 = d * (x1 + x2)
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Right multiplication of decisions is additive for LinearExpression addition`` (d:Decision) =
             let x1 = randomFloat rng
             let x2 = randomFloat rng
             let r1 = (x1 * d) + (x2 * d)
@@ -104,13 +112,13 @@ module Types =
             Assert.Equal(e, r)
 
         [<Property>]
-        let ``Multiplication of Decisions and float is associative`` (d:Decision) (SmallFloat f) =
+        let ``Multiplication of Decision and float is commutative`` (d:Decision) (SmallFloat f) =
             let e1 = d * f
             let e2 = f * d
             Assert.Equal(e1, e2)
 
         [<Property>]
-        let ``Multiplication of Decisions and float is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
+        let ``Addition of LinearExpressions from multiplication of Decisions and floats is commutative`` (d1:Decision) (SmallFloat f1) (SmallFloat f2) =
             let d2 = DecisionGen.Where(fun x -> x.Name <> d1.Name) |> Gen.sample 0 1 |> Seq.exactlyOne
             let e1 = (d1 * f1) + (d2 * f2)
             let e2 = (d2 * f2) + (d1 * f1)
@@ -121,7 +129,7 @@ module Types =
     module LinearExpression =
 
         [<Property>]
-        let ``Addition of LinearExpression is associative`` () =
+        let ``Addition of LinearExpression is commutative`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
             let expr1 = randomExpressionFromDecisions rng decisions
@@ -131,7 +139,7 @@ module Types =
             Assert.Equal(r1, r2)
 
         [<Property>]
-        let ``Addition of LinearExpression is commutative`` () =
+        let ``Addition of LinearExpression is associative`` () =
             let numberOfDecisions = rng.Next(1, 100)
             let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
             let expr1 = randomExpressionFromDecisions rng decisions
@@ -139,6 +147,48 @@ module Types =
             let expr3 = randomExpressionFromDecisions rng decisions
             let r1 = (expr1 + expr2) + expr3
             let r2 = expr1 + (expr2 + expr3)
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Left multiplication of floats is additive for LinearExpression addition`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr1 = randomExpressionFromDecisions rng decisions
+            let expr2 = randomExpressionFromDecisions rng decisions
+            let r1 = f * (expr1 + expr2)
+            let r2 = f * expr2 + f * expr1
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Right multiplication of floats is additive for LinearExpression addition`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr1 = randomExpressionFromDecisions rng decisions
+            let expr2 = randomExpressionFromDecisions rng decisions
+            let r1 = (expr1 + expr2) * f
+            let r2 = expr2 * f + expr1 * f
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Left multiplication of floats is additive for LinearExpression addition when evaluated`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr1 = randomExpressionFromDecisions rng decisions
+            let expr2 = randomExpressionFromDecisions rng decisions
+            let evaluate = LinearExpression.Evaluate (fun _ -> 1.0)
+            let r1 = evaluate <| f * (expr1 + expr2)
+            let r2 = evaluate <| f * expr2 + f * expr1
+            Assert.Equal(r1, r2)
+
+        [<Property>]
+        let ``Right multiplication of floats is additive for LinearExpression addition when evaluated`` (SmallFloat f) =
+            let numberOfDecisions = rng.Next(1, 100)
+            let decisions = DecisionGen |> Gen.sample 0 numberOfDecisions |> Seq.distinctBy (fun x -> x.Name)
+            let expr1 = randomExpressionFromDecisions rng decisions
+            let expr2 = randomExpressionFromDecisions rng decisions
+            let evaluate = LinearExpression.Evaluate (fun _ -> 1.0)
+            let r1 = evaluate <| (expr1 + expr2) * f
+            let r2 = evaluate <| expr2 * f + expr1 * f
             Assert.Equal(r1, r2)
 
         [<Property>]
@@ -202,6 +252,11 @@ module Types =
             let expr = randomExpressionFromDecisions rng decisions
             let r = expr + d - d
             Assert.Equal(expr, r)
+
+        [<Fact>]
+        let ``GetHashCode works correctly`` () =
+            LinearExpression.Empty.GetHashCode() |> ignore
+            (LinearExpression.OfFloat 1.0).GetHashCode() |> ignore
 
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
