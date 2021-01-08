@@ -1,10 +1,11 @@
 ﻿namespace Flips.UnitsOfMeasure
 
 [<AutoOpen>]
-module Types =
+module rec Types =
 
     open Flips
     
+
     /// A Decision with a UnitOfMeasure
     type Decision<[<Measure>] 'Measure> =
         | Value of Types.Decision
@@ -14,6 +15,16 @@ module Types =
           let (Value d) = this
           d.Name
     
+        interface IDecision with
+            member this.Name =
+                let (Value d) = this
+                let (DecisionName name) = d.Name
+                name
+
+            member this.Type =
+                let (Value d) = this
+                d.Type
+
         static member (+) (Value lD: Decision<'Measure>, Value rD: Decision<'Measure>) =
           LinearExpression<'Measure>.Value (lD + rD)
     
@@ -66,96 +77,95 @@ module Types =
           l >== r
     
     
-    and 
         /// A LinearExpression with a UnitOfMeausre
-        [<NoComparison>]
-        LinearExpression<[<Measure>] 'Measure> =
+    [<NoComparison>]
+    type LinearExpression<[<Measure>] 'Measure> =
         | Value of Types.LinearExpression
-        with
+    with
     
-            static member inline Zero =
-                LinearExpression<'Measure>.Value Flips.Types.LinearExpression.Zero
+        static member inline Zero =
+            LinearExpression<'Measure>.Value Flips.Types.LinearExpression.Zero
     
-            static member (+) (Value lExpr: LinearExpression<'Measure>, Value rExpr: LinearExpression<'Measure>) =
-                LinearExpression<'Measure>.Value (lExpr + rExpr)
+        static member (+) (Value lExpr: LinearExpression<'Measure>, Value rExpr: LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (lExpr + rExpr)
     
-            static member (+) (Value expr: LinearExpression<'Measure>, f: float<'Measure>) =
-                LinearExpression<'Measure>.Value (expr + float f)
+        static member (+) (Value expr: LinearExpression<'Measure>, f: float<'Measure>) =
+            LinearExpression<'Measure>.Value (expr + float f)
     
-            static member (+) (f: float<'Measure>, expr: LinearExpression<'Measure>) =
-                expr + f
+        static member (+) (f: float<'Measure>, expr: LinearExpression<'Measure>) =
+            expr + f
     
-            static member (+) (Value expr: LinearExpression<'Measure>, Decision.Value d: Decision<'Measure>) =
-                LinearExpression<'Measure>.Value (expr + d)
+        static member (+) (Value expr: LinearExpression<'Measure>, Decision.Value d: Decision<'Measure>) =
+            LinearExpression<'Measure>.Value (expr + d)
     
-            static member (+) (d: Decision<'Measure>, expr: LinearExpression<'Measure>) =
-                expr + d
+        static member (+) (d: Decision<'Measure>, expr: LinearExpression<'Measure>) =
+            expr + d
     
-            static member (*) (Value expr: LinearExpression<'LMeasure>, f: float<'RMeasure>) =
-                LinearExpression<'Measure>.Value (expr * float f)
+        static member (*) (Value expr: LinearExpression<'LMeasure>, f: float<'RMeasure>) =
+            LinearExpression<'Measure>.Value (expr * float f)
     
-            static member (*) (f: float<'LMeasure>, expr: LinearExpression<'RMeasure>) =
-                expr * f
+        static member (*) (f: float<'LMeasure>, expr: LinearExpression<'RMeasure>) =
+            expr * f
     
-            static member (-) (Value expr: LinearExpression<'Measure>, f: float<'Measure>) =
-                LinearExpression<'Measure>.Value (expr - float f)
+        static member (-) (Value expr: LinearExpression<'Measure>, f: float<'Measure>) =
+            LinearExpression<'Measure>.Value (expr - float f)
     
-            static member (-) (f: float<'Measure>, Value expr: LinearExpression<'Measure>) =
-                LinearExpression<'Measure>.Value (float f - expr)
+        static member (-) (f: float<'Measure>, Value expr: LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (float f - expr)
     
-            static member (-) (Value expr: LinearExpression<'Measure>, Decision.Value d: Decision<'Measure>) =
-                LinearExpression<'Measure>.Value (expr - d)
+        static member (-) (Value expr: LinearExpression<'Measure>, Decision.Value d: Decision<'Measure>) =
+            LinearExpression<'Measure>.Value (expr - d)
     
-            static member (-) (Decision.Value d: Decision<'Measure>, Value expr: LinearExpression<'Measure>) =
-                LinearExpression<'Measure>.Value (d - expr)
+        static member (-) (Decision.Value d: Decision<'Measure>, Value expr: LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (d - expr)
     
-            static member (-) (Value lExpr: LinearExpression<'Measure>, Value rExpr: LinearExpression<'Measure>) =
-                LinearExpression<'Measure>.Value (lExpr - rExpr)
+        static member (-) (Value lExpr: LinearExpression<'Measure>, Value rExpr: LinearExpression<'Measure>) =
+            LinearExpression<'Measure>.Value (lExpr - rExpr)
     
-            static member (<==) (Value l: LinearExpression<'Measure>, r: float<'Measure>) =
-                l <== float r
+        static member (<==) (Value l: LinearExpression<'Measure>, r: float<'Measure>) =
+            l <== float r
     
-            static member (<==) (l: float<'Measure>, Value r: LinearExpression<'Measure>) =
-                float l <== r
+        static member (<==) (l: float<'Measure>, Value r: LinearExpression<'Measure>) =
+            float l <== r
     
-            static member (<==) (Value l: LinearExpression<'Measure>, Decision.Value r: Decision<'Measure>) =
-                l <== r
+        static member (<==) (Value l: LinearExpression<'Measure>, Decision.Value r: Decision<'Measure>) =
+            l <== r
     
-            static member (<==) (Decision.Value l: Decision<'Measure>, Value r: LinearExpression<'Measure>) =
-                l <== r
+        static member (<==) (Decision.Value l: Decision<'Measure>, Value r: LinearExpression<'Measure>) =
+            l <== r
     
-            static member (<==) (Value l: LinearExpression<'Measure>, Value r: LinearExpression<'Measure>) =
-                l <== r
+        static member (<==) (Value l: LinearExpression<'Measure>, Value r: LinearExpression<'Measure>) =
+            l <== r
     
-            static member (==) (Value l: LinearExpression<'Measure>, r: float<'Measure>) =
-                l == float r
+        static member (==) (Value l: LinearExpression<'Measure>, r: float<'Measure>) =
+            l == float r
     
-            static member (==) (l: float<'Measure>, Value r: LinearExpression<'Measure>) =
-                float l == r
+        static member (==) (l: float<'Measure>, Value r: LinearExpression<'Measure>) =
+            float l == r
     
-            static member (==) (Value l: LinearExpression<'Measure>, Decision.Value r: Decision<'Measure>) =
-                l == r
+        static member (==) (Value l: LinearExpression<'Measure>, Decision.Value r: Decision<'Measure>) =
+            l == r
     
-            static member (==) (Decision.Value l: Decision<'Measure>, Value r: LinearExpression<'Measure>) =
-                l == r
+        static member (==) (Decision.Value l: Decision<'Measure>, Value r: LinearExpression<'Measure>) =
+            l == r
     
-            static member (==) (Value l: LinearExpression<'Measure>, Value r: LinearExpression<'Measure>) =
-                l == r
+        static member (==) (Value l: LinearExpression<'Measure>, Value r: LinearExpression<'Measure>) =
+            l == r
     
-            static member (>==) (Value l: LinearExpression<'Measure>, r: float<'Measure>) =
-                l >== float r
+        static member (>==) (Value l: LinearExpression<'Measure>, r: float<'Measure>) =
+            l >== float r
     
-            static member (>==) (l: float<'Measure>, Value r: LinearExpression<'Measure>) =
-                float l >== r
+        static member (>==) (l: float<'Measure>, Value r: LinearExpression<'Measure>) =
+            float l >== r
     
-            static member (>==) (Value l: LinearExpression<'Measure>, Decision.Value r: Decision<'Measure>) =
-                l >== r
+        static member (>==) (Value l: LinearExpression<'Measure>, Decision.Value r: Decision<'Measure>) =
+            l >== r
     
-            static member (>==) (Decision.Value l: Decision<'Measure>, Value r: LinearExpression<'Measure>) =
-                l >== r
+        static member (>==) (Decision.Value l: Decision<'Measure>, Value r: LinearExpression<'Measure>) =
+            l >== r
     
-            static member (>==) (Value l: LinearExpression<'Measure>, Value r: LinearExpression<'Measure>) =
-                l >== r
+        static member (>==) (Value l: LinearExpression<'Measure>, Value r: LinearExpression<'Measure>) =
+            l >== r
     
     
     /// A DecisionType with a UnitOfMeasure

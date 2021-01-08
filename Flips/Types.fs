@@ -1,11 +1,11 @@
 ﻿[<AutoOpen>]
-module Flips.Types
+module rec Flips.Types
 
 open System.Collections.Generic
 open System
 
 /// Comparer used for the reduction of LinearExpression due to float addition
-type SignInsenstiveComparer private () =
+type SignInsenstiveComparer internal () =
     static let instance = SignInsenstiveComparer ()
     static member Instance = instance
     interface IComparer<float> with 
@@ -18,20 +18,49 @@ type SignInsenstiveComparer private () =
 /// A Continuous type can take on any value between the Upper and Lower bound (inclusive)
 type DecisionType =
     | Boolean
-    | Integer of LowerBound: float * UpperBound: float
     | Continuous of LowerBound: float * UpperBound: float
+    | Integer of LowerBound: float * UpperBound: float
+
+type IDecision =
+    inherit IComparable
+    abstract member Name : string
+    abstract member Type : DecisionType
+
+type LinearTerm =
+    | Constant of float
+    | LinearElement of coefficient:float * decision:IDecision
+
+type ILinearExpression = 
+    abstract member Terms : seq<LinearTerm>
+
+type Relationship =
+    | Equal
+    | LessOrEqual
+    | GreaterOrEqual
+
+type IConstraint =
+    abstract member Name : string
+    abstract member LHSExpression : ILinearExpression
+    abstract member RHSExpression : ILinearExpression
+    abstract member Relationship : Relationship
+    
+/// The goal of the optimization. Minimize will try to minimize the Objective Function
+/// Maximize will try to maximize the Objective Function
+type ObjectiveSense =
+    | Minimize
+    | Maximize
+
+type IObjective =
+    abstract member Expression : ILinearExpression
+    abstract member Sense : ObjectiveSense
+    abstract member Name : string
+
+type IModel =
+    abstract member Constraints : seq<IConstraint>
+    abstract member Objectives : IObjective list // TODO: This is wrong. Objectives should be in the order of priority
 
 /// A Name which uniquely identifies the Decision
 type DecisionName = DecisionName of string
-
-/// Used for the reduction of a LinearExpression to a form used for mapping to 
-/// underlying solvers.
-[<NoComparison>]
-type internal ReduceAccumulator = {
-    DecisionTypes : Dictionary<DecisionName, DecisionType>
-    Coefficients : Dictionary<DecisionName, List<float>>
-    Offsets : List<float>
-}
 
 /// Represents a decision that must be made
 type Decision =  {
@@ -39,6 +68,13 @@ type Decision =  {
     Type : DecisionType
 }
 with
+
+    interface IDecision with
+        member this.Name =
+            let (DecisionName name) = this.Name
+            name
+
+        member this.Type = this.Type
 
     static member (*) (decision: Decision, f: float) =
         LinearExpression.AddDecision ((f, decision), LinearExpression.Zero)
@@ -92,81 +128,68 @@ with
         LinearExpression.OfDecision decision >== rhsDecision
 
 
-and 
-    /// A type used for mapping a LinearExpression to a form which a Solver can use
-    [<NoComparison>][<CustomEquality>] 
-    internal ReducedLinearExpression =
+[<NoComparison>]
+type private ReduceAccumulator = {
+    Terms : Dictionary<Decision, ResizeArray<float>>
+    Offsets : ResizeArray<float>
+}
+
+  /// A type used for mapping a LinearExpression to a form which a Solver can use
+[<NoComparison;CustomEquality>] 
+type private ReducedLinearExpression =
     {
-        DecisionTypes : Dictionary<DecisionName, DecisionType>
-        Coefficients : Dictionary<DecisionName, float>
+        //DecisionTypes : Dictionary<DecisionName, DecisionType>
+        Terms : Dictionary<Decision, float>
         Offset : float
     } with
-        static member private NearlyEquals (a: float) (b: float) : bool =
-            let aValue = System.BitConverter.DoubleToInt64Bits a
-            let bValue = System.BitConverter.DoubleToInt64Bits b
-            if (aValue >>> 63) <> (bValue >>> 63) then
-                a = b
-            else
-                System.Math.Abs(aValue - bValue) <= 10_000L
+    static member private NearlyEquals (a: float) (b: float) : bool =
+        let aValue = System.BitConverter.DoubleToInt64Bits a
+        let bValue = System.BitConverter.DoubleToInt64Bits b
+        if (aValue >>> 63) <> (bValue >>> 63) then
+            a = b
+        else
+            System.Math.Abs(aValue - bValue) <= 10_000L
 
-        override this.GetHashCode () =
-            hash this
+    override this.Equals(obj) =
+        match obj with
+        | :? ReducedLinearExpression as that ->
+            let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset that.Offset
 
-        override this.Equals(obj) =
-            match obj with
-            | :? ReducedLinearExpression as otherExpr ->
-                let offsetSame = ReducedLinearExpression.NearlyEquals this.Offset otherExpr.Offset
+            let thatValuesMatchThis =
+                this.Terms
+                |> Seq.forall (fun (KeyValue(decision, thisCoefficient)) ->
+                                match that.Terms.TryGetValue decision with
+                                | true, thatCoefficient -> ReducedLinearExpression.NearlyEquals thisCoefficient thatCoefficient
+                                | false, _ -> false
+                )
 
-                let asMap (d: Dictionary<_,_>) =
-                    d
-                    |> Seq.map (fun kvp -> kvp.Key, kvp.Value)
-                    |> Map.ofSeq
+            let thatHasNoAdditionalTerms =
+                that.Terms
+                |> Seq.forall (fun (KeyValue(decision, _)) -> this.Terms.ContainsKey decision)
 
-                let thisCoefficients = asMap this.Coefficients
-                let otherCoefficients = asMap otherExpr.Coefficients
+            let allPassing = offsetSame && thatValuesMatchThis && thatHasNoAdditionalTerms
+            allPassing
+        | _ -> false
 
-                let leftMatchesRight =
-                    (true, thisCoefficients)
-                    ||> Map.fold (fun b k thisCoef -> 
-                                    match Map.tryFind k otherCoefficients with
-                                    | Some otherCoef -> b && (ReducedLinearExpression.NearlyEquals thisCoef otherCoef)
-                                    | None -> b && (ReducedLinearExpression.NearlyEquals thisCoef 0.0))
+    static member internal OfReduceAccumulator (acc: ReduceAccumulator) =
+        let offset = acc.Offsets |> Seq.sortBy Math.Abs |> Seq.sum
+  
+        let terms = Dictionary()
+        for KeyValue (decision, coefficients) in acc.Terms do
+            coefficients.Sort(SignInsenstiveComparer())
+            let coefficient = Seq.sum coefficients
+            if coefficient <> 0.0 then // NOTE: Note sure if we need to test for -0.0
+                terms.Add(decision, coefficient)
 
-                let evaluateRightElement b n otherCoef =
-                    if this.Coefficients.ContainsKey(n) then
-                        b
-                    else
-                        let essentiallyZero = ReducedLinearExpression.NearlyEquals otherCoef 0.0
-                        b && essentiallyZero
+        {
+            Terms = terms
+            Offset = offset
+        }
+    
 
-                let rightNonMatchesAreZero =
-                    (true, otherCoefficients)
-                    ||> Map.fold evaluateRightElement
-
-                let allPassing = offsetSame && leftMatchesRight && rightNonMatchesAreZero
-                allPassing
-            | _ -> false
-
-        static member internal OfReduceAccumulator (acc: ReduceAccumulator) =
-            let offset = acc.Offsets |> Seq.sortBy Math.Abs |> Seq.sum
-        
-            let coefficients = Dictionary()
-            for elem in acc.Coefficients do
-                elem.Value.Sort SignInsenstiveComparer.Instance
-                let coefficient = Seq.sum elem.Value
-                coefficients.Add(elem.Key, coefficient)
-
-            {
-                DecisionTypes = acc.DecisionTypes
-                Coefficients = coefficients
-                Offset = offset
-            }
-        
-
-and 
-    /// Represents a linear collection of Decisions, Coefficients, and an Offset
-    [<NoComparison; CustomEquality>] 
-    LinearExpression =
+/// Represents a linear collection of Decisions, Coefficients, and an Offset
+[<NoComparison; CustomEquality>] 
+type LinearExpression =
     internal
     | Empty
     | AddFloat of float:float * linearExpression:LinearExpression
@@ -175,33 +198,32 @@ and
     | AddLinearExpression of lhsExpression:LinearExpression * rhsExpression:LinearExpression
 
 
-
-    static member internal Reduce (expr: LinearExpression) : ReducedLinearExpression =
+    static member private Reduce (expr: LinearExpression) : ReducedLinearExpression =
         let initialState = {
-            DecisionTypes = Dictionary()
-            Coefficients = Dictionary()
+            Terms = Dictionary()
             Offsets = ResizeArray()
         }
 
-        let rec evaluateNode (multiplier:float, state:ReduceAccumulator) (node:LinearExpression) cont =
+        let tryFind k (d: Dictionary<_,_>) =
+            match d.TryGetValue(k) with
+            | (true, v) -> Some v
+            | (false, _) -> None
+
+        let rec evaluateNode (multiplier: float, state: ReduceAccumulator) (node: LinearExpression) cont =
             match node with
             | Empty -> cont (multiplier, state)
             | AddFloat (addToOffset, nodeExpr) -> 
                 state.Offsets.Add(multiplier * addToOffset)
                 evaluateNode (multiplier, state) nodeExpr cont
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
-                match Dictionary.tryFind nodeDecision.Name state.DecisionTypes with
+                match tryFind nodeDecision state.Terms with
                 | Some existingType ->
-                    if existingType <> nodeDecision.Type then
-                        invalidArg "DecisionType" "Cannot have different DecisionType for same DecisionName"
-                    else
-                        state.Coefficients.[nodeDecision.Name].Add(nodeCoef * multiplier)
-                        evaluateNode (multiplier, state) nodeExpr cont
+                    state.Terms.[nodeDecision].Add(nodeCoef * multiplier)
+                    evaluateNode (multiplier, state) nodeExpr cont
                 | None ->
                     let newCoefArray = ResizeArray()
                     newCoefArray.Add(multiplier * nodeCoef)
-                    state.DecisionTypes.Add(nodeDecision.Name, nodeDecision.Type)
-                    state.Coefficients.Add(nodeDecision.Name, newCoefArray)
+                    state.Terms.Add(nodeDecision, newCoefArray)
                     evaluateNode (multiplier, state) nodeExpr cont
             | Multiply (nodeMultiplier, nodeExpr) ->
                 let newMultiplier = multiplier * nodeMultiplier
@@ -209,18 +231,10 @@ and
             | AddLinearExpression (lExpr, rExpr) ->
                 evaluateNode (multiplier, state) lExpr (fun (_, lState) -> evaluateNode (multiplier, lState) rExpr cont)
 
-        let (_,reduceResult) = evaluateNode (1.0, initialState) expr id
+        let (_,reduceResult) = evaluateNode (1.0, initialState) expr (fun x -> x)
 
         ReducedLinearExpression.OfReduceAccumulator reduceResult
 
-    static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
-        let rec getRec cont (decisions: Set<Decision>) = function
-            | Empty -> cont decisions
-            | AddFloat (_, expr) -> getRec cont decisions expr
-            | Multiply (_, expr) -> getRec cont decisions expr
-            | AddDecision ((_, decision), expr) -> getRec cont (decisions.Add decision) expr
-            | AddLinearExpression (lExpr, rExpr) -> getRec (fun l -> getRec cont l rExpr) decisions lExpr
-        getRec id Set.empty expr
 
     static member internal Evaluate (getDecisionCoef: #IReadOnlyDictionary<_,_>) (expr:LinearExpression) : float =
 
@@ -248,128 +262,123 @@ and
         let total = Seq.sum reduceResult
         total
 
-
+    
+    interface ILinearExpression with
+        member this.Terms =
+            let reducedForm = LinearExpression.Reduce this
+            seq { 
+                for KeyValue (decision, coefficient) in reducedForm.Terms do
+                    yield LinearTerm.LinearElement (coefficient, decision)
+                yield LinearTerm.Constant reducedForm.Offset
+            }
+            
+    
     override this.GetHashCode () =
-        match this with
-        | Empty -> 0
-        | AddFloat (f, le) -> hash (f, le)
-        | AddDecision (f, d) -> hash (f, d)
-        | Multiply (f, le) -> hash (f, le)
-        | AddLinearExpression (le1, le2) -> hash (le1, le2)
+        hash (LinearExpression.Reduce this)
 
     override this.Equals(obj) =
         match obj with
-        | :? LinearExpression as that -> 
+        | :? LinearExpression as otherExpr -> 
             let thisReduced = LinearExpression.Reduce this
-            let thatReduced = LinearExpression.Reduce that
-            thisReduced = thatReduced
+            let otherReduced = LinearExpression.Reduce otherExpr
+            thisReduced = otherReduced
         | _ -> false
 
     static member Zero =
         LinearExpression.Empty
-
+    
     static member (+) (l: LinearExpression, r: LinearExpression) =
         LinearExpression.AddLinearExpression (l, r)
-
+    
     static member (+) (expr: LinearExpression, f: float) =
         LinearExpression.AddFloat (f, expr)
-
+    
     static member (+) (f: float, expr: LinearExpression) =
         expr + f
-
+    
     static member (+) (expr: LinearExpression, decision: Decision) =
         LinearExpression.AddDecision ((1.0, decision), expr)
     
     static member (+) (decision: Decision, expr: LinearExpression) =
         expr + decision
-
+    
     static member (*) (expr: LinearExpression, f: float) =
         LinearExpression.Multiply (f, expr)
-
+    
     static member (*) (f: float, expr: LinearExpression) =
         LinearExpression.Multiply (f, expr)
-
+    
     static member (-) (expr: LinearExpression, f: float) =
         expr + (-1.0 * f)
-
+    
     static member (-) (f: float, expr: LinearExpression) =
         f + (-1.0 * expr)
-
+    
     static member (-) (expr: LinearExpression, d: Decision) =
         expr + (-1.0 * d)
-
+    
     static member (-) (d: Decision, expr: LinearExpression) =
         d + (-1.0 * expr)
-
+    
     static member (-) (lExpr: LinearExpression, rExpr: LinearExpression) =
         lExpr + (-1.0 * rExpr)
-
+    
     static member OfFloat (f: float) =
         LinearExpression.AddFloat(f, LinearExpression.Zero)
-
+    
     static member OfDecision (d: Decision) =
         LinearExpression.AddDecision((1.0, d), LinearExpression.Zero)
-
+    
     static member (<==) (lhs: LinearExpression, rhs: float) =
-        Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
-
+        ConstraintExpression (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
+    
     static member (<==) (lhs: float, rhs: LinearExpression) =
-        Inequality (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
-
+        ConstraintExpression (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
+    
     static member (<==) (lhs: LinearExpression, rhs: Decision) =
-        Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
-
+        ConstraintExpression (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
+    
     static member (<==) (decision: Decision, expr: LinearExpression) =
         LinearExpression.OfDecision decision <== expr
-
+    
     static member (<==) (lhs: LinearExpression, rhs: LinearExpression) =
-        Inequality (lhs, LessOrEqual, rhs)
-
+        ConstraintExpression (lhs, LessOrEqual, rhs)
+    
     static member (==) (lhs: LinearExpression, rhs: float) =
-        Equality (lhs, LinearExpression.OfFloat rhs)
-
+        ConstraintExpression (lhs, Equal, LinearExpression.OfFloat rhs)
+    
     static member (==) (lhs: float, rhs: LinearExpression) =
-        Equality (LinearExpression.OfFloat lhs, rhs)
-
+        ConstraintExpression (LinearExpression.OfFloat lhs, Equal, rhs)
+    
     static member (==) (lhs: LinearExpression, rhs: Decision) =
-        Equality (lhs, LinearExpression.OfDecision rhs)
-
+        ConstraintExpression (lhs, Equal, LinearExpression.OfDecision rhs)
+    
     static member (==) (decision: Decision, expr: LinearExpression) =
         LinearExpression.OfDecision decision == expr
-
+    
     static member (==) (lhs: LinearExpression, rhs: LinearExpression) =
-        Equality (lhs, rhs)
-
+        ConstraintExpression (lhs, Equal, rhs)
+    
     static member (>==) (lhs: LinearExpression, rhs: float) =
-        Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
-
+        ConstraintExpression (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
+    
     static member (>==) (lhs: float, rhs: LinearExpression) =
-        Inequality (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
-
+        ConstraintExpression (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
+    
     static member (>==) (lhs: LinearExpression, rhs: Decision) =
-        Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
-
+        ConstraintExpression (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
+    
     static member (>==) (decision: Decision, expr: LinearExpression) =
         LinearExpression.OfDecision decision >== expr
-
+    
     static member (>==) (lhs: LinearExpression, rhs: LinearExpression) =
-        Inequality (lhs, GreaterOrEqual, rhs)
+        ConstraintExpression (lhs, GreaterOrEqual, rhs)
 
 
-and 
-    /// Represents the type of comparison between two LinearExpression
-    Inequality =
-        internal
-        | LessOrEqual
-        | GreaterOrEqual
-
-and 
-    /// The representation of how two LinearExpressions must relate to one another
-    [<NoComparison>]
-    ConstraintExpression = 
-        internal
-        | Inequality of LHS: LinearExpression * inequality:Inequality * RHS: LinearExpression
-        | Equality of LHS: LinearExpression * RHS: LinearExpression
+/// The representation of how two LinearExpressions must relate to one another
+[<NoComparison>]
+type ConstraintExpression = 
+    ConstraintExpression of lhs:LinearExpression * relationship:Relationship * rhs:LinearExpression
 
 /// A unique identified for a Constraint
 type ConstraintName = ConstraintName of string
@@ -379,14 +388,23 @@ type ConstraintName = ConstraintName of string
 type Constraint = 
     internal {
         Name : ConstraintName
-        Expression : ConstraintExpression
+        ConstraintExpression : ConstraintExpression
     }
 
-/// The goal of the optimization. Minimize will try to minimize the Objective Function
-/// Maximize will try to maximize the Objective Function
-type ObjectiveSense =
-    | Minimize
-    | Maximize
+    interface IConstraint with
+        member this.Name =
+            let (ConstraintName name) = this.Name
+            name
+        member this.LHSExpression: ILinearExpression = 
+            let (ConstraintExpression (lhs, _, _)) = this.ConstraintExpression
+            lhs :> ILinearExpression
+        member this.RHSExpression: ILinearExpression = 
+            let (ConstraintExpression (_, _, rhs)) = this.ConstraintExpression
+            rhs :> ILinearExpression
+        member this.Relationship: Relationship = 
+            let (ConstraintExpression (_, relationship, _)) = this.ConstraintExpression
+            relationship
+
 
 /// A name for the Objective to document what the function is meant to represent
 type ObjectiveName = internal ObjectiveName of string
@@ -397,13 +415,25 @@ type Objective =
     internal {
         Name : ObjectiveName
         Sense : ObjectiveSense
-        Expression : LinearExpression
+        Expression : ILinearExpression
     }
+
+    interface IObjective with
+        member this.Expression = this.Expression
+        member this.Sense = this.Sense
+        member this.Name =
+            let (ObjectiveName name) = this.Name
+            name
 
 /// A type which represents the optimization model. It contains an Objective which represents the
 /// goal of the model and a collection of Constraints which the model must obey.
 [<NoComparison>]
-type Model = internal {
-    Objectives : Objective list
-    Constraints : Constraint list
-}
+type Model = 
+    internal {
+        Constraints : IConstraint list
+        Objectives : IObjective list
+    }
+
+    interface IModel with
+        member this.Constraints = this.Constraints :> seq<IConstraint>
+        member this.Objectives = this.Objectives // TODO: This is wrong

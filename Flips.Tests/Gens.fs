@@ -88,17 +88,17 @@ module Gens =
             return finalExpr
         }
 
-    let InequalityGen = 
+    let RelationshipGen = 
         gen {
-            return! Gen.elements [LessOrEqual; GreaterOrEqual]
+            return! Gen.elements [Equal; LessOrEqual; GreaterOrEqual]
         }
 
     let ConstraintExpressionGen = 
         gen {
             let! lhs = LinearExpressionGen
             let! rhs = LinearExpressionGen
-            let! inequality = InequalityGen
-            return! Gen.elements [Inequality (lhs, inequality, rhs); Equality (lhs, rhs)]
+            let! relationship = RelationshipGen
+            return! Gen.elements [ConstraintExpression (lhs, relationship, rhs)]
         }
 
     let ConstraintNameGen = 
@@ -113,7 +113,7 @@ module Gens =
             let! constraintExpression = ConstraintExpressionGen
             let cnst = {
                 Name = name
-                Expression = constraintExpression
+                ConstraintExpression = constraintExpression
             }
             return cnst
         }
@@ -159,7 +159,7 @@ module Gens =
         static member ArbDecisionNameGen () = Arb.fromGen DecisionNameGen
         static member ArbDecision () = Arb.fromGen DecisionGen
         static member ArbLinearExpression () = Arb.fromGen LinearExpressionGen
-        static member ArbInequality () = Arb.fromGen InequalityGen
+        static member ArbRelationship () = Arb.fromGen RelationshipGen
         static member ArbConstraintName () = Arb.fromGen ConstraintNameGen
         static member ArbConstraintExpression () = Arb.fromGen ConstraintExpressionGen
         static member ArbConstraint () = Arb.fromGen ConstraintGen
