@@ -19,3 +19,21 @@
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+  <PropertyGroup>
+    <OtherFlags>
+    </OtherFlags>
+    <WarningsAsErrors>3239;</WarningsAsErrors>
+    <NoWarn>NU1701;0052;</NoWarn>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
+    <ProjectReference Include="..\Flips\Flips.fsproj" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

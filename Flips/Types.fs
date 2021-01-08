@@ -211,7 +211,7 @@ and
 
         let (_,reduceResult) = evaluateNode (1.0, initialState) expr id
 
-        ReducedLinearExpression.OfReduceAccumulator reduceResult
+          ReducedLinearExpression.OfReduceAccumulator reduceResult
 
     static member internal GetDecisions (expr:LinearExpression) : Set<Decision> =
         let rec getRec cont (decisions: Set<Decision>) = function

@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <OutputPath>../bin/</OutputPath>
+    <TargetFramework>net48</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Remove="paket-files\**" />
