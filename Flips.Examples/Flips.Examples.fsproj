@@ -3,9 +3,9 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
-        <Platforms>AnyCPU;x64</Platforms>
+        <Platforms>x64</Platforms>
         <UseFlipsSolverCplex>false</UseFlipsSolverCplex>
-        <UseFlipsSolverLegacy>false</UseFlipsSolverLegacy>
+        <UseFlipsSolverLegacy>true</UseFlipsSolverLegacy>
         <UseFlipsSolverCbc>true</UseFlipsSolverCbc>
     </PropertyGroup>
 

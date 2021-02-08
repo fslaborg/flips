@@ -1,0 +1,10 @@
+Decision Name	Result
+NumberOf[Portland,Hamburger]	560
+NumberOf[Portland,HotDog]	0
+NumberOf[Portland,Pizza]	0
+NumberOf[Sellwood,Hamburger]	39.99999999999998
+NumberOf[Sellwood,HotDog]	600
+NumberOf[Sellwood,Pizza]	66.66666666666663
+NumberOf[Woodstock,Hamburger]	0
+NumberOf[Woodstock,HotDog]	0
+NumberOf[Woodstock,Pizza]	333.33333333333337

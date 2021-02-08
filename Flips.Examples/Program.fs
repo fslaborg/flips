@@ -1,7 +1,6 @@
-﻿// Learn more about F# at http://fsharp.org
-
-open System
+﻿open System
 open Flips
+open Flips.Legacy
 open Flips.Examples
  
 

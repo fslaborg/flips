@@ -1,0 +1,17 @@
+Decision Name	Result
+"BuildRoaster[Location ""Alberta""]"	0
+"BuildRoaster[Location ""Belmont""]"	0
+"BuildRoaster[Location ""Eastmoreland""]"	0
+"BuildRoaster[Location ""Hawthorne""]"	1
+"BuildRoaster[Location ""Nob Hill""]"	0
+"BuildRoaster[Location ""Sellwood""]"	0
+"BuildRoaster[Location ""St Johns""]"	1
+"BuildRoaster[Location ""The Pearl""]"	0
+"BuildWarehouse[Location ""Alberta""]"	1
+"BuildWarehouse[Location ""Belmont""]"	0
+"BuildWarehouse[Location ""Eastmoreland""]"	0
+"BuildWarehouse[Location ""Hawthorne""]"	1
+"BuildWarehouse[Location ""Nob Hill""]"	0
+"BuildWarehouse[Location ""Sellwood""]"	1
+"BuildWarehouse[Location ""St Johns""]"	1
+"BuildWarehouse[Location ""The Pearl""]"	0

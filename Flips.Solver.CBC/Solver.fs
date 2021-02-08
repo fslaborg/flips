@@ -42,18 +42,46 @@ module internal ORTools =
             | Constant constant ->
                 exprAccumulator <- exprAccumulator + constant
             | LinearElement (coefficient, decision) ->
-                addVariable solver decisions vars decision
+                addVariable solver decisions vars decision |> ignore
                 exprAccumulator <- exprAccumulator + (coefficient * vars.[decision.Name])
 
         exprAccumulator
 
 
     let private setObjective (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (solver: Solver) =
-        let expr = buildExpression solver decisions vars objective.Expression
+        //let expr = buildExpression solver decisions vars objective.Expression
+
+        //match objective.Sense with
+        //| Minimize -> solver.Minimize(expr)
+        //| Maximize -> solver.Maximize(expr)
+
+        let decisionCoefficients = Dictionary<IDecision, ResizeArray<float>>()
+        let offsets = ResizeArray()
+
+        for term in objective.Expression.Terms do
+            match term with
+            | Constant c ->
+                offsets.Add c
+            | LinearElement (c, d) ->
+                match Dictionary.tryFind d decisionCoefficients with
+                | Some coefs -> coefs.Add c
+                | None ->
+                    let coefs = ResizeArray()
+                    coefs.Add(c)
+                    decisionCoefficients.Add (d, coefs)
+
+        let mutable exprAccumulator = LinearExpr()
+
+        for KeyValue(decision, coefficients) in decisionCoefficients do
+            let coefficient = coefficients |> Seq.sortBy System.Math.Abs |> Seq.sum
+            addVariable solver decisions vars decision |> ignore
+            exprAccumulator <- exprAccumulator + (coefficient * vars.[decision.Name])
+
+        exprAccumulator <- exprAccumulator + (offsets |> Seq.sortBy System.Math.Abs |> Seq.sum)
 
         match objective.Sense with
-        | Minimize -> solver.Minimize(expr)
-        | Maximize -> solver.Maximize(expr)
+        | Minimize -> solver.Minimize(exprAccumulator)
+        | Maximize -> solver.Maximize(exprAccumulator)
 
 
     let private addEqualityConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (constraintName:string) (lhs: #ILinearExpression) (rhs: #ILinearExpression) (solver:Solver) =
@@ -100,17 +128,17 @@ module internal ORTools =
      
         let rhsConstant = offsets |> Seq.sortBy System.Math.Abs |> Seq.sum
 
-        let c =
+        let newConstraint =
             match inequality with
             | Inequality.LessOrEqual -> 
                 solver.MakeConstraint(System.Double.NegativeInfinity, rhsConstant, constraintName)
             | Inequality.GreaterOrEqual -> 
                 solver.MakeConstraint(rhsConstant, System.Double.PositiveInfinity, constraintName)
-
+        
         for KeyValue(decision, coefficients) in decisionCoefficients do
             let coefficient = coefficients |> Seq.sortBy System.Math.Abs |> Seq.sum
             let variable = addVariable solver decisions vars decision
-            c.SetCoefficient(variable, coefficient)
+            newConstraint.SetCoefficient(variable, coefficient)
 
 
     let private addConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (c: #IConstraint) (solver:Solver) =
@@ -185,7 +213,12 @@ module internal ORTools =
 
     let internal solve (settings: Settings) (model: #IModel) : Result<Flips.Solver.ISolution, SolverError> =
 
-        let solver = Solver.CreateSolver("CBC")
+        let solver = 
+            match settings.SolverType with
+            | CBC ->
+                Solver.CreateSolver("CBC")
+            | GLOP ->
+                Solver.CreateSolver("GLOP")
 
         solver.SetTimeLimit(settings.MaxDuration)
 
