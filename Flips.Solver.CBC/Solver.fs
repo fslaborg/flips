@@ -74,18 +74,10 @@ module internal ORTools =
         let decisionCoefficients = Dictionary<IDecision, ResizeArray<float>>()
         let offsets = ResizeArray()
 
-        let summer (x: ResizeArray<float>) =
-            let mutable acc = 0.0
-
-            for idx in 0..x.Count - 1 do
-                acc <- acc + x.[idx]
-
-            acc
-
         for term in lhs.Terms do
             match term with
             | Constant c ->
-                offsets.Add c
+                offsets.Add (-1.0 * c) // Because we will move it to the RHS
             | LinearElement (c, d) ->
                 match Dictionary.tryFind d decisionCoefficients with
                 | Some coefs -> coefs.Add c
@@ -97,7 +89,7 @@ module internal ORTools =
         for term in rhs.Terms do
             match term with
             | Constant c ->
-                offsets.Add (-1.0 * c)
+                offsets.Add c
             | LinearElement (c, d) ->
                 match Dictionary.tryFind d decisionCoefficients with
                 | Some coefs -> coefs.Add (-1.0 * c)
@@ -105,36 +97,20 @@ module internal ORTools =
                     let coefs = ResizeArray()
                     coefs.Add (-1.0 * c)
                     decisionCoefficients.Add (d, coefs)
-        
-        //let lhsExpr = buildExpression solver decisions vars lhs
-        //let rhsExpr = buildExpression solver decisions vars rhs
-        //let constraintExpr = lhsExpr - rhsExpr
      
+        let rhsConstant = offsets |> Seq.sortBy System.Math.Abs |> Seq.sum
+
         let c =
             match inequality with
             | Inequality.LessOrEqual -> 
-                //System.Double.NegativeInfinity, 0.0
-                solver.MakeConstraint(System.Double.NegativeInfinity, summer offsets, constraintName)
+                solver.MakeConstraint(System.Double.NegativeInfinity, rhsConstant, constraintName)
             | Inequality.GreaterOrEqual -> 
-                //0.0, System.Double.PositiveInfinity
-                solver.MakeConstraint(summer offsets, System.Double.NegativeInfinity, constraintName)
+                solver.MakeConstraint(rhsConstant, System.Double.PositiveInfinity, constraintName)
 
-        //let lb, ub =
-        //    match inequality with
-        //    | Inequality.LessOrEqual -> System.Double.NegativeInfinity, 0.0
-        //    | Inequality.GreaterOrEqual -> 0.0, System.Double.PositiveInfinity
-
-        //constraintExpr.Visit()
-
-        // note: this is work around for
-        // https://github.com/google/or-tools/issues/2231
-        // https://github.com/matthewcrews/flips/issues/104
-        //let dictionary = new Dictionary<_, _>()
-        //let num = constraintExpr.Visit(dictionary)
-        //let c = solver.MakeConstraint(lb - num, ub - num, constraintName)
         for KeyValue(decision, coefficients) in decisionCoefficients do
+            let coefficient = coefficients |> Seq.sortBy System.Math.Abs |> Seq.sum
             let variable = addVariable solver decisions vars decision
-            c.SetCoefficient(variable, Seq.sum coefficients)
+            c.SetCoefficient(variable, coefficient)
 
 
     let private addConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (c: #IConstraint) (solver:Solver) =
@@ -233,34 +209,31 @@ module internal ORTools =
           setObjective decisions vars objective solver
         )
 
-        SolverError.Unknown "The model status is unknown. Unable to solve."
-        |> Result.Error
+        let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
 
-        //let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
+        match result with
+        | Result.Ok (solver, objective) ->
+            match model.Objectives with
+            | firstObjective :: _ when firstObjective <> objective ->
+              // Write LP/MPS Formulation to file again if requested
+              // doing it again in case the solved objective isn't the first one
+              settings.WriteLPFile |> Option.iter (writeLPFile solver)
+              settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+            | [] | [_] | _ -> () 
 
-        //match result with
-        //| Result.Ok (solver, objective) ->
-        //    match model.Objectives with
-        //    | firstObjective :: _ when firstObjective <> objective ->
-        //      // Write LP/MPS Formulation to file again if requested
-        //      // doing it again in case the solved objective isn't the first one
-        //      settings.WriteLPFile |> Option.iter (writeLPFile solver)
-        //      settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
-        //    | [] | [_] | _ -> () 
-
-        //    buildSolution decisions vars solver
-        //    |> Result.Ok
-        //| Result.Error errorStatus ->
-        //    match errorStatus with
-        //    | Solver.ResultStatus.INFEASIBLE ->
-        //        SolverError.Infeasible "The model was found to be infeasible"
-        //        |> Result.Error
-        //    | Solver.ResultStatus.UNBOUNDED ->
-        //        SolverError.Unbounded "The model was found to be unbounded"
-        //        |> Result.Error
-        //    | _ ->
-        //        SolverError.Unknown "The model status is unknown. Unable to solve."
-        //        |> Result.Error
+            buildSolution decisions vars solver
+            |> Result.Ok
+        | Result.Error errorStatus ->
+            match errorStatus with
+            | Solver.ResultStatus.INFEASIBLE ->
+                SolverError.Infeasible "The model was found to be infeasible"
+                |> Result.Error
+            | Solver.ResultStatus.UNBOUNDED ->
+                SolverError.Unbounded "The model was found to be unbounded"
+                |> Result.Error
+            | _ ->
+                SolverError.Unknown "The model status is unknown. Unable to solve."
+                |> Result.Error
 
 
 type Solver (settings:Settings) =

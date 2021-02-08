@@ -2,7 +2,6 @@
 
 open System
 open Flips
-open Flips.Types
 open Flips.Examples
  
 

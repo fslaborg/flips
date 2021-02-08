@@ -16,36 +16,13 @@ type SignInsenstiveComparer internal () =
 /// A Boolean maps to a 0 or 1 value
 /// An Integer type can take on any discrete value between the Upper and Lower Bound (inclusive)
 /// A Continuous type can take on any value between the Upper and Lower bound (inclusive)
-[<NoComparison; CustomEquality>]
 type DecisionType =
     | Boolean
     | Continuous of LowerBound: float * UpperBound: float
     | Integer of LowerBound: float * UpperBound: float
-    with
-        override this.GetHashCode () =
-            let mutable h = 17
-            match this with
-            | Boolean -> 
-                h * 23 + 0
-            | Continuous (lb, ub) -> 
-                h <- h * 23 + lb.GetHashCode()
-                h <- h * 23 + ub.GetHashCode()
-                h
-            | Integer (lb, ub) -> 
-                h <- h * 23 + lb.GetHashCode()
-                h <- h * 23 + ub.GetHashCode()
-                h
-
-        override this.Equals(obj) =
-            match obj with
-            | :? DecisionType as that ->
-                failwith "Not impelemented"
-            | _ -> false
-
-            
 
 type IDecision =
-    //inherit IComparable
+    inherit IComparable
     abstract member Name : string
     abstract member Type : DecisionType
 
@@ -86,25 +63,11 @@ type IModel =
 type DecisionName = DecisionName of string
 
 /// Represents a decision that must be made
-[<NoComparison; CustomEquality>]
 type Decision =  {
     Name : DecisionName
     Type : DecisionType
 }
 with
-
-    override this.GetHashCode () =
-        let mutable h = 17
-
-        h <- h * 23 + this.Name.GetHashCode()
-        h <- h * 23 + this.Type.GetHashCode()
-        h
-
-    override this.Equals (obj) =
-        match obj with
-        | :? Decision as that -> this.Name = that.Name
-
-        | _ -> false
 
     interface IDecision with
         member this.Name =
@@ -172,7 +135,7 @@ type private ReduceAccumulator = {
 }
 
   /// A type used for mapping a LinearExpression to a form which a Solver can use
-[<NoComparison;CustomEquality>] 
+[<NoComparison; CustomEquality>] 
 type private ReducedLinearExpression =
     {
         //DecisionTypes : Dictionary<DecisionName, DecisionType>
