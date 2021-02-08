@@ -109,13 +109,7 @@ module rec CplexSolver =
             { new Flips.Solver.ISolution with 
                 member x.Values = decisionMap }
 
-        type CplexFormulation = 
-            {
-                decisions : IReadOnlyDictionary<DecisionName,Decision>
-                vars: IReadOnlyDictionary<DecisionName,INumVar>
-                constraints: IReadOnlyDictionary<Constraint, IConstraint>
-                objective: Objective * IObjective
-            }
+        
 
         let formulateWithCplex (model: Flips.Types.Model) state =
             let decisionsByName = 
@@ -165,7 +159,7 @@ module rec CplexSolver =
               objective = objective, cplexObjective
               constraints = cx }
 
-        let runSolverWithCallbacks (model: Flips.Types.Model) state (callbackHandler: Cplex.Callback seq) =
+        let runSolverWithCallbacks (model: Flips.Types.Model) state (callbackHandler: #seq<Cplex.Callback>) =
           
           state.cplex.ClearCallbacks()
 
@@ -179,6 +173,17 @@ module rec CplexSolver =
           // look for WriteToFile option
           state.options.ExportToFiles 
           |> Seq.iter(state.cplex.ExportModel)
+          
+          let cplexOutStringWriter =
+              match state.options.RedirectCplexOutput with
+              | Console -> None
+              | StringWriter -> 
+                let stringWriter = new System.IO.StringWriter()
+                state.cplex.SetOut stringWriter
+                Some stringWriter
+              | Null -> 
+                state.cplex.SetOut System.IO.TextWriter.Null
+                None
 
           use __ = 
             { new IDisposable with 
@@ -186,11 +191,9 @@ module rec CplexSolver =
                 state.cplex.ClearCallbacks()
             } 
 
-          if state.cplex.Solve() then
-              let solution = buildSolution cplexFormulation state
-              Ok (solution,cplexFormulation)
-          else
-              Error ""
+          let solved = state.cplex.Solve()
+          let solution = buildSolution cplexFormulation state
+          CplexSolution(solution.Values, cplexOutStringWriter |> Option.map string, cplexFormulation, solved)
           
         let runSolverWithCallback (model: Flips.Types.Model) state (callbackHandler: Cplex.Callback) =
             runSolverWithCallbacks model state [|callbackHandler|]
@@ -199,7 +202,7 @@ module rec CplexSolver =
   
     type ICPlexOption =
         inherit System.IComparable
-
+    
     [<CustomEquality;CustomComparison>]
     type NativeParam = 
       | NativeParam of param: ILOG.CPLEX.Cplex.Param
@@ -225,9 +228,12 @@ module rec CplexSolver =
                   nameCompare
             | _ -> 1
           
+    type CplexOutputOption = Null | StringWriter | Console
+
     type CplexOption =
         | DoNotReuseState
         | WriteToFile of fileName: string
+        | RedirectOutput of CplexOutputOption
         | CplexIntOption of Cplex.IntParam * value: int
         | CplexLongOption of Cplex.LongParam * value: int64
         | CplexBoolOption of Cplex.BooleanParam * value: bool
@@ -260,11 +266,29 @@ module rec CplexSolver =
         interface ICPlexOption with
           member x.CompareTo other =  x.CompareTo other
 
-
+    type CplexFormulation = 
+        {
+            decisions : IReadOnlyDictionary<DecisionName,Decision>
+            vars: IReadOnlyDictionary<DecisionName,INumVar>
+            constraints: IReadOnlyDictionary<Constraint, IConstraint>
+            objective: Objective * IObjective
+        }
     type CplexOptions =
         {
             options : ICPlexOption Set
         }
+        member x.RedirectCplexOutput =
+            x.options
+            |> Set.toSeq
+            |> Seq.choose 
+                    (function 
+                        | :? CplexOption as o -> 
+                            match o with 
+                            | RedirectOutput o -> Some o 
+                            | _ -> None 
+                        | _ -> None)
+            |> Seq.tryHead
+            |> Option.defaultValue Console
         member x.HasDoNotReuseState = x.options.Contains DoNotReuseState
         member x.ExportToFiles =
             x.options 
@@ -385,6 +409,17 @@ module rec CplexSolver =
                 ] |> Set.ofList
             { state with options = { state.options with options = newOptions } }
 
+    type CplexSolution
+             ( values           : IReadOnlyDictionary<Decision, float>
+             , redirectedOutput : string option
+             , formulation      : CplexFormulation
+             , solved           : bool) =
+        member x.Solved           = solved
+        member x.Formulation      = formulation
+        member x.RedirectedOutput = redirectedOutput
+        member x.Solution         = values
+        interface Flips.Solver.ISolution with
+            member x.Values = values
 
     type CPlexProblemState = 
         {
@@ -404,10 +439,10 @@ module rec CplexSolver =
                 cplexExprToFlipsConstraint = readOnlyDict []
                 toBackendSettings = { obfuscateVarNames = false; obfuscateConstraintNames = false}
             }
-        member x.GetBackendVariable (decision: Decision) = x.flipsDecisionToCplexNumVar.[decision.Name]
-        member x.GetBackendConstraint (expr: Constraint) = x.flipsConstraintToCplexExpr.[expr]
-        member x.GetFlipsDecision(backendVariable: INumVar) = x.cplexNumVarToFlipsDecision.[backendVariable]
-        member x.GetFlipsConstraint (expr: IConstraint) = x.cplexExprToFlipsConstraint.[expr]
+        member x.GetBackendVariable   (decision: Decision)       = x.flipsDecisionToCplexNumVar.[decision.Name]
+        member x.GetBackendConstraint (expr: Constraint)         = x.flipsConstraintToCplexExpr.[expr]
+        member x.GetFlipsDecision     (backendVariable: INumVar) = x.cplexNumVarToFlipsDecision.[backendVariable]
+        member x.GetFlipsConstraint   (expr: IConstraint)        = x.cplexExprToFlipsConstraint.[expr]
     let createEmpty () = CPlexProblemState.empty
     
     let createFromModel toBackendSettings =
@@ -434,3 +469,145 @@ module rec CplexSolver =
         /// some user may prefer an exception
         unknownDecisionTurnsToZero : bool
     }
+
+module Callbacks =
+    type CallbacksOption =
+        {
+            // cut is disabled because it doesn't compile
+            //cut                 : Cplex.CutCallback                option
+            // optimization is disabled because it gives null reference exception in cplex
+            //optimization        : Cplex.OptimizationCallback       option
+            barrier             : Cplex.BarrierCallback            option
+            branch              : Cplex.BranchCallback             option
+            continuous          : Cplex.ContinuousCallback         option
+            control             : Cplex.ControlCallback            option
+            crossover           : Cplex.CrossoverCallback          option
+            disjunctiveCut      : Cplex.DisjunctiveCutCallback     option
+            disjunctiveCutInfo  : Cplex.DisjunctiveCutInfoCallback option
+            flowMIRCut          : Cplex.FlowMIRCutCallback         option
+            flowMIRCutInfo      : Cplex.FlowMIRCutInfoCallback     option
+            fractionalCut       : Cplex.FractionalCutCallback      option
+            fractionalCutInfo   : Cplex.FractionalCutInfoCallback  option
+            heuristic           : Cplex.HeuristicCallback          option
+            incumbent           : Cplex.IncumbentCallback          option
+            lazyConstraint      : Cplex.LazyConstraintCallback     option
+            mip                 : Cplex.MIPCallback                option
+            mipInfo             : Cplex.MIPInfoCallback            option
+            network             : Cplex.NetworkCallback            option
+            node                : Cplex.NodeCallback               option
+            presolve            : Cplex.PresolveCallback           option
+            probing             : Cplex.ProbingCallback            option
+            probingInfo         : Cplex.ProbingInfoCallback        option
+            simplex             : Cplex.SimplexCallback            option
+            solve               : Cplex.SolveCallback              option
+            tuning              : Cplex.TuningCallback             option
+            userCut             : Cplex.UserCutCallback            option
+        }
+        member x.AsCallbacks =
+            [|
+                x.barrier             |> Option.map (fun c -> c :> Cplex.Callback)
+                x.branch              |> Option.map (fun c -> c :> Cplex.Callback)
+                x.continuous          |> Option.map (fun c -> c :> Cplex.Callback)
+                x.control             |> Option.map (fun c -> c :> Cplex.Callback)
+                x.crossover           |> Option.map (fun c -> c :> Cplex.Callback)
+                x.disjunctiveCut      |> Option.map (fun c -> c :> Cplex.Callback)
+                x.disjunctiveCutInfo  |> Option.map (fun c -> c :> Cplex.Callback)
+                x.flowMIRCut          |> Option.map (fun c -> c :> Cplex.Callback)
+                x.flowMIRCutInfo      |> Option.map (fun c -> c :> Cplex.Callback)
+                x.fractionalCut       |> Option.map (fun c -> c :> Cplex.Callback)
+                x.fractionalCutInfo   |> Option.map (fun c -> c :> Cplex.Callback)
+                x.heuristic           |> Option.map (fun c -> c :> Cplex.Callback)
+                x.incumbent           |> Option.map (fun c -> c :> Cplex.Callback)
+                x.lazyConstraint      |> Option.map (fun c -> c :> Cplex.Callback)
+                x.mip                 |> Option.map (fun c -> c :> Cplex.Callback)
+                x.mipInfo             |> Option.map (fun c -> c :> Cplex.Callback)
+                x.network             |> Option.map (fun c -> c :> Cplex.Callback)
+                x.node                |> Option.map (fun c -> c :> Cplex.Callback)
+                x.presolve            |> Option.map (fun c -> c :> Cplex.Callback)
+                x.probing             |> Option.map (fun c -> c :> Cplex.Callback)
+                x.probingInfo         |> Option.map (fun c -> c :> Cplex.Callback)
+                x.simplex             |> Option.map (fun c -> c :> Cplex.Callback)
+                x.solve               |> Option.map (fun c -> c :> Cplex.Callback)
+                x.tuning              |> Option.map (fun c -> c :> Cplex.Callback)
+                x.userCut             |> Option.map (fun c -> c :> Cplex.Callback)
+            |] |> Seq.choose id
+        static member empty = 
+            {
+                barrier             = None
+                branch              = None
+                continuous          = None
+                control             = None
+                crossover           = None
+                disjunctiveCut      = None
+                disjunctiveCutInfo  = None
+                flowMIRCut          = None
+                flowMIRCutInfo      = None
+                fractionalCut       = None
+                fractionalCutInfo   = None
+                heuristic           = None
+                incumbent           = None
+                lazyConstraint      = None
+                mip                 = None
+                mipInfo             = None
+                network             = None
+                node                = None
+                presolve            = None
+                probing             = None
+                probingInfo         = None
+                simplex             = None
+                solve               = None
+                tuning              = None
+                userCut             = None
+            }
+        static member withBarrier             (callback: Cplex.BarrierCallback           ) state = { state with barrier            = Some callback }
+        static member withBranch              (callback: Cplex.BranchCallback            ) state = { state with branch             = Some callback }
+        static member withContinuous          (callback: Cplex.ContinuousCallback        ) state = { state with continuous         = Some callback }
+        static member withControl             (callback: Cplex.ControlCallback           ) state = { state with control            = Some callback }
+        static member withCrossover           (callback: Cplex.CrossoverCallback         ) state = { state with crossover          = Some callback }
+        static member withDisjunctiveCut      (callback: Cplex.DisjunctiveCutCallback    ) state = { state with disjunctiveCut     = Some callback }
+        static member withDisjunctiveCutInfo  (callback: Cplex.DisjunctiveCutInfoCallback) state = { state with disjunctiveCutInfo = Some callback }
+        static member withFlowMIRCut          (callback: Cplex.FlowMIRCutCallback        ) state = { state with flowMIRCut         = Some callback }
+        static member withFlowMIRCutInfo      (callback: Cplex.FlowMIRCutInfoCallback    ) state = { state with flowMIRCutInfo     = Some callback }
+        static member withFractionalCut       (callback: Cplex.FractionalCutCallback     ) state = { state with fractionalCut      = Some callback }
+        static member withFractionalCutInfo   (callback: Cplex.FractionalCutInfoCallback ) state = { state with fractionalCutInfo  = Some callback }
+        static member withHeuristic           (callback: Cplex.HeuristicCallback         ) state = { state with heuristic          = Some callback }
+        static member withIncumbent           (callback: Cplex.IncumbentCallback         ) state = { state with incumbent          = Some callback }
+        static member withLazyConstraint      (callback: Cplex.LazyConstraintCallback    ) state = { state with lazyConstraint     = Some callback }
+        static member withMip                 (callback: Cplex.MIPCallback               ) state = { state with mip                = Some callback }
+        static member withMipInfo             (callback: Cplex.MIPInfoCallback           ) state = { state with mipInfo            = Some callback }
+        static member withNetwork             (callback: Cplex.NetworkCallback           ) state = { state with network            = Some callback }
+        static member withNode                (callback: Cplex.NodeCallback              ) state = { state with node               = Some callback }
+        static member withPresolve            (callback: Cplex.PresolveCallback          ) state = { state with presolve           = Some callback }
+        static member withProbing             (callback: Cplex.ProbingCallback           ) state = { state with probing            = Some callback }
+        static member withProbingInfo         (callback: Cplex.ProbingInfoCallback       ) state = { state with probingInfo        = Some callback }
+        static member withSimplex             (callback: Cplex.SimplexCallback           ) state = { state with simplex            = Some callback }
+        static member withSolve               (callback: Cplex.SolveCallback             ) state = { state with solve              = Some callback }
+        static member withTuning              (callback: Cplex.TuningCallback            ) state = { state with tuning             = Some callback }
+        static member withUserCut             (callback: Cplex.UserCutCallback           ) state = { state with userCut            = Some callback }
+
+
+namespace Flips.Solver.Cplex.V0
+
+open Flips.Solver.Cplex.Internals.CplexSolver
+open Flips.Solver.Cplex.Internals
+open Flips.Solver.Cplex.Internals.Callbacks
+
+type CplexSolver =
+
+    static member solve(model:Flips.Types.Model) = 
+        let state = ICplexSolverState.create ()
+        Primitives.solve model state
+    
+    static member solve(model:Flips.Types.Model, callbacks: ILOG.CPLEX.Cplex.Callback seq) = 
+        let state = ICplexSolverState.create ()
+        Primitives.runSolverWithCallbacks model state callbacks
+
+    static member solve(model:Flips.Types.Model, options, callbacks: ILOG.CPLEX.Cplex.Callback seq) = 
+        let state = ICplexSolverState.create ()
+        let state = options |> Seq.fold (fun state o -> ICplexSolverState.setOption o state) state
+        Primitives.runSolverWithCallbacks model state callbacks
+
+    static member solve(model:Flips.Types.Model, options, callbacks: CallbacksOption) = 
+        let state = ICplexSolverState.create ()
+        let state = options |> Seq.fold (fun state o -> ICplexSolverState.setOption o state) state
+        Primitives.runSolverWithCallbacks model state callbacks.AsCallbacks

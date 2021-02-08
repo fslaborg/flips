@@ -109,6 +109,17 @@ module rec Extensions =
                   yield! rhs.GetDecisions()            
           }
 
+  type Flips.Types.Objective with
+      static member evaluate (solution: Flips.Solver.ISolution) (objective: Flips.Types.Objective) =
+          objective.Expression
+          |> Flips.Types.LinearExpression.Evaluate solution.Values
+
+  type Flips.UnitsOfMeasure.Types.Objective<[<Measure>]'Measure> with
+      static member evaluate (solution: Flips.Solver.ISolution) (Flips.UnitsOfMeasure.Types.Objective.Value objective: Flips.UnitsOfMeasure.Types.Objective<'Measure>) =
+          objective.Expression
+          |> Flips.Types.LinearExpression.Evaluate solution.Values
+          |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
+
   type Printer =
     static member print (expr: Flips.Types.Objective) =
       let t =
@@ -117,7 +128,7 @@ module rec Extensions =
         | ObjectiveSense.Minimize -> "min"
       $"{t} {expr.Name.AsString} such as: {Printer.print expr.Expression}"
 
-    static member printWithLiterals (expr: Flips.Types.Constraint) (values:IReadOnlyDictionary<_,_>) =
+    static member printWithLiterals (values:IReadOnlyDictionary<_,_>) (expr: Flips.Types.Constraint) =
       let d = 
         [for d in expr.Expression.GetDecisions() do 
           d.Name, d] |> dict
