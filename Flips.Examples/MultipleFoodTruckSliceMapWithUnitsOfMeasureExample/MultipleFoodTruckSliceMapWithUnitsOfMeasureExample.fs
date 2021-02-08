@@ -19,7 +19,9 @@ let solve settings =
     match result with
     | Optimal solution ->
         printfn "Objective Value: %f" (Objective.evaluate solution objective)
-
+        
+        CsvExport.exportVariablesToFile "foodtruck.party.slicemap.uom" solution.DecisionResults CsvExport.csvConfig
+        
         let values = Solution.getValues solution numberOfItem
 
         for ((location, item), value) in values |> Map.toSeq do

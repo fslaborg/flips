@@ -1,27 +1,54 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <Platforms>AnyCPU;x64</Platforms>
-      <UseFlipsSolverCplex>false</UseFlipsSolverCplex>
-      <UseFlipsSolverLegacy>true</UseFlipsSolverLegacy>
-      <UseFlipsSolverCbc>true</UseFlipsSolverCbc>
-  </PropertyGroup>
-    
-  <PropertyGroup Condition="'$(UseFlipsSolverCplex)' == 'true'">
-      <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_CPLEX</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(UseFlipsSolverCbc)' == 'true'">
-      <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_CBC</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(UseFlipsSolverLegacy)' == 'true'">
-      <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_LEGACY</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+        <Platforms>AnyCPU;x64</Platforms>
+        <UseFlipsSolverCplex>false</UseFlipsSolverCplex>
+        <UseFlipsSolverLegacy>true</UseFlipsSolverLegacy>
+        <UseFlipsSolverCbc>true</UseFlipsSolverCbc>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(UseFlipsSolverCplex)' == 'true'">
+        <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_CPLEX</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UseFlipsSolverCbc)' == 'true'">
+        <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_CBC</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UseFlipsSolverLegacy)' == 'true'">
+        <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_LEGACY</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <Optimize>false</Optimize>
+        <Tailcalls>false</Tailcalls>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="CsvExport.fs" />
+        <!--<Compile Include="Solver.CBC\CoffeeRoastingExample.fs" />
+    <Compile Include="MultiObjective\MultiObjectiveExample.fs" />
+    <Compile Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
+    <Compile Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />
+    <Compile Include="SimpleExample\SimpleExample.fs" />
+    <Compile Include="FoodTruckExample\FoodTruckExample.fs" />
+    <Compile Include="FoodTruckMapExample\FoodTruckMapExample.fs" />
+    <Compile Include="FoodTruckConstraintBuilderExample\FoodTruckConstraintBuilderExample.fs" />
+    <Compile Include="MapSlicingExample\MapSlicingExample.fs" />
+    <Compile Include="MultipleFoodTrackExample\MultipleFoodTruckExample.fs" />
+    <Compile Include="MultipleFoodTruckSliceMapExample\MultipleFoodTruckSliceMapExample.fs" />
+    <Compile Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
+    <Compile Include="CoffeeRoastingExample\CoffeeRoastingExample.fs" />
+    <Compile Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />-->
+    </ItemGroup>
+    <PropertyGroup Condition="'$(UseFlipsSolverCbc)' == 'true'">
+        <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_CBC</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UseFlipsSolverLegacy)' == 'true'">
+        <DefineConstants>$(DefineConstants);USE_FLIPS_SOLVER_LEGACY</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <Optimize>false</Optimize>
+        <Tailcalls>false</Tailcalls>
+    </PropertyGroup>
     <ItemGroup Condition="'$(UseFlipsSolverCplex)' == 'true'">
         <None Include="..\thirdparties\ilog.cplex\bin\x64\cplex121.dll" Link="cplex121.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -31,31 +58,32 @@
         </None>
     </ItemGroup>
     <ItemGroup>
-    <Compile Include="SampleProblems.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="Solver.CBC\CoffeeRoastingExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverCplex)' == 'true'" Include="Solver.Cplex\Cplex.Samples.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultiObjective\MultiObjectiveExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="SimpleExample\SimpleExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckExample\FoodTruckExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckMapExample\FoodTruckMapExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckConstraintBuilderExample\FoodTruckConstraintBuilderExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MapSlicingExample\MapSlicingExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTrackExample\MultipleFoodTruckExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTruckSliceMapExample\MultipleFoodTruckSliceMapExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="CoffeeRoastingExample\CoffeeRoastingExample.fs" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
-    
-    <None Include="StocksExample\README.md" />
-    <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="StocksExample\StocksExample.fs" />
-    <Compile Include="Program.fs" />
-    <None Include="paket.references" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="SliceMap" Version="0.0.2" />
-  </ItemGroup>
+        <Compile Include="SampleProblems.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="Solver.CBC\CoffeeRoastingExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverCplex)' == 'true'" Include="Solver.Cplex\Cplex.Samples.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultiObjective\MultiObjectiveExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckUnitsOfMeasureExample\FoodTruckUnitsOfMeasureExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="SimpleExample\SimpleExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckExample\FoodTruckExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckMapExample\FoodTruckMapExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckConstraintBuilderExample\FoodTruckConstraintBuilderExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MapSlicingExample\MapSlicingExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTrackExample\MultipleFoodTruckExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTruckSliceMapExample\MultipleFoodTruckSliceMapExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultipleFoodTruckSliceMapWithUnitsOfMeasureExample\MultipleFoodTruckSliceMapWithUnitsOfMeasureExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="CoffeeRoastingExample\CoffeeRoastingExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="BinaryProgrammingExample\BinaryProgrammingExample.fs" />
+
+        <None Include="StocksExample\README.md" />
+        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="StocksExample\StocksExample.fs" />
+        <Compile Include="Program.fs" />
+        <None Include="paket.references" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="19.0.0" />
+        <PackageReference Include="SliceMap" Version="0.0.2" />
+    </ItemGroup>
     <ItemGroup Condition="'$(UseFlipsSolverCplex)' == 'true'">
         <Reference Include="ILOG.Concert">
             <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.Concert.dll</HintPath>
@@ -63,16 +91,16 @@
         <Reference Include="ILOG.CPLEX">
             <HintPath>..\thirdparties\ilog.cplex\bin\x64\ILOG.CPLEX.dll</HintPath>
         </Reference>
-    </ItemGroup>    
+    </ItemGroup>
     <ItemGroup>
         <ProjectReference Condition="'$(UseFlipsSolverCbc)' == 'true'" Include="..\Flips.Solver.CBC\Flips.Solver.CBC.fsproj" />
         <ProjectReference Condition="'$(UseFlipsSolverCplex)' == 'true'" Include="..\Flips.Solver.Cplex\Flips.Solver.Cplex.fsproj" />
         <ProjectReference Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="..\Flips.Solver.Legacy\Flips.Solver.Legacy.fsproj" />
         <ProjectReference Include="..\Flips.Solver\Flips.Solver.fsproj" />
         <ProjectReference Include="..\Flips\Flips.fsproj" />
-    </ItemGroup>    
-    <ItemGroup>
-      <Folder Include="Solver.CBC\" />
     </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+    <ItemGroup>
+        <Folder Include="Solver.CBC\" />
+    </ItemGroup>
+    <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -2,39 +2,23 @@
 
 open Flips
 open Flips.Solver
-open System.Collections.Generic
 
 
 [<RequireQualifiedAccess>]
 module LinearExpression =
 
-    let evaluate (solution: ISolution) (expr: LinearExpression) : float =
+    let evaluate (solution: #ISolution) (expr: #ILinearExpression) : float =
 
-        let decisions = solution.Values
+        let mutable acc = FSharp.Core.LanguagePrimitives.GenericZero
 
-        let rec evaluateNode (multiplier: float, state: ResizeArray<float>) (node: LinearExpression) cont =
-            match node with
-            | Empty -> cont (multiplier, state)
-            | AddFloat (f, nodeExpr) ->
-                state.Add(multiplier * f)
-                let newState = (multiplier, state) 
-                evaluateNode newState nodeExpr cont
-            | AddDecision ((nodeCoef, nodeDecision), nodeExpr) ->
-                state.Add(multiplier * nodeCoef * decisions.[nodeDecision])
-                let newState = (multiplier, state)
-                evaluateNode newState nodeExpr cont
-            | Multiply (nodeMultiplier, nodeExpr) ->
-                let newState = (multiplier * nodeMultiplier, state)
-                evaluateNode newState nodeExpr cont
-            | AddLinearExpression (lExpr, rExpr) ->
-                evaluateNode (multiplier, state) lExpr (fun l -> evaluateNode l rExpr cont)
-          
+        for elem in expr.Terms do
+            match elem with
+            | Constant c -> 
+                acc <- acc + c
+            | LinearElement (c, d) -> 
+                acc <- acc + (c * solution.Values.[d])
 
-        let (_, reduceResult) = evaluateNode (1.0, ResizeArray()) expr (fun x -> x)
-
-        reduceResult.Sort(SignInsenstiveComparer())
-        let total = Seq.sum reduceResult
-        total
+        acc
 
 
 [<RequireQualifiedAccess>]
@@ -44,5 +28,22 @@ module Objective =
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: ISolution) (objective: Objective) =
+    let evaluate (solution: #ISolution) (objective: #IObjective) =
         LinearExpression.evaluate solution objective.Expression
+
+
+[<RequireQualifiedAccess>]
+module Solution =
+
+    /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
+    /// <param name="solution">The solution that is used to look up the solver values</param>
+    /// <param name="decisions">An IDictionary<'Key, Decision<'Measure>> that will be used for the lookups</param>
+    /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>
+    let getValues (solution: #ISolution) (decisions: #System.Collections.Generic.IDictionary<_, #IDecision>) =
+        let getWithDefault (d: #IDecision) =
+            match solution.Values.TryGetValue d with
+            | true, v -> v
+            | false, _ -> 0.0
+
+        seq { for KeyValue (key, value) in decisions -> key, getWithDefault value }
+        |> Map

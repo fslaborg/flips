@@ -10,7 +10,7 @@ module Decision =
     /// <remarks>This function is here for completeness. It is recommend to use the functions for the specific decision types.</remarks>
     /// <typeparam name="'Measure">The Unit of Measure for the Decision</typeparam>
     /// <param name="decisionName">The unique identifier for the Decision</param>
-    /// <param name="decitionType">The type of the decision</param>
+    /// <param name="decisionType">The type of the decision</param>
     /// <returns>A new Decision with the given DecisionType</returns>
     let create<[<Measure>] 'Measure> decisionName decisionType =
         let d = Decision.create decisionName decisionType
@@ -60,16 +60,6 @@ module Objective =
     let create objectiveName sense (LinearExpression.Value expr: LinearExpression<'Measure>) =
         let objective = Objective.create objectiveName sense expr
         Objective<'Measure>.Value objective
-#if HAS_SOLUTION_TYPE
-    /// <summary>A function for evaluating the resulting value of an Objective after solving</summary>
-    /// <param name="solution">The solution used for looking up the results of Decisions</param>
-    /// <param name="objective">The Objective to evaluate the resulting value for</param>
-    /// <returns>A float<'Measure> which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Types.Solution) (Objective.Value objective: Objective<'Measure>) =
-        objective.Expression
-        |> Flips.Types.LinearExpression.Evaluate solution.DecisionResults
-        |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
-#endif
 
 
 [<RequireQualifiedAccess>]
@@ -87,45 +77,24 @@ module Model =
 
     /// <summary>Add an Objective to a Model</summary>
     /// <param name="objective">The objective to be added to the model</param>
+    /// <param name="model">The model to which the objective will be added</param>
     /// <returns>A new Model with the Objective added</returns>
     let addObjective (Objective.Value objective) model : Flips.Types.Model =
 
         { model with Objectives = [objective] @ model.Objectives }
 
-#if HAS_SOLUTION_TYPE
-[<RequireQualifiedAccess>]
-module Solution =
-
-    /// <summary>A function for taking the initial set of Decisions and returning the values the solver found</summary>
-    /// <param name="solution">The solution that is used to look up the solver values</param>
-    /// <param name="decisions">An IDictionary<'Key, Decision<'Measure>> that will be used for the lookups</param>
-    /// <returns>A new Map<'Key,float<'Mesure>> where the values are the recommendations from the solver</returns>
-    let getValues (s: Types.Solution) (decisions: System.Collections.Generic.IDictionary<_,Decision<'Measure>>) =
-        let getWithDefault (Decision.Value d: Decision<'Measure>) =
-            match Map.tryFind d s.DecisionResults with
-            | Some v -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> v
-            | None -> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure> 0.0
-
-        seq { for kvp in decisions -> kvp.Key, getWithDefault kvp.Value}
-        |> Map.ofSeq
-
-    /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
-    /// <param name="solution">The solution used for lookup up the results of Decisions</param>
-    /// <param name="expression">The LinearExpression with a Unit of Measure to evaluate the resulting value for</param>
-    /// <returns>A float with a Unit of Measure which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Types.Solution) (LinearExpression.Value expression: LinearExpression<'Measure>) =
-        Flips.Types.LinearExpression.Evaluate solution.DecisionResults expression
-        |> FSharp.Core.LanguagePrimitives.FloatWithMeasure<'Measure>
-#endif
 
 [<AutoOpen>]
 module Builders =
 
-    /// <summary>A Computation Expression for creating tuples of type ('Key * Decision<'Measure>)</summary>
+    /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * <c>Decision</c>&lt;<typeparamref name="'Measure" />&gt;)</summary>
     /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
-    /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
-    /// <returns>A seq of type ('Key * Decision<'Measure>). The result is typically used to create a Map or SliceMap</returns>
-    type DecisionBuilder<[<Measure>] 'Measure> (decisionSetPrefix: string) =
+    type DecisionBuilder<[<Measure>] 'Measure>
+        /// <summary>A Computation Expression for creating tuples of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;)</summary>
+        /// <typeparam name="'Measure">The Unit of Measure for the Decisions</typeparam>
+        /// <param name="decisionSetPrefix">The prefix used for naming the Decisions</param>
+        /// <returns>A seq of type (<typeparamref name="'Key"/> * Decision&lt;<typeparamref name="'Measure" />&gt;). The result is typically used to create a Map or SliceMap</returns>
+        (decisionSetPrefix:string) =
 
         let createDecision indices decisionType =
             let name = namer decisionSetPrefix indices
@@ -199,8 +168,17 @@ module Sum =
 
     open SliceMap
 
-    /// <summary>A function which sums the values contained in a SliceMap</summary>
-    /// <param name="x">An instance of ISliceData</param>
-    /// <returns>A LinearExpression with a Unit of Measure</returns>
-    let inline sum (x: ISliceData<'Key, 'Value>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
-        SliceMap.TryFind.sum x.Keys x.TryFind
+    [<AutoOpen>]
+    type Summer () =
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, Flips.UnitsOfMeasure.Types.Decision<_>>) : Flips.UnitsOfMeasure.Types.LinearExpression<_> =
+            TryFind.sum x.Keys x.TryFind
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, Flips.UnitsOfMeasure.Types.LinearExpression<_>>) =
+            TryFind.sum x.Keys x.TryFind
+
+        /// A function for summing the contents of a SliceMap
+        static member sum(x:ISliceData<'Key, float<_>>) : float<_> =
+            TryFind.sum x.Keys x.TryFind

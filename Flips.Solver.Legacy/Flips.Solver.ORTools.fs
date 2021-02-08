@@ -5,108 +5,115 @@ open System.Collections.Generic
 open Flips
 open Flips.Types
 open Flips.Legacy.Internals
+open Flips.Solver
 
 module ORTools =
     open Google.OrTools.LinearSolver
     
+    [<RequireQualifiedAccess>]
+    type Inequality =
+        | LessOrEqual
+        | GreaterOrEqual
 
     type internal OrToolsSolverType =
         | CBC
         | GLOP
 
-    let private createVariable (solver:Solver) (DecisionName name:DecisionName) (decisionType:DecisionType) =
-        match decisionType with
-        | Boolean -> solver.MakeBoolVar(name)
-        | Integer (lb, ub) -> solver.MakeIntVar(float lb, float ub, name)
-        | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, name)
+    let private createVariable (solver:Solver) (decision: #IDecision) =
+        match decision.Type with
+        | Boolean -> solver.MakeBoolVar(decision.Name)
+        | Integer (lb, ub) -> solver.MakeIntVar(float lb, float ub, decision.Name)
+        | Continuous (lb, ub) -> solver.MakeNumVar(float lb, float ub, decision.Name)
 
 
-    let addVariable (solver:Solver) decisionName (decisionType:DecisionType) (vars:Dictionary<DecisionName, Variable>) =
-        if not (vars.ContainsKey(decisionName)) then
-            let var = createVariable solver decisionName decisionType
-            vars.[decisionName] <- var
+    let addVariable (solver:Solver) (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (decision: #IDecision) =
+        if not (vars.ContainsKey(decision.Name)) then
+            let var = createVariable solver decision
+            decisions.[decision.Name] <- decision
+            vars.[decision.Name] <- var
 
-    let private buildExpression solver (vars:Dictionary<DecisionName,Variable>) (expr:LinearExpression) =
-        let reducedExpr = Flips.Types.LinearExpression.Reduce expr
+    let private buildExpression solver (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (expr: #ILinearExpression) =
+        let mutable exprAccumulator = LinearExpr()
 
-        let decisionExpr =
-            reducedExpr.Coefficients
-            |> Seq.map (fun kvp ->
-                          addVariable solver kvp.Key reducedExpr.DecisionTypes.[kvp.Key] vars
-                          kvp.Value * vars.[kvp.Key])
-            |> Array.ofSeq
+        for term in expr.Terms do
+            match term with
+            | Constant constant ->
+                exprAccumulator <- exprAccumulator + constant
+            | LinearElement (coefficient, decision) ->
+                addVariable solver decisions vars decision
+                exprAccumulator <- exprAccumulator + (coefficient * vars.[decision.Name])
 
-        let offsetExpr = LinearExpr() + reducedExpr.Offset
-        let resultExpr = decisionExpr.Sum() + offsetExpr
-        resultExpr
+        exprAccumulator
 
 
-    let private setObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
-        let expr = buildExpression solver vars objective.Expression
+    let private setObjective (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (solver: Solver) =
+        let expr = buildExpression solver decisions vars objective.Expression
 
         match objective.Sense with
         | Minimize -> solver.Minimize(expr)
         | Maximize -> solver.Maximize(expr)
 
 
-    let private addEqualityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (solver:Solver) =
-        let lhsExpr = buildExpression solver vars lhs
-        let rhsExpr = buildExpression solver vars rhs
+    let private addEqualityConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (constraintName:string) (lhs: #ILinearExpression) (rhs: #ILinearExpression) (solver:Solver) =
+        let lhsExpr = buildExpression solver decisions vars lhs
+        let rhsExpr = buildExpression solver decisions vars rhs
         // note: this is work around for
         // https://github.com/google/or-tools/issues/2231
         // https://github.com/matthewcrews/flips/issues/104
         let dictionary = new Dictionary<_, _>()
         let mutable num = lhsExpr.Visit(dictionary)
         num <- num + rhsExpr.DoVisit(dictionary, -1.0)
-        let c = solver.MakeConstraint(0.0 - num, 0.0 - num, n)
+        let c = solver.MakeConstraint(0.0 - num, 0.0 - num, constraintName)
         for item in dictionary do
             c.SetCoefficient(item.Key, item.Value)
 
 
-    let private addInequalityConstraint (vars:Dictionary<DecisionName, Variable>) (ConstraintName n:ConstraintName) (lhs:LinearExpression) (rhs:LinearExpression) (inequality:Inequality) (solver:Solver) =
-        let lhsExpr = buildExpression solver vars lhs
-        let rhsExpr = buildExpression solver vars rhs
+    let private addInequalityConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (constraintName: string) (lhs: #ILinearExpression) (rhs: #ILinearExpression) (inequality: Inequality) (solver:Solver) =
+        let lhsExpr = buildExpression solver decisions vars lhs
+        let rhsExpr = buildExpression solver decisions vars rhs
         let constraintExpr = lhsExpr - rhsExpr
         
         let lb, ub =
             match inequality with
-            | LessOrEqual -> System.Double.NegativeInfinity, 0.0
-            | GreaterOrEqual -> 0.0, System.Double.PositiveInfinity
+            | Inequality.LessOrEqual -> System.Double.NegativeInfinity, 0.0
+            | Inequality.GreaterOrEqual -> 0.0, System.Double.PositiveInfinity
 
         // note: this is work around for
         // https://github.com/google/or-tools/issues/2231
         // https://github.com/matthewcrews/flips/issues/104
         let dictionary = new Dictionary<_, _>()
         let num = constraintExpr.Visit(dictionary)
-        let c = solver.MakeConstraint(lb - num, ub - num, n)
+        let c = solver.MakeConstraint(lb - num, ub - num, constraintName)
         for item in dictionary do
             c.SetCoefficient(item.Key, item.Value)
 
 
-    let private addConstraint (vars:Dictionary<DecisionName, Variable>) (c:Types.Constraint) (solver:Solver) =
-        match c.Expression with
-        | Equality (lhs, rhs) -> addEqualityConstraint vars c.Name lhs rhs solver
-        | Inequality (lhs, inequality, rhs) -> addInequalityConstraint vars c.Name lhs rhs inequality solver
+    let private addConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (c: #IConstraint) (solver:Solver) =
+        match c.Relationship with
+        | Equal -> addEqualityConstraint decisions vars c.Name c.LHSExpression c.RHSExpression solver
+        | LessOrEqual -> addInequalityConstraint decisions vars c.Name c.LHSExpression c.RHSExpression Inequality.LessOrEqual solver
+        | GreaterOrEqual -> addInequalityConstraint decisions vars c.Name c.LHSExpression c.RHSExpression Inequality.GreaterOrEqual solver
 
 
-    let private addConstraints (varMap:Dictionary<DecisionName, Variable>) (constraints:FSharp.Collections.List<Types.Constraint>) (solver:Solver) =
+    let private addConstraints (decisions: Dictionary<string, _>) (varMap: Dictionary<string, Variable>) (constraints: #IConstraint list) (solver:Solver) =
         for c in constraints do
-            addConstraint varMap c solver |> ignore
+            addConstraint decisions varMap c solver |> ignore
 
 
-    let private buildSolution (decisions:seq<Decision>) (vars:Dictionary<DecisionName, Variable>) (solver:Solver) (objective:Types.Objective) =
-        
+    let private buildSolution (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (solver:Solver) (objective: #IObjective) =
+
         let decisionMap =
             decisions
-            |> Seq.map (fun d ->
-                            match Dictionary.tryFind d.Name vars with
-                            | Some (var: Variable) -> d, var.SolutionValue()
-                            | None -> d, 0.0)
-            |> Map.ofSeq
+            |> Seq.map (fun (KeyValue(decisionName, decision)) -> decision, match Dictionary.tryFind decisionName vars with | Some v -> v.SolutionValue() | None -> 0.0)
+            |> Map
+
+        let solution =
+            { new ISolution with
+                member _.Values = decisionMap :> IReadOnlyDictionary<IDecision, float> }
 
         {
-            Flips.Legacy.Types.Solution.DecisionResults = decisionMap
-            Flips.Legacy.Types.Solution.ObjectiveResult = Flips.Types.LinearExpression.Evaluate decisionMap objective.Expression
+            DecisionResults = decisionMap
+            ObjectiveResult = LinearExpression.evaluate solution objective.Expression
         }
 
 
@@ -120,8 +127,8 @@ module ORTools =
         System.IO.File.WriteAllText(filePath, lpFile)
 
 
-    let internal solveForObjective (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (solver:Solver) =
-        setObjective vars objective solver
+    let internal solveForObjective (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (solver: Solver) =
+        setObjective decisions vars objective solver
 
         let resultStatus = solver.Solve()
 
@@ -132,34 +139,31 @@ module ORTools =
             Result.Error resultStatus
 
 
-
-    let internal addObjectiveAsConstraint (vars:Dictionary<DecisionName, Variable>) (objective:Flips.Types.Objective) (objectiveValue:float) (solver:Solver) =
-        let objectiveAsConstraint =
-            let (ObjectiveName name) = objective.Name
-            match objective.Sense with
-            | Maximize ->
-                Constraint.create name (objective.Expression >== objectiveValue)
-            | Minimize ->
-                Constraint.create name (objective.Expression <== objectiveValue)
-
+    let internal addObjectiveAsConstraint (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (objectiveValue: float) (solver: Solver) =
+        let rhs = LinearExpression.OfFloat objectiveValue
+        match objective.Sense with
+        | Maximize ->
+            addInequalityConstraint decisions vars objective.Name objective.Expression rhs Inequality.GreaterOrEqual solver
+        | Minimize ->
+            addInequalityConstraint decisions vars objective.Name objective.Expression rhs Inequality.LessOrEqual solver
+        
         // The underlying API is mutable :/
-        addConstraint vars objectiveAsConstraint solver |> ignore
         solver
 
-    let rec internal solveForObjectives (vars:Dictionary<DecisionName, Variable>) (objectives:Flips.Types.Objective list) (solver:Solver) =
+    let rec internal solveForObjectives (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (objectives: #IObjective list) (solver: Solver) =
 
         match objectives with
         | [] ->
             failwith "Model without Objective" // Argument should be a special type
         | objective :: [] ->
-            solveForObjective vars objective solver
+            solveForObjective decisions vars objective solver
         | objective :: remaining ->
-            solveForObjective vars objective solver
-            |> Result.map (fun (solver,_) -> addObjectiveAsConstraint vars objective (solver.Objective().BestBound()) solver)
-            |> Result.bind (solveForObjectives vars remaining)
+            solveForObjective decisions vars objective solver
+            |> Result.map (fun (solver,_) -> addObjectiveAsConstraint decisions vars objective (solver.Objective().BestBound()) solver)
+            |> Result.bind (solveForObjectives decisions vars remaining)
 
 
-    let internal solve (solverType:OrToolsSolverType) (settings:SolverSettings) (model:Flips.Types.Model) =
+    let internal solve (solverType:OrToolsSolverType) (settings: SolverSettings) (model:Flips.Types.Model) =
 
         let solver =
             match solverType with
@@ -175,18 +179,19 @@ module ORTools =
         //    solver.SuppressOutput()
 
         let vars = Dictionary()
-        addConstraints vars model.Constraints solver
+        let decisions = Dictionary()
+        addConstraints decisions vars model.Constraints solver
         
         model.Objectives
         |> List.tryHead 
         |> Option.iter (fun objective -> 
           // Write LP/MPS Formulation to file if requested with first objective
-          setObjective vars objective solver
+          setObjective decisions vars objective solver
           settings.WriteLPFile |> Option.iter (writeLPFile solver)
           settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
         )
 
-        let result = solveForObjectives vars (List.rev model.Objectives) solver
+        let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
 
         match result with
         | Result.Ok (solver,objective) ->
@@ -198,7 +203,7 @@ module ORTools =
               settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
             | [] | [_] | _ -> () 
 
-            buildSolution (Model.getDecisions model) vars solver model.Objectives.[0]
+            buildSolution decisions vars solver model.Objectives.[0]
             |> SolveResult.Optimal 
         | Result.Error errorStatus ->
             match errorStatus with

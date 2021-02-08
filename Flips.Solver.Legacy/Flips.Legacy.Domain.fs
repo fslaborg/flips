@@ -1,7 +1,11 @@
 ﻿namespace Flips.Legacy
 
-open Flips.Types
+open System.Collections.Generic
+open Flips
+open Flips.Solver
 open Flips.Legacy.Types
+open Flips.Legacy.Internals
+
 
 [<RequireQualifiedAccess>]
 module Objective =
@@ -10,8 +14,9 @@ module Objective =
     /// <param name="solution">The solution used for looking up the results of Decisions</param>
     /// <param name="objective">The Objective to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Solution) (objective: Objective) =
-        LinearExpression.Evaluate solution.DecisionResults objective.Expression
+    let evaluate (solution: #ISolution) (objective: #IObjective) =
+        LinearExpression.evaluate solution objective.Expression
+
 
 [<RequireQualifiedAccess>]
 module Solution =
@@ -20,11 +25,11 @@ module Solution =
     /// <param name="solution">The solution that is used to look up the solver values</param>
     /// <param name="decisions">An IDictionary<'Key, Decision> that will be used for the lookups</param>
     /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
-    let getValues (solution: Solution) (decisions: System.Collections.Generic.IDictionary<_,Decision>) =
+    let getValues (solution: #ISolution) (decisions: #System.Collections.Generic.IDictionary<_,#IDecision>) =
         let inline getWithDefault d =
-            match Map.tryFind d solution.DecisionResults with
-            | Some v -> v
-            | None -> 0.0
+            match solution.Values.TryGetValue d with
+            | true, v -> v
+            | fale, _ -> 0.0
 
         seq { for kvp in decisions -> kvp.Key, getWithDefault kvp.Value}
         |> Map.ofSeq
@@ -33,8 +38,9 @@ module Solution =
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Solution) (expression: LinearExpression) =
-        LinearExpression.Evaluate solution.DecisionResults expression
+    let evaluate (solution: ISolution) (expression: ILinearExpression) =
+        LinearExpression.evaluate solution expression
+
 
 [<RequireQualifiedAccess>]
 module Settings =
@@ -92,6 +98,8 @@ namespace Flips.Types
 
 
 open System
+open Flips.Solver
+
 
 [<RequireQualifiedAccess;Obsolete("Use Flips.FlipsVersion2.Solution instead")>]
 module Solution =
@@ -100,14 +108,14 @@ module Solution =
     /// <param name="solution">The solution that is used to look up the solver values</param>
     /// <param name="decisions">An IDictionary<'Key, Decision> that will be used for the lookups</param>
     /// <returns>A new Map<'Key,float> where the values are the recommendations from the solver</returns>
-    let getValues (solution: Solution) (decisions: System.Collections.Generic.IDictionary<_,Decision>) =
+    let getValues (solution: #ISolution) (decisions: #System.Collections.Generic.IDictionary<_,Decision>) =
         Flips.Legacy.Solution.getValues solution decisions
 
     /// <summary>A function for evaluating the resulting value of a LinearExpression after solving the model</summary>
     /// <param name="solution">The solution used for lookup up the results of Decisions</param>
     /// <param name="expression">The LinearExpression to evaluate the resulting value for</param>
     /// <returns>A float which is the simplification of the LinearExpression</returns>
-    let evaluate (solution: Solution) (expression: LinearExpression) =
+    let evaluate (solution: ISolution) (expression: LinearExpression) =
         Flips.Legacy.Solution.evaluate solution expression
 
 

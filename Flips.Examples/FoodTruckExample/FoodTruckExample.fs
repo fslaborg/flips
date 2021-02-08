@@ -18,9 +18,10 @@ let solve settings =
     match result with
     | Optimal solution ->
         printfn "Objective Value: %f" (Objective.evaluate solution objective)
+        
+        CsvExport.exportVariablesToFile "foodtruck" solution.DecisionResults CsvExport.csvConfig
 
         for (decision, value) in solution.DecisionResults |> Map.toSeq do
-            let (DecisionName name) = decision.Name
-            printfn "Decision: %s\tValue: %f" name value
+            printfn "Decision: %s\tValue: %f" decision.Name value
     | errorCase -> 
         printfn "Unable to solve. Error: %A" errorCase

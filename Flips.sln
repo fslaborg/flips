@@ -21,12 +21,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C3221202-C
 		docs\.nojekyll = docs\.nojekyll
 		docs\app.css = docs\app.css
 		docs\CNAME = docs\CNAME
+		docs\solver-samples\cplex.fsx = docs\solver-samples\cplex.fsx
 		docs\index.html = docs\index.html
 		docs\package-lock.json = docs\package-lock.json
 		docs\package.json = docs\package.json
 		docs\README.md = docs\README.md
 		docs\WhatIsOptimization.md = docs\WhatIsOptimization.md
-		docs\solver-samples\cplex.fsx = docs\solver-samples\cplex.fsx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "example-problems", "example-problems", "{4693BB0E-197B-4B9D-9B2B-F25E9FA939DA}"
@@ -82,6 +82,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{5ED4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{4D5C661A-E91C-4B9E-8167-DE8AC931F87C}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dev-release.yml = .github\workflows\dev-release.yml
 		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
 		.github\workflows\secrets.yml = .github\workflows\secrets.yml
 	EndProjectSection
@@ -107,6 +108,7 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Debug|Any CPU.Build.0 = Debug|x64
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Debug|x64.ActiveCfg = Debug|x64
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Debug|x64.Build.0 = Debug|x64
 		{FFE0CCDF-E1F1-47E5-8259-C5E4EE270D76}.Release|Any CPU.ActiveCfg = Release|x64
@@ -138,8 +140,8 @@ Global
 		{AC769337-906E-4D1F-BC98-3CC1341323C4}.Release|x64.Build.0 = Release|Any CPU
 		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Debug|x64.ActiveCfg = Debug|x64
-		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Debug|x64.Build.0 = Debug|x64
+		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Debug|x64.Build.0 = Debug|Any CPU
 		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{39CB6CEF-AA38-4802-A9FD-9FB041E751C8}.Release|x64.ActiveCfg = Release|x64
