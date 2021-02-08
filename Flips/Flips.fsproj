@@ -9,7 +9,7 @@
         <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
         <Copyright>2020</Copyright>
         <PackageProjectUrl></PackageProjectUrl>
-        <RepositoryUrl>https://github.com/matthewcrews/flips</RepositoryUrl>
+        <RepositoryUrl>https://github.com/fslaborg/flips</RepositoryUrl>
         <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -94,11 +94,6 @@
         <Compile Include="UnitsOfMeasure.Domain.fs" />
         <None Include="paket.references" />
         <None Include="paket.template" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Update="Google.OrTools.runtime.win-x64">
-            <NoWarn>NU1701</NoWarn>
-        </PackageReference>
     </ItemGroup>
     <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
