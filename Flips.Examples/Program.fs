@@ -34,14 +34,20 @@ let main argv =
 #endif
 #if USE_FLIPS_SOLVER_CPLEX
     Flips.Examples.Cplex.Samples.runFoodTruckExample ()
-    Flips.Examples.Cplex.Samples.runBinaryProgrammingExample ()
-    Flips.Examples.Cplex.Samples.runFoodTruckConstraintBuilderExample ()
-    Flips.Examples.Cplex.Samples.runFoodTruckUnitsOfMeasureExample ()
-    Flips.Examples.Cplex.Samples.runFoodTruckDecisionBuilder ()
     Flips.Examples.Cplex.Samples.runFoodTruckMapExample ()
+    Flips.Examples.Cplex.Samples.runFoodTruckConstraintBuilderExample ()
+    Flips.Examples.Cplex.Samples.runFoodTruckDecisionBuilder ()
+    Flips.Examples.Cplex.Samples.runFoodTruckUnitsOfMeasureExample ()
+    Flips.Examples.Cplex.Samples.runMultipleFoodTruckExample ()
+    Flips.Examples.Cplex.Samples.runMultipleFoodTruckWithSliceMapExample ()
+    Flips.Examples.Cplex.Samples.runMultipleFoodTruckSliceMapWithUnitsOfMeasureExample ()
+    Flips.Examples.Cplex.Samples.runSimpleExample()
     Flips.Examples.Cplex.Samples.runMapSlicingExample ()
-    Flips.Examples.Cplex.Samples.runMultiobjectiveModel ()
+    Flips.Examples.Cplex.Samples.runBinaryProgrammingExample ()
+    Flips.Examples.Cplex.Samples.runStocksExample()
     Flips.Examples.Cplex.Samples.runCoffeeRoastingModel ()
+    Flips.Examples.Cplex.Samples.runMultiobjectiveModel ()
+    
 #endif
     printfn "Press any key to close..."
     Console.ReadKey () |> ignore
