@@ -122,6 +122,8 @@ module FoodTruckExample =
             |> Model.addConstraint maxHotDog
             |> Model.addConstraint maxWeight
         model, objective
+
+
 module FoodTruckMapExample =
 
     let model =
@@ -432,6 +434,68 @@ module MultipleFoodTruckWithSliceMapExample =
         model, objective
 
 
+module MultipleFoodTruckSliceMapWithUnitsOfMeasureExample =
+    open Flips.UnitsOfMeasure
+    
+    type [<Measure>] USD
+    type [<Measure>] Item
+    type [<Measure>] Lb
+    
+    let model =
+
+        // Declare the parameters for our model
+        let items = ["Hamburger"; "HotDog"; "Pizza"]
+        let locations = ["Woodstock"; "Sellwood"; "Portland"]
+        let profit = 
+            [
+                (("Woodstock", "Hamburger"), 1.50<USD/Item>); (("Sellwood", "Hamburger"), 1.40<USD/Item>); (("Portland", "Hamburger"), 1.90<USD/Item>)
+                (("Woodstock", "HotDog"   ), 1.20<USD/Item>); (("Sellwood", "HotDog"   ), 1.50<USD/Item>); (("Portland", "HotDog"   ), 1.80<USD/Item>)
+                (("Woodstock", "Pizza"    ), 2.20<USD/Item>); (("Sellwood", "Pizza"    ), 1.70<USD/Item>); (("Portland", "Pizza"    ), 2.00<USD/Item>)
+            ] |> SMap2.ofList
+
+        let maxIngredients = SMap.ofList [("Hamburger", 900.0<Item>); ("HotDog", 600.0<Item>); ("Pizza", 400.0<Item>)]
+        let itemWeight = SMap.ofList [("Hamburger", 0.5<Lb/Item>); ("HotDog", 0.4<Lb/Item>); ("Pizza", 0.6<Lb/Item>)]
+        let maxTruckWeight = SMap.ofList [("Woodstock", 200.0<Lb>); ("Sellwood", 300.0<Lb>); ("Portland", 280.0<Lb>) ]
+
+        // Create Decisions for each loation and item using a DecisionBuilder
+        // Turn the result into a `SMap2`
+        let numberOfItem =
+            DecisionBuilder<Item> "NumberOf" {
+                for location in locations do
+                for item in items ->
+                    Continuous (0.0<Item>, 1_000_000.0<Item>)
+            } |> SMap2.ofSeq
+
+        // Create the Linear Expression for the objective
+        let objectiveExpression = sum (profit .* numberOfItem)
+
+        // Create an Objective with the name "MaximizeRevenue" the goal of Maximizing
+        // the Objective Expression
+        let objective = Objective.create "MaximizeRevenue" Maximize objectiveExpression
+
+        // Create Total Item Maximum constraints for each item
+        let maxItemConstraints =
+            ConstraintBuilder "MaxItemTotal" {
+                for item in items ->
+                    sum (1.0 * numberOfItem.[All, item]) <== maxIngredients.[item]
+            }
+
+        // Create a Constraints for the Max combined weight of items for each Location
+        let maxWeightConstraints =
+            ConstraintBuilder "MaxTotalWeight" {
+                for location in locations ->
+                    sum (itemWeight .* numberOfItem.[location, All]) <== maxTruckWeight.[location]
+            }
+
+        // Create a Model type and pipe it through the addition of the constraints
+        let model =
+            Model.create objective
+            |> Model.addConstraints maxItemConstraints
+            |> Model.addConstraints maxWeightConstraints
+
+        model, objective, numberOfItem
+
+
 module CoffeeRoastingExample =
     open Flips.UnitsOfMeasure
     
@@ -632,3 +696,99 @@ module BinaryProgrammingExample =
             Model.create objective
             |> Model.addConstraint uniqueConstraint
         model, objective
+
+
+module StocksExample =
+    open System
+    open FSharp.Data
+    open MathNet.Numerics.Statistics 
+    
+    type YahooStocks = CsvProvider<"2020-01-01,1.11,1.22,1.33,1.44,1.55,5666777888", Schema = " Date (date), Open (float), High(float), Low(float), Close(float), Adj Close (float), Volume(int64)">
+    let model =
+        
+        // Raw data preparation (downloaded directly from yahoo using CSV data provider)
+        let getStockReturns (tickers : string list) startDate endDate = 
+            
+            let period1 = DateTimeOffset(startDate).ToUnixTimeSeconds().ToString();
+            let period2 = DateTimeOffset(endDate).ToUnixTimeSeconds().ToString();
+
+            let getUriString ticker = String.Format("https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1mo&events=history", ticker, period1, period2)
+                
+            let stockReturns = 
+                tickers
+                |> Seq.map(fun ticker -> 
+                    let uriString = getUriString ticker 
+                    let prices = YahooStocks.Load(uriString).Cache()
+                    let returns = 
+                        prices.Rows 
+                        |> Seq.sortBy(fun r -> r.Date) 
+                        |> Seq.map(fun r -> r.``Adj Close``) 
+                        |> Seq.pairwise 
+                        |> Seq.map (fun (x1, x2) -> (x2 - x1) / x1)
+                    ticker, returns, Statistics.Mean(returns), returns |> Seq.min )
+            
+            stockReturns
+
+        let getStockData  (tickers : string list) startDate endDate  = 
+            let stockReturns = getStockReturns tickers startDate endDate
+            stockReturns |> Seq.map (fun (ticker, returns, mean, min) -> ticker, mean, min)
+
+
+        // Flips job here...
+        
+        // stocks
+        let items =  ["AAPL"; "ADBE"; "CVX"; "GOOG"; "IBM"; "MDLZ"; "MSFT"; "NFLX"; "ORCL"; "SBUX" ]
+
+        // get initial data directly from finance.yahoo.com using CSV data provider
+        let startDate = DateTime(2005, 1, 1) 
+        let endDate = DateTime(2020, 1, 31) 
+        let stockData = getStockData items startDate endDate   
+
+        let returns = 
+            [for ticker, mean, min in stockData do 
+                ticker, mean] 
+            |> Map.ofList
+        
+        let risks = 
+            [for ticker, mean, min in stockData do 
+                ticker, -min] 
+            |> Map.ofList       
+         
+        // Decision - solver will change this vector to find minimal risk
+        let weights =
+              [for item in items do
+                  item, Decision.createContinuous (sprintf "Portfolio Share: %s" item) 0.0 infinity]
+              |> Map.ofList
+
+        let profits = 
+            [ for item in items do 
+                item, weights.[item] * returns.[item]] 
+            |> Map.ofList           
+
+        // Objective
+        let objectiveExpression = List.sum [for item in items -> weights.[item] * risks.[item]]
+        let objective = Objective.create "MinimizeRisk" Minimize objectiveExpression
+
+        // Max Profit Constraints: at least 2.5%
+        let maxProfitConstraintExpression = List.sum [for item in items -> profits.[item]]
+        let maxProfitConstraint = Constraint.create "MaxProfit" (maxProfitConstraintExpression >== 0.025)
+
+        // Weights sum constraint: weights sum should be equal 100%
+        let weightsSumConstraintExpression = List.sum [for item in items -> weights.[item] * 1.0]
+        let maxWeightConstraint = Constraint.create "WeightSum" (weightsSumConstraintExpression == 1.0)
+
+        // Weights Less than 1 constarint: each weight shuld be <= 100%
+        let weightsLessThan1Constraints =
+            [for item in items ->
+                Constraint.create (sprintf "MaxWeight%s" item) (weights.[item] <== 1.0)]
+
+        // Model
+        let model =
+            Model.create objective
+            |> Model.addConstraint maxProfitConstraint
+            |> Model.addConstraint maxWeightConstraint
+            |> Model.addConstraints weightsLessThan1Constraints
+
+        model, objective
+
+

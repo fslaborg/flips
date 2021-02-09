@@ -3,7 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
-        <Platforms>AnyCPU;x64</Platforms>
+        <Platforms>x64</Platforms>
         <UseFlipsSolverCplex>false</UseFlipsSolverCplex>
         <UseFlipsSolverLegacy>true</UseFlipsSolverLegacy>
         <UseFlipsSolverCbc>true</UseFlipsSolverCbc>
@@ -59,7 +59,7 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="SampleProblems.fs" />
-        <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="Solver.CBC\CoffeeRoastingExample.fs" />
+        <Compile Condition="'$(UseFlipsSolverCBC)' == 'true'" Include="Solver.CBC\CoffeeRoastingExample.fs" />
         <Compile Condition="'$(UseFlipsSolverCplex)' == 'true'" Include="Solver.Cplex\Cplex.Samples.fs" />
         <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="MultiObjective\MultiObjectiveExample.fs" />
         <Compile Condition="'$(UseFlipsSolverLegacy)' == 'true'" Include="FoodTruckDecisionBuilder\FoodTruckDecisionBuilder.fs" />

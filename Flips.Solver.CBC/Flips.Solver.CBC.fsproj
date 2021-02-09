@@ -8,6 +8,11 @@
         <Optimize>false</Optimize>
         <Tailcalls>false</Tailcalls>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>
+        <Optimize>true</Optimize>
+        <Tailcalls>true</Tailcalls>
+    </PropertyGroup>
     <ItemGroup>
         <None Include="paket.references" />
         <Compile Include="Types.fs" />

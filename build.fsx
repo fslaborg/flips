@@ -36,7 +36,7 @@ open System.IO
 let solutionFile = "Flips.sln"
 
 // Github repo
-let repo = "https://github.com/matthewcrews/flips"
+let repo = "https://github.com/fslaborg/flips"
 
 // Read additional information from the release notes document
 let release = ReleaseNotes.load (__SOURCE_DIRECTORY__ @@ "RELEASE_NOTES.md")
