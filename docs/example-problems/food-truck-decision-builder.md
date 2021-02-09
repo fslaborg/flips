@@ -1,7 +1,8 @@
 # Food Truck Decision Builder
 
 ```fsharp
-module Flips.Examples.FoodTruckDecisionBuilder
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
 
 open Flips
 open Flips.Types

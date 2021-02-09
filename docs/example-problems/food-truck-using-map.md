@@ -1,7 +1,8 @@
 # Food Truck Using Map
 
 ```fsharp
-module Flips.Examples.FoodTruckMapExample
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
 
 open Flips
 open Flips.Types
