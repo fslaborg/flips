@@ -61,8 +61,8 @@ module internal ORTools =
         exprAccumulator <- exprAccumulator + (offsets |> Seq.sortBy System.Math.Abs |> Seq.sum)
 
         match objective.Sense with
-        | Minimize -> solver.Minimize(exprAccumulator)
-        | Maximize -> solver.Maximize(exprAccumulator)
+        | Minimize -> solver.Minimize exprAccumulator
+        | Maximize -> solver.Maximize exprAccumulator
 
 
     let private addConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (constraintName: string) (lhs: #ILinearExpression) (rhs: #ILinearExpression) (relationship: Relationship) (solver:Solver) =
@@ -176,6 +176,7 @@ module internal ORTools =
     let internal solve (settings: Settings) (model: #IModel) : Result<Flips.Solver.ISolution, SolverError> =
 
         let solver = 
+            // Setting the SolverType between CBC which can handle MIP and GLOP which is strictly LP
             match settings.SolverType with
             | CBC ->
                 Solver.CreateSolver("CBC")
@@ -190,7 +191,9 @@ module internal ORTools =
         else
             solver.SuppressOutput()
 
+        // A dictionary for tracking the Variables that are created for DecisionName
         let vars = Dictionary()
+        // A dictionary for mapping DecisionName to Decision
         let decisions = Dictionary()
         addConstraints decisions vars model.Constraints solver
         
