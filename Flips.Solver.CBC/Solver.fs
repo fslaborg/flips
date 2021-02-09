@@ -49,8 +49,9 @@ module internal ORTools =
             let var = createVariable solver decision
             decisions.[decision.Name] <- decision
             vars.[decision.Name] <- var
-
-        vars.[decision.Name]
+            var
+        else
+            vars.[decision.Name]
 
 
     let private setObjective (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (solver: Solver) =
@@ -72,8 +73,8 @@ module internal ORTools =
 
         for KeyValue(decision, coefficients) in decisionCoefficients do
             let coefficient = Math.kahanSum coefficients
-            addVariable solver decisions vars decision |> ignore
-            exprAccumulator <- exprAccumulator + (coefficient * vars.[decision.Name])
+            let var = addVariable solver decisions vars decision
+            exprAccumulator <- exprAccumulator + (coefficient * var)
 
         exprAccumulator <- exprAccumulator + (Math.kahanSum offsets)
 
