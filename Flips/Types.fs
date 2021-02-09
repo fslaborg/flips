@@ -135,7 +135,7 @@ type private ReduceAccumulator = {
 }
 
   /// A type used for mapping a LinearExpression to a form which a Solver can use
-[<NoComparison;CustomEquality>] 
+[<NoComparison; CustomEquality>] 
 type private ReducedLinearExpression =
     {
         //DecisionTypes : Dictionary<DecisionName, DecisionType>
