@@ -25,3 +25,21 @@ module Dictionary =
 
     let tryFind key (d: Dictionary<_, _>) =
         key |> d.TryGetValue |> ByRefPair.toOption
+
+
+[<RequireQualifiedAccess>]
+module Math =
+
+    let kahanSum (xs: float list) =
+        let rec kahanSumAux (xs: float list) (sum: float) (c: float) =
+            match xs with
+            | [] -> sum
+            | x::xs ->
+            let y = x - c in
+            let t = sum + y in
+            let c = (t - sum) - y in
+            kahanSumAux xs t c
+
+        match xs with
+        | [] -> 0.0
+        | _ -> kahanSumAux xs 0.0 0.0

@@ -12,6 +12,24 @@ module internal Dictionary =
         | false, _ -> None
 
 
+[<RequireQualifiedAccess>]
+module internal Math =
+
+    let kahanSum (xs: float list) =
+        let rec kahanSumAux (xs: float list) (sum: float) (c: float) =
+            match xs with
+            | [] -> sum
+            | x::xs ->
+            let y = x - c in
+            let t = sum + y in
+            let c = (t - sum) - y in
+            kahanSumAux xs t c
+
+        match xs with
+        | [] -> 0.0
+        | _ -> kahanSumAux xs 0.0 0.0
+
+
 module internal ORTools =
 
     [<RequireQualifiedAccess>]
@@ -184,31 +202,34 @@ module internal ORTools =
           setObjective decisions vars objective solver
         )
 
-        let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
+        SolverError.Unknown "The model status is unknown. Unable to solve."
+        |> Result.Error
 
-        match result with
-        | Result.Ok (solver, objective) ->
-            match model.Objectives with
-            | firstObjective :: _ when firstObjective <> objective ->
-              // Write LP/MPS Formulation to file again if requested
-              // doing it again in case the solved objective isn't the first one
-              settings.WriteLPFile |> Option.iter (writeLPFile solver)
-              settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
-            | [] | [_] | _ -> () 
+        //let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
 
-            buildSolution decisions vars solver
-            |> Result.Ok
-        | Result.Error errorStatus ->
-            match errorStatus with
-            | Solver.ResultStatus.INFEASIBLE ->
-                SolverError.Infeasible "The model was found to be infeasible"
-                |> Result.Error
-            | Solver.ResultStatus.UNBOUNDED ->
-                SolverError.Unbounded "The model was found to be unbounded"
-                |> Result.Error
-            | _ ->
-                SolverError.Unknown "The model status is unknown. Unable to solve."
-                |> Result.Error
+        //match result with
+        //| Result.Ok (solver, objective) ->
+        //    match model.Objectives with
+        //    | firstObjective :: _ when firstObjective <> objective ->
+        //      // Write LP/MPS Formulation to file again if requested
+        //      // doing it again in case the solved objective isn't the first one
+        //      settings.WriteLPFile |> Option.iter (writeLPFile solver)
+        //      settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+        //    | [] | [_] | _ -> () 
+
+        //    buildSolution decisions vars solver
+        //    |> Result.Ok
+        //| Result.Error errorStatus ->
+        //    match errorStatus with
+        //    | Solver.ResultStatus.INFEASIBLE ->
+        //        SolverError.Infeasible "The model was found to be infeasible"
+        //        |> Result.Error
+        //    | Solver.ResultStatus.UNBOUNDED ->
+        //        SolverError.Unbounded "The model was found to be unbounded"
+        //        |> Result.Error
+        //    | _ ->
+        //        SolverError.Unknown "The model status is unknown. Unable to solve."
+        //        |> Result.Error
 
 
 type Solver (settings:Settings) =

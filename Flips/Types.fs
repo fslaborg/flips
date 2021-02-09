@@ -130,8 +130,8 @@ with
 
 [<NoComparison>]
 type private ReduceAccumulator = {
-    Terms : Dictionary<Decision, ResizeArray<float>>
-    Offsets : ResizeArray<float>
+    Terms : Dictionary<Decision, float list>
+    mutable Offsets : float list
 }
 
   /// A type used for mapping a LinearExpression to a form which a Solver can use
@@ -172,12 +172,11 @@ type private ReducedLinearExpression =
         | _ -> false
 
     static member internal OfReduceAccumulator (acc: ReduceAccumulator) =
-        let offset = acc.Offsets |> Seq.sortBy Math.Abs |> Seq.sum
+        let offset = Math.kahanSum acc.Offsets
   
         let terms = Dictionary()
         for KeyValue (decision, coefficients) in acc.Terms do
-            coefficients.Sort(SignInsenstiveComparer())
-            let coefficient = Seq.sum coefficients
+            let coefficient = Math.kahanSum coefficients
             if coefficient <> 0.0 then // NOTE: Note sure if we need to test for -0.0
                 terms.Add(decision, coefficient)
 
@@ -201,7 +200,7 @@ type LinearExpression =
     static member private Reduce (expr: LinearExpression) : ReducedLinearExpression =
         let initialState = {
             Terms = Dictionary()
-            Offsets = ResizeArray()
+            Offsets = []
         }
 
         let tryFind k (d: Dictionary<_,_>) =
@@ -213,17 +212,15 @@ type LinearExpression =
             match node with
             | Empty -> cont (multiplier, state)
             | AddFloat (addToOffset, nodeExpr) -> 
-                state.Offsets.Add(multiplier * addToOffset)
+                state.Offsets <- (multiplier * addToOffset)::state.Offsets
                 evaluateNode (multiplier, state) nodeExpr cont
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
                 match tryFind nodeDecision state.Terms with
-                | Some existingType ->
-                    state.Terms.[nodeDecision].Add(nodeCoef * multiplier)
+                | Some existingCoefficients ->
+                    state.Terms.[nodeDecision] <- (nodeCoef * multiplier)::existingCoefficients
                     evaluateNode (multiplier, state) nodeExpr cont
                 | None ->
-                    let newCoefArray = ResizeArray()
-                    newCoefArray.Add(multiplier * nodeCoef)
-                    state.Terms.Add(nodeDecision, newCoefArray)
+                    state.Terms.Add(nodeDecision, [multiplier * nodeCoef])
                     evaluateNode (multiplier, state) nodeExpr cont
             | Multiply (nodeMultiplier, nodeExpr) ->
                 let newMultiplier = multiplier * nodeMultiplier
