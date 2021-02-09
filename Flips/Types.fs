@@ -198,39 +198,34 @@ type LinearExpression =
 
 
     static member private Reduce (expr: LinearExpression) : ReducedLinearExpression =
-        let initialState = {
+        let accumulator = {
             Terms = Dictionary()
             Offsets = []
         }
 
-        let tryFind k (d: Dictionary<_,_>) =
-            match d.TryGetValue(k) with
-            | (true, v) -> Some v
-            | (false, _) -> None
-
-        let rec evaluateNode (multiplier: float, state: ReduceAccumulator) (node: LinearExpression) cont =
+        let rec evaluateNode (multiplier: float) (node: LinearExpression) cont =
             match node with
-            | Empty -> cont (multiplier, state)
+            | Empty -> cont (multiplier)
             | AddFloat (addToOffset, nodeExpr) -> 
-                state.Offsets <- (multiplier * addToOffset)::state.Offsets
-                evaluateNode (multiplier, state) nodeExpr cont
+                accumulator.Offsets <- (multiplier * addToOffset)::accumulator.Offsets
+                evaluateNode multiplier nodeExpr cont
             | AddDecision ((nodeCoef , nodeDecision), nodeExpr) ->
-                match tryFind nodeDecision state.Terms with
+                match Dictionary.tryFind nodeDecision accumulator.Terms with
                 | Some existingCoefficients ->
-                    state.Terms.[nodeDecision] <- (nodeCoef * multiplier)::existingCoefficients
-                    evaluateNode (multiplier, state) nodeExpr cont
+                    accumulator.Terms.[nodeDecision] <- (nodeCoef * multiplier)::existingCoefficients
+                    evaluateNode multiplier nodeExpr cont
                 | None ->
-                    state.Terms.Add(nodeDecision, [multiplier * nodeCoef])
-                    evaluateNode (multiplier, state) nodeExpr cont
+                    accumulator.Terms.Add(nodeDecision, [multiplier * nodeCoef])
+                    evaluateNode multiplier nodeExpr cont
             | Multiply (nodeMultiplier, nodeExpr) ->
                 let newMultiplier = multiplier * nodeMultiplier
-                evaluateNode (newMultiplier, state) nodeExpr cont
+                evaluateNode newMultiplier nodeExpr cont
             | AddLinearExpression (lExpr, rExpr) ->
-                evaluateNode (multiplier, state) lExpr (fun (_, lState) -> evaluateNode (multiplier, lState) rExpr cont)
+                evaluateNode multiplier lExpr (fun _ -> evaluateNode multiplier rExpr cont)
 
-        let (_,reduceResult) = evaluateNode (1.0, initialState) expr (fun x -> x)
+        let _ = evaluateNode 1.0 expr id
 
-        ReducedLinearExpression.OfReduceAccumulator reduceResult
+        ReducedLinearExpression.OfReduceAccumulator accumulator
 
 
     static member internal Evaluate (getDecisionCoef: #IReadOnlyDictionary<_,_>) (expr:LinearExpression) : float =
