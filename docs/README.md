@@ -214,3 +214,42 @@ In the last few years Python has done an incredible service to the software deve
 Many of the existing libraries for using LP/MIP are either array-based or heavily Object-Oriented. There is nothing wrong with these approaches, but they run counter to idiomatic F#. F# provides a rich set of tools for expressing problems and algorithms in a functional-first style. After spending several years working in F# and Mathematical Planning, it appeared that there was a gap in the market. A library was needed that allowed an F# developer to express their LP/MIP in a functional way.
 
 Flips is intended to make building and solving LP/MIP problems in F# simple. The hope is that by filling in the gap between current LP/MIP libraries and F# developers the adoption of the awesome tool of LP/MIP will be accelerated.
+
+## Background Information
+
+LP/MIP is one of many different [Search Algorithms](https://en.wikipedia.org/wiki/Search_algorithm) we use in computing.
+
+One of the most one famous, used to train neural networks, is [Gradient Descent](https://en.wikipedia.org/wiki/Gradient_descent).  Gradient descent only works when the space of possibilities can be represented as continuous numbers (because it uses calculus), this is called [Continuous optimization](https://en.wikipedia.org/wiki/Continuous_optimization).
+
+The other large field is where the problem cannot be respresented as a continuous number, i.e. you can't send 0.3 of a food truck to a location.  This is called [Discrete Optimisation](https://en.wikipedia.org/wiki/Discrete_optimization), and is generally a harder problem than continuous optimisation (the search space is less smooth).
+
+Examples of discrete optimisations algorithms include:
+
+- [Branch and Bound](https://en.wikipedia.org/wiki/Branch_and_bound)
+- [LP](https://en.wikipedia.org/wiki/Linear_programming) / [MIPS](https://en.wikipedia.org/wiki/Linear_programming#Integer_unknowns)
+- [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming)
+- [Local Search](https://en.wikipedia.org/wiki/Local_search_(optimization))
+  - [Hill climbing](https://en.wikipedia.org/wiki/Hill_climbing)
+  - [Genetic Algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm)
+  - [Simulated Annealing](https://en.wikipedia.org/wiki/Simulated_annealing)
+
+You'll also often see the term [Metaheuristic](https://en.wikipedia.org/wiki/Metaheuristic) used to describe these algorithms.
+
+It is also worth being aware that many of the problems we try and solve come up again and again, have common names, and well understood properties around complexity. 
+Most are NP complete meaning finding the perfect answer is generally infeasible unless the problem space is very small or you have infinite time to solve your problem.
+
+Examples of commom problems:
+
+- [Assignment problems](https://en.wikipedia.org/wiki/Assignment_problem)
+- [Knapsack problems](https://en.wikipedia.org/wiki/Knapsack_problem)
+- [Nurse scheduling problems](https://en.wikipedia.org/wiki/Nurse_scheduling_problem)
+- [Travelling Saleman problems](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
+- [Vehicle routing problems](https://en.wikipedia.org/wiki/Vehicle_routing_problem)
+
+Although often we are trying to optimise the solution (e.g. use the minimum fuel for a journey or maximise the profit of our food truck), sometimes just finding a feasbile solution is the challenge (e.g can we cover the required shifts in this hosptial given the staff we have).
+
+Recommended background learning:
+
+- The excellant [Discrete Optimization](https://www.coursera.org/learn/discrete-optimization) coursera course covers search algorithms in general, common optimisation problems and it lots of fun.  Highly recommended.
+- [Basic Modeling for Discrete Optimization](https://www.coursera.org/learn/basic-modeling) is another coursera course which specialises on LP/MIPS constraints, using the [Minizinc](https://www.minizinc.org) language. It teaches important techniques to make more efficient constraints including things like symmetry breaking. It leads on to two further advanced courses, and although uses minizinc, is directly transferable to Flips.
+- https://www.optaplanner.org is an OpenSource java framework that uses Local Search algorithms.  It has excellant documentation and is worth having a look at to understand the sorts of problems that Discrete Optimisation is good at solving, check out the [use cases documentation](https://www.optaplanner.org/learn/useCases/)
