@@ -54,29 +54,28 @@ module internal ORTools =
 
 
     let private setObjective (decisions: Dictionary<string, _>) (vars: Dictionary<string, Variable>) (objective: #IObjective) (solver: Solver) =
-        let decisionCoefficients = Dictionary<IDecision, ResizeArray<float>>()
-        let offsets = ResizeArray()
+        let decisionCoefficients = Dictionary<IDecision, float list>()
+        let mutable offsets = []
 
         for term in objective.Expression.Terms do
             match term with
             | Constant c ->
-                offsets.Add c
+                offsets <- c::offsets
             | LinearElement (c, d) ->
                 match Dictionary.tryFind d decisionCoefficients with
-                | Some coefs -> coefs.Add c
+                | Some coefs -> 
+                    decisionCoefficients.[d] <- c::coefs
                 | None ->
-                    let coefs = ResizeArray()
-                    coefs.Add(c)
-                    decisionCoefficients.Add (d, coefs)
+                    decisionCoefficients.Add (d, [c])
 
         let mutable exprAccumulator = LinearExpr()
 
         for KeyValue(decision, coefficients) in decisionCoefficients do
-            let coefficient = coefficients |> Seq.sortBy System.Math.Abs |> Seq.sum
+            let coefficient = Math.kahanSum coefficients
             addVariable solver decisions vars decision |> ignore
             exprAccumulator <- exprAccumulator + (coefficient * vars.[decision.Name])
 
-        exprAccumulator <- exprAccumulator + (offsets |> Seq.sortBy System.Math.Abs |> Seq.sum)
+        exprAccumulator <- exprAccumulator + (Math.kahanSum offsets)
 
         match objective.Sense with
         | Minimize -> solver.Minimize exprAccumulator
@@ -84,34 +83,32 @@ module internal ORTools =
 
 
     let private addConstraint (decisions: Dictionary<string, _>) (vars:Dictionary<string, Variable>) (constraintName: string) (lhs: #ILinearExpression) (rhs: #ILinearExpression) (relationship: Relationship) (solver:Solver) =
-        let decisionCoefficients = Dictionary<IDecision, ResizeArray<float>>()
-        let offsets = ResizeArray()
+        let decisionCoefficients = Dictionary<IDecision, float list>()
+        let mutable offsets = []
 
         for term in lhs.Terms do
             match term with
             | Constant c ->
-                offsets.Add (-1.0 * c) // Because we will move it to the RHS
+                offsets <- (-1.0 * c)::offsets // Because we will move it to the RHS
             | LinearElement (c, d) ->
                 match Dictionary.tryFind d decisionCoefficients with
-                | Some coefs -> coefs.Add c
+                | Some coefs -> 
+                    decisionCoefficients.[d] <- c::coefs
                 | None ->
-                    let coefs = ResizeArray()
-                    coefs.Add(c)
-                    decisionCoefficients.Add (d, coefs)
+                    decisionCoefficients.Add (d, [c])
 
         for term in rhs.Terms do
             match term with
             | Constant c ->
-                offsets.Add c
+                offsets <- c::offsets
             | LinearElement (c, d) ->
                 match Dictionary.tryFind d decisionCoefficients with
-                | Some coefs -> coefs.Add (-1.0 * c)
+                | Some coefs -> 
+                    decisionCoefficients.[d] <- (-1.0 * c)::coefs
                 | None ->
-                    let coefs = ResizeArray()
-                    coefs.Add (-1.0 * c)
-                    decisionCoefficients.Add (d, coefs)
+                    decisionCoefficients.Add (d, [-1.0 * c])
      
-        let rhsConstant = offsets |> Seq.sortBy System.Math.Abs |> Seq.sum
+        let rhsConstant = Math.kahanSum offsets
 
         let newConstraint =
             match relationship with
@@ -123,7 +120,7 @@ module internal ORTools =
                 solver.MakeConstraint(rhsConstant, System.Double.PositiveInfinity, constraintName)
         
         for KeyValue(decision, coefficients) in decisionCoefficients do
-            let coefficient = coefficients |> Seq.sortBy System.Math.Abs |> Seq.sum
+            let coefficient = Math.kahanSum coefficients
             let variable = addVariable solver decisions vars decision
             newConstraint.SetCoefficient(variable, coefficient)
 
