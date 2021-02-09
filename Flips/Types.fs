@@ -230,29 +230,23 @@ type LinearExpression =
 
     static member internal Evaluate (getDecisionCoef: #IReadOnlyDictionary<_,_>) (expr:LinearExpression) : float =
 
-        let rec evaluateNode (multiplier:float, state:ResizeArray<float>) (node:LinearExpression) cont =
+        let rec evaluateNode (multiplier:float, state:float list) (node:LinearExpression) cont =
             match node with
             | Empty -> cont (multiplier, state)
             | AddFloat (f, nodeExpr) ->
-                state.Add(multiplier * f)
-                let newState = (multiplier, state) 
+                let newState = (multiplier, (multiplier * f)::state) 
                 evaluateNode newState nodeExpr cont
             | AddDecision ((nodeCoef, nodeDecision), nodeExpr) ->
-                state.Add(multiplier * nodeCoef * getDecisionCoef.[nodeDecision])
-                let newState = (multiplier, state)
+                let newState = (multiplier, (multiplier * nodeCoef * getDecisionCoef.[nodeDecision])::state)
                 evaluateNode newState nodeExpr cont
             | Multiply (nodeMultiplier, nodeExpr) ->
                 let newState = (multiplier * nodeMultiplier, state)
                 evaluateNode newState nodeExpr cont
             | AddLinearExpression (lExpr, rExpr) ->
                 evaluateNode (multiplier, state) lExpr (fun (_, lState) -> evaluateNode (multiplier, lState) rExpr cont)
-            
 
-        let (_,reduceResult) = evaluateNode (1.0, ResizeArray()) expr id
-
-        reduceResult.Sort SignInsenstiveComparer.Instance
-        let total = Seq.sum reduceResult
-        total
+        let (_,reduceResult) = evaluateNode (1.0, []) expr id
+        Math.kahanSum reduceResult
 
     
     interface ILinearExpression with
