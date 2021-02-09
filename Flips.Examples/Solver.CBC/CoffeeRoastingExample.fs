@@ -6,13 +6,7 @@ open Flips.Solver.CBC
 
 let solve () =
     let model, objective, buildRoaster, buildWarehouse, locations = Flips.Examples.SampleProblems.CoffeeRoastingExample.model
-    let settings = 
-        Settings [
-            set.SolverType CBC
-            set.EnableOutput true
-            set.WriteLPFile "Chicken.lp"
-            set.WriteMPSFile "MPStest.mps"
-            ]
+    let settings = Settings []
     let solver = Solver settings
     // Call the `solve` function in the Solve module to evaluate the model
     let result = solver.Solve model
