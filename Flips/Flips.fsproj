@@ -78,6 +78,7 @@
         </AssemblyAttribute>
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="HPCsharp" Version="3.15.0" />
         <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
             <PrivateAssets>all</PrivateAssets>
