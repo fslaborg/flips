@@ -223,34 +223,31 @@ module internal ORTools =
           setObjective decisions vars objective solver
         )
 
-        SolverError.Unknown "The model status is unknown. Unable to solve."
-        |> Result.Error
+        let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
 
-        //let result = solveForObjectives decisions vars (List.rev model.Objectives) solver
+        match result with
+        | Result.Ok (solver, objective) ->
+            match model.Objectives with
+            | firstObjective :: _ when firstObjective <> objective ->
+              // Write LP/MPS Formulation to file again if requested
+              // doing it again in case the solved objective isn't the first one
+              settings.WriteLPFile |> Option.iter (writeLPFile solver)
+              settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
+            | [] | [_] | _ -> () 
 
-        //match result with
-        //| Result.Ok (solver, objective) ->
-        //    match model.Objectives with
-        //    | firstObjective :: _ when firstObjective <> objective ->
-        //      // Write LP/MPS Formulation to file again if requested
-        //      // doing it again in case the solved objective isn't the first one
-        //      settings.WriteLPFile |> Option.iter (writeLPFile solver)
-        //      settings.WriteMPSFile |> Option.iter (writeMPSFile solver)
-        //    | [] | [_] | _ -> () 
-
-        //    buildSolution decisions vars solver
-        //    |> Result.Ok
-        //| Result.Error errorStatus ->
-        //    match errorStatus with
-        //    | Solver.ResultStatus.INFEASIBLE ->
-        //        SolverError.Infeasible "The model was found to be infeasible"
-        //        |> Result.Error
-        //    | Solver.ResultStatus.UNBOUNDED ->
-        //        SolverError.Unbounded "The model was found to be unbounded"
-        //        |> Result.Error
-        //    | _ ->
-        //        SolverError.Unknown "The model status is unknown. Unable to solve."
-        //        |> Result.Error
+            buildSolution decisions vars solver
+            |> Result.Ok
+        | Result.Error errorStatus ->
+            match errorStatus with
+            | Solver.ResultStatus.INFEASIBLE ->
+                SolverError.Infeasible "The model was found to be infeasible"
+                |> Result.Error
+            | Solver.ResultStatus.UNBOUNDED ->
+                SolverError.Unbounded "The model was found to be unbounded"
+                |> Result.Error
+            | _ ->
+                SolverError.Unknown "The model status is unknown. Unable to solve."
+                |> Result.Error
 
 
 type Solver (settings:Settings) =
