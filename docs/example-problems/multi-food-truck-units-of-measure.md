@@ -1,11 +1,13 @@
 # Multi Food Truck with Slicing and Units of Measure
 
 ```fsharp
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
+
 open Flips
 open Flips.Types
-open Flips.UnitsOfMeasure
-open Flips.UnitsOfMeasure.Types
 open Flips.SliceMap
+open Flips.UnitsOfMeasure
 
 type [<Measure>] USD
 type [<Measure>] Item

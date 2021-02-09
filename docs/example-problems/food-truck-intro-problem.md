@@ -1,7 +1,8 @@
 # Food Truck Intro
 
 ```fsharp
-module Flips.Examples.FoodTruckExample
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
 
 open Flips
 open Flips.Types
