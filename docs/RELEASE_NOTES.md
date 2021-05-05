@@ -1,3 +1,6 @@
+### 2.4.5 - Tuesday, May 4th, 2021
+* Updated references to get rid of Google ORTools import warning
+
 ### 2.4.4 - Thursday, December 31st, 2020
 * Bug fixes for LinearExpression
 * Updated to Google.ORTools 8.1.8487
