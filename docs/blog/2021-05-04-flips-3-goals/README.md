@@ -1,4 +1,4 @@
-# Flips 3.0
+# Flips 3.0 Goals
 
 Flips has now been out for over a year. It has been exciting to see people find the project and pick it up. I've had the joy of using it in several major projects. It's now being used as a core solver in a new simulation project that I am working on. It has been a joy answering people questions and the support from the community has been great. I still believe that people come to F# for the awesome language but stay for the wonderful community.
 
