@@ -11,7 +11,7 @@ nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
 nuget FSharp.Core
 nuget FSharp.Data ~> 3
-nuget Google.OrTools ~> 8
+nuget Google.OrTools ~> 9
 nuget MathNet.Numerics ~> 4
 nuget MathNet.Numerics.FSharp ~> 4
 nuget Microsoft.NET.Test.Sdk ~> 16
