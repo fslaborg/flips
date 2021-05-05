@@ -1,4 +1,4 @@
-version 5.249.0
+version 5.257.0
 
 generate_load_scripts: true
 
@@ -11,7 +11,7 @@ nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
 nuget FSharp.Core
 nuget FSharp.Data ~> 3
-nuget Google.OrTools ~> 8
+nuget Google.OrTools ~> 9
 nuget MathNet.Numerics ~> 4
 nuget MathNet.Numerics.FSharp ~> 4
 nuget Microsoft.NET.Test.Sdk ~> 16
@@ -20,8 +20,6 @@ nuget OPTANO.Modeling.Gurobi ~> 9
 nuget System.Memory
 nuget xunit ~> 2
 nuget xunit.runner.visualstudio ~> 2
-
-
 
 group Tooling
   source https://nuget.org/api/v2
