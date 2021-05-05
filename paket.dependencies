@@ -1,4 +1,4 @@
-version 5.249.0
+version 5.257.0
 
 generate_load_scripts: true
 
@@ -20,8 +20,6 @@ nuget OPTANO.Modeling.Gurobi ~> 9
 nuget System.Memory
 nuget xunit ~> 2
 nuget xunit.runner.visualstudio ~> 2
-
-
 
 group Tooling
   source https://nuget.org/api/v2
