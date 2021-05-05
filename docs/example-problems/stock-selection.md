@@ -3,6 +3,10 @@
 This problem was provided [Zbigniew Gajewski](https://github.com/zbigniew-gajewski) as an example of how to use Flips to select the best combination of stocks.
 
 ```fsharp
+#r "nuget: Flips"
+#r "nuget: FSharp.Data"
+fsi.ShowDeclarationValues <- false
+
 open System
 open FSharp.Data
 open MathNet.Numerics
@@ -107,7 +111,7 @@ let results = Solver.solve settings model
 printfn "-- Result --"
 match results with
 | Optimal solution ->
-    printfn "Objective Value - Risk: %f %%" ((Objective.evaluatesolution objective) * 100.0)
+    printfn "Objective Value - Risk: %f %%" ((Objective.evaluate solution objective) * 100.0)
 
     for (decision, value) in solution.DecisionResults |> Map.toSeq |> Seq.filter(fun (key, value) -> value > 0.0) do
         let (DecisionName name) = decision.Name

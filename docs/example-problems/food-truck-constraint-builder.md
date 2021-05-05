@@ -1,7 +1,8 @@
 # Food Truck with ConstraintBuilder
 
 ```fsharp
-module Flips.Examples.FoodTruckConstraintBuilderExample
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
 
 open Flips
 open Flips.Types

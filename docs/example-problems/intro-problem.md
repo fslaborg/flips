@@ -1,7 +1,8 @@
 # Intro Problem
 
 ```fsharp
-module Flips.Examples.SimpleExample
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
 
 open Flips
 open Flips.Types

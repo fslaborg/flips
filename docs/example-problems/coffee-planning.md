@@ -3,11 +3,13 @@
 This problems provides and example of planning the necessary facilities to roast and warehouse coffee production. There is a minimum roasing capacity of 30.0 Ton, a minimum warehousing capacity of 30,000 sq.ft. and a requirement that anywhere where there is a Roaster, there is also a Warehouse. This shows the use of Units of Measure and some mild Domain modeling using single case discriminated union `Location`.
 
 ```fsharp
+#r "nuget: Flips"
+fsi.ShowDeclarationValues <- false
+
 open Flips
 open Flips.Types
-open Flips.UnitsOfMeasure
-open Flips.UnitsOfMeasure.Types
 open Flips.SliceMap
+open Flips.UnitsOfMeasure
 
 type [<Measure>] USD
 type [<Measure>] ft
