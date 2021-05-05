@@ -5,3 +5,4 @@ The following is a series of blog posts which provide insight into the thinking 
 ## Posts
 
 - [2020-11-21: Next Steps for Flips](2020-11-21-next-steps-for-flips/README.md)
+- [2021-05-04: Flips 3 Goals](2021-05-04-flips-3-goals/README.md)
