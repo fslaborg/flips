@@ -3,7 +3,6 @@
 // --------------------------------------------------------------------------------------
 #nowarn "0213"
 #r "paket: groupref FakeBuild //"
-#load "./tools/FSharpLint.fs"
 #load "./.fake/build.fsx/intellisense.fsx"
 
 open Fake.Core
@@ -13,7 +12,6 @@ open Fake.IO
 open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Tools
-open Tools.Linting
 open System
 open System.IO
 
@@ -154,13 +152,13 @@ Target.create "Build" <| fun _ ->
 // --------------------------------------------------------------------------------------
 // Lint source code
 
-Target.create "Lint" <| fun _ ->
-    fsSrcAndTest
-    -- (__SOURCE_DIRECTORY__  @@ "src/**/AssemblyInfo.*")
-    |> (fun fGlob -> [(false, fGlob)])
-    |> Seq.map (fun (b,glob) -> (b,glob |> List.ofSeq))
-    |> List.ofSeq
-    |> FSharpLinter.lintFiles
+// Target.create "Lint" <| fun _ ->
+//     fsSrcAndTest
+//     -- (__SOURCE_DIRECTORY__  @@ "src/**/AssemblyInfo.*")
+//     |> (fun fGlob -> [(false, fGlob)])
+//     |> Seq.map (fun (b,glob) -> (b,glob |> List.ofSeq))
+//     |> List.ofSeq
+//     |> FSharpLinter.lintFiles
 
 // --------------------------------------------------------------------------------------
 // Run the unit tests
@@ -226,20 +224,13 @@ Target.create "Publish" ignore
     ==> "Restore"
     ==> "Build"
 
-"Restore" ==> "Lint"
-
-"Lint" 
-    ?=> "Build"
-    ?=> "RunTests"
-    ?=> "CleanDocs"
-
 "Build" ==> "RunTests"
 
 "All"
     ==> "GitPush"
     ?=> "GitTag"
 
-"All" <== ["Lint"; "RunTests" ]
+"All" <== [ "RunTests" ]
 
 "CleanDocs"
     ==> "CopyDocFiles"
