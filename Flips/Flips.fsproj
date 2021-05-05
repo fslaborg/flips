@@ -68,10 +68,10 @@
     <None Include="paket.references" />
     <None Include="paket.template" />
   </ItemGroup>
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Update="Google.OrTools.runtime.win-x64">
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
-  </ItemGroup>
+  </ItemGroup>-->
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
