@@ -1,5 +1,7 @@
 ![Flips Banner](GitHubBanner.png)
 
+[![Discord](https://img.shields.io/discord/836161044501889064?color=purple&label=Join%20our%20Discord%21&logo=discord&logoColor=white)](https://discord.gg/Z5r5HdV5U2)
+
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
 > Full Documenation can be found [here](https://flipslibrary.com/).
