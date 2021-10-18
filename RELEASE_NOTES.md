@@ -1,3 +1,6 @@
+### 2.4.6 - Monday, Oct 18th, 2021
+* Updated OPTANO.Modeling to 3.8.1.532
+
 ### 2.4.5 - Tuesday, May 4th, 2021
 * Updated Google ORTools to 9
 
