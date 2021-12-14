@@ -1,3 +1,6 @@
+### 2.4.7 - Tuesday, December 14th, 2021
+* Updated OPTANO.Modeling to 3.9.2.537
+
 ### 2.4.6 - Monday, Oct 18th, 2021
 * Updated OPTANO.Modeling to 3.8.1.532
 
