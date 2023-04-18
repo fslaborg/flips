@@ -1,3 +1,10 @@
+### 2.4.9 - Wednesday, October 19th, 2022
+* Fix problem with Units of Measure when multiplying float and LinearExpression
+
+### 2.4.8 - Friday, June 17th, 2022
+* Fix F# 5.0 dependency
+* Updated dependencies
+
 ### 2.4.7 - Tuesday, December 14th, 2021
 * Updated OPTANO.Modeling to 3.9.2.537
 
