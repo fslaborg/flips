@@ -102,10 +102,11 @@ let settings = {
     SolverType = SolverType.CBC
     MaxDuration = 10_000L
     WriteLPFile = None
+    WriteMPSFile = None
 }
 
-// Call the `solve` function in the Solve module to evaluate the model
-let result = solve settings model
+// Call the `solve` function in the Solver module to evaluate the model
+let result = Solver.solve settings model
 ```
 
 The `solve` function returns a `SolveResult` which is a DU with two cases: Optimal or Suboptimal. If the `SolveResult` is the `Optimal` case, it will contain a `Solution`. If the `SolveResult` case is `Suboptimal`, it will hold a `string` which describes what went wrong. In this case the `SolveResult` case is `Optimal` so we can match the case and print out the solution values. The `Solution` type contains `DecisionResult` which is a `Map<Decision,float>`. `DecisionResult` tells you which values the `Solver` picked for the `Decision`s you provided it. The field in the `Solution` is `ObjectiveResult` which is a `float` which tells you how well the `Solver` was able to do.
