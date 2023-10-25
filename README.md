@@ -42,3 +42,7 @@ support in using their product. Flips currently only supports the latest version
 [Google GLOPS solver]: https://github.com/google/or-tools
 [Gurobi]: https://www.gurobi.com/
 [IBM CPLEX]: https://www.ibm.com/products/ilog-cplex-optimization-studio/details
+
+### License
+
+All of flips projects are available as open source under the terms of the [MIT license](https://github.com/fslaborg/flips/blob/main/LICENSE)
