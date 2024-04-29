@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Platforms>x64</Platforms>
+    <TargetFramework>net8.0</TargetFramework>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
@@ -21,17 +20,6 @@
     <DebugType>embedded</DebugType>
     <OtherFlags>$(OtherFlags) --warnon:3390</OtherFlags>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NoWarn>NU1701;0052;</NoWarn>
-    <DocumentationFile>bin\x64\Debug\netstandard2.0\Flips.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <NoWarn>NU1701;0052;</NoWarn>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <WarningLevel>5</WarningLevel>
-    <DocumentationFile>bin\x64\Release\netstandard2.0\Flips.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
