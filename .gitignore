@@ -276,3 +276,6 @@ paket.local
 # Libraries
 MipCL213WrapperCpp.dll
 Scip70WrapperCpp.dll
+
+# MacOS
+.DS_Store
