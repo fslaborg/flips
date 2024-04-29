@@ -6,7 +6,7 @@ nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
 nuget FSharp.Core
 nuget FSharp.Data ~> 3
-nuget Google.OrTools 9.0.9048
+nuget Google.OrTools ~> 9
 nuget MathNet.Numerics ~> 4
 nuget MathNet.Numerics.FSharp ~> 4
 nuget Microsoft.NET.Test.Sdk ~> 16
@@ -19,23 +19,23 @@ nuget xunit.runner.visualstudio ~> 2
 group Tooling
   source https://api.nuget.org/v3/index.json
 
-  nuget Fake.IO.FileSystem ~> 5
+  nuget Fake.IO.FileSystem ~> 6
   nuget FSharp.Core
   nuget FSharpLint.Core ~> 0
 
 group FakeBuild
   source https://api.nuget.org/v3/index.json
 
-    nuget Fake.Core.Target ~> 5
-    nuget Fake.Core.ReleaseNotes ~> 5
-    nuget Fake.DotNet.AssemblyInfoFile ~> 5
-    nuget Fake.DotNet.Cli ~> 5
-    nuget Fake.DotNet.MSBuild ~> 5
-    nuget Fake.DotNet.Paket ~> 5
-    nuget Fake.IO.FileSystem ~> 5
-    nuget Fake.JavaScript.Yarn ~> 5
-    nuget Fake.JavaScript.Npm ~> 5
-    nuget Fake.Tools.Git ~> 5
+    nuget Fake.Core.Target ~> 6
+    nuget Fake.Core.ReleaseNotes ~> 6
+    nuget Fake.DotNet.AssemblyInfoFile ~> 6
+    nuget Fake.DotNet.Cli ~> 6
+    nuget Fake.DotNet.MSBuild ~> 6
+    nuget Fake.DotNet.Paket ~> 6
+    nuget Fake.IO.FileSystem ~> 6
+    nuget Fake.JavaScript.Yarn ~> 6
+    nuget Fake.JavaScript.Npm ~> 6
+    nuget Fake.Tools.Git ~> 6
     nuget FSharp.Json ~> 0
     nuget FSharpLint.Core ~> 0
     nuget NuGet.Packaging ~> 6
