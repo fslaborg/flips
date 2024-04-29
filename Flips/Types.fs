@@ -262,22 +262,22 @@ and
     static member Zero =
         LinearExpression.Empty
 
-    static member (+) (l:LinearExpression, r:LinearExpression) =
+    static member (+) (l:LinearExpression, r:LinearExpression): LinearExpression =
         LinearExpression.AddLinearExpression (l, r)
 
-    static member (+) (expr:LinearExpression, f:float) =
+    static member (+) (expr:LinearExpression, f:float): LinearExpression =
         LinearExpression.AddFloat (f, expr)
 
-    static member (+) (f:float, expr:LinearExpression) =
+    static member (+) (f:float, expr:LinearExpression): LinearExpression =
         expr + f
 
-    static member (+) (expr:LinearExpression, decision:Decision) =
+    static member (+) (expr:LinearExpression, decision:Decision): LinearExpression =
         LinearExpression.AddDecision ((1.0, decision), expr)
     
-    static member (+) (decision:Decision, expr:LinearExpression) =
+    static member (+) (decision:Decision, expr:LinearExpression): LinearExpression =
         expr + decision
 
-    static member (*) (expr:LinearExpression, f:float) =
+    static member (*) (expr:LinearExpression, f:float): LinearExpression =
         LinearExpression.Multiply (f, expr)
 
     static member (*) (f:float, expr:LinearExpression) =
@@ -304,49 +304,49 @@ and
     static member OfDecision (d:Decision) =
         LinearExpression.AddDecision((1.0, d), LinearExpression.Zero)
 
-    static member (<==) (lhs:LinearExpression, rhs:float) =
+    static member (<==) (lhs:LinearExpression, rhs:float): ConstraintExpression =
         Inequality (lhs, LessOrEqual, LinearExpression.OfFloat rhs)
 
-    static member (<==) (lhs:float, rhs:LinearExpression) =
+    static member (<==) (lhs:float, rhs:LinearExpression): ConstraintExpression =
         Inequality (LinearExpression.OfFloat lhs, LessOrEqual, rhs)
 
-    static member (<==) (lhs:LinearExpression, rhs:Decision) =
+    static member (<==) (lhs:LinearExpression, rhs:Decision): ConstraintExpression =
         Inequality (lhs, LessOrEqual, LinearExpression.OfDecision rhs)
 
-    static member (<==) (decision:Decision, expr:LinearExpression) =
+    static member (<==) (decision:Decision, expr:LinearExpression): ConstraintExpression =
         LinearExpression.OfDecision decision <== expr
 
-    static member (<==) (lhs:LinearExpression, rhs:LinearExpression) =
+    static member (<==) (lhs:LinearExpression, rhs:LinearExpression): ConstraintExpression =
         Inequality (lhs, LessOrEqual, rhs)
 
-    static member (==) (lhs:LinearExpression, rhs:float) =
+    static member (==) (lhs:LinearExpression, rhs:float): ConstraintExpression =
         Equality (lhs, LinearExpression.OfFloat rhs)
 
-    static member (==) (lhs:float, rhs:LinearExpression) =
+    static member (==) (lhs:float, rhs:LinearExpression): ConstraintExpression =
         Equality (LinearExpression.OfFloat lhs, rhs)
 
-    static member (==) (lhs:LinearExpression, rhs:Decision) =
+    static member (==) (lhs:LinearExpression, rhs:Decision): ConstraintExpression =
         Equality (lhs, LinearExpression.OfDecision rhs)
 
-    static member (==) (decision:Decision, expr:LinearExpression) =
+    static member (==) (decision:Decision, expr:LinearExpression): ConstraintExpression =
         LinearExpression.OfDecision decision == expr
 
-    static member (==) (lhs:LinearExpression, rhs:LinearExpression) =
+    static member (==) (lhs:LinearExpression, rhs:LinearExpression): ConstraintExpression =
         Equality (lhs, rhs)
 
-    static member (>==) (lhs:LinearExpression, rhs:float) =
+    static member (>==) (lhs:LinearExpression, rhs:float): ConstraintExpression =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfFloat rhs)
 
-    static member (>==) (lhs:float, rhs:LinearExpression) =
+    static member (>==) (lhs:float, rhs:LinearExpression): ConstraintExpression =
         Inequality (LinearExpression.OfFloat lhs, GreaterOrEqual, rhs)
 
-    static member (>==) (lhs:LinearExpression, rhs:Decision) =
+    static member (>==) (lhs:LinearExpression, rhs:Decision): ConstraintExpression =
         Inequality (lhs, GreaterOrEqual, LinearExpression.OfDecision rhs)
 
-    static member (>==) (decision:Decision, expr:LinearExpression) =
+    static member (>==) (decision:Decision, expr:LinearExpression): ConstraintExpression =
         LinearExpression.OfDecision decision >== expr
 
-    static member (>==) (lhs:LinearExpression, rhs:LinearExpression) =
+    static member (>==) (lhs:LinearExpression, rhs:LinearExpression): ConstraintExpression =
         Inequality (lhs, GreaterOrEqual, rhs)
 
 and 
