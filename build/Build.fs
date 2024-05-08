@@ -19,48 +19,49 @@ let repo = "https://github.com/matthewcrews/flips"
 let release = ReleaseNotes.load (rootDir @@ "RELEASE_NOTES.md")
 
 // Helper active pattern for project types
-let (|Fsproj|Csproj|Vbproj|Shproj|) (projFileName:string) =
+let (|Fsproj|Csproj|Vbproj|Shproj|) (projFileName: string) =
     match projFileName with
     | f when f.EndsWith("fsproj") -> Fsproj
     | f when f.EndsWith("csproj") -> Csproj
     | f when f.EndsWith("vbproj") -> Vbproj
     | f when f.EndsWith("shproj") -> Shproj
-    | _                           -> failwith (sprintf "Project file %s not supported. Unknown project type." projFileName)
-    
-let srcGlob     = rootDir @@ "Flips/*.??proj"
-let fsSrcGlob   = rootDir @@ "Flips/*.fs"
-let fsTestGlob  = rootDir @@ "Flips.Tests/*.fs"
-let fsExpGlob   = rootDir @@ "Flips.Examples/*.fs"
-let bin         = rootDir @@ "bin"
-let docs        = rootDir @@ "docs"
-let libGlob     = rootDir @@ "Flips/*.fsproj"
+    | _ -> failwith (sprintf "Project file %s not supported. Unknown project type." projFileName)
+
+let srcGlob = rootDir @@ "Flips/*.??proj"
+let fsSrcGlob = rootDir @@ "Flips/*.fs"
+let fsTestGlob = rootDir @@ "Flips.Tests/*.fs"
+let fsExpGlob = rootDir @@ "Flips.Examples/*.fs"
+let bin = rootDir @@ "bin"
+let docs = rootDir @@ "docs"
+let libGlob = rootDir @@ "Flips/*.fsproj"
 let examplesDir = rootDir @@ "Flips.Examples"
 
 let fsSrcAndTest =
-    !! fsSrcGlob
-    ++ fsTestGlob
-    ++ fsExpGlob
-    -- (rootDir  @@ "Flips/obj/**")
-    -- (rootDir  @@ "Flips.Tests/obj/**")
-    -- (rootDir  @@ "Flips.Examples/obj/**")
-    
-let configuration() =
+    !!fsSrcGlob ++ fsTestGlob ++ fsExpGlob
+    -- (rootDir @@ "Flips/obj/**")
+    -- (rootDir @@ "Flips.Tests/obj/**")
+    -- (rootDir @@ "Flips.Examples/obj/**")
+
+let configuration () =
     FakeVar.getOrDefault "configuration" "Release"
 
 let getEnvFromAllOrNone (s: string) =
     let envOpt (envVar: string) =
-        if String.isNullOrEmpty envVar then None
-        else Some(envVar)
+        if String.isNullOrEmpty envVar then None else Some(envVar)
 
     let procVar = Environment.GetEnvironmentVariable(s) |> envOpt
-    let userVar = Environment.GetEnvironmentVariable(s, EnvironmentVariableTarget.User) |> envOpt
-    let machVar = Environment.GetEnvironmentVariable(s, EnvironmentVariableTarget.Machine) |> envOpt
 
-    match procVar,userVar,machVar with
+    let userVar =
+        Environment.GetEnvironmentVariable(s, EnvironmentVariableTarget.User) |> envOpt
+
+    let machVar =
+        Environment.GetEnvironmentVariable(s, EnvironmentVariableTarget.Machine)
+        |> envOpt
+
+    match procVar, userVar, machVar with
     | Some(v), _, _
     | _, Some(v), _
-    | _, _, Some(v)
-        -> Some(v)
+    | _, _, Some(v) -> Some(v)
     | _ -> None
 
 let initTargets () =
@@ -70,37 +71,37 @@ let initTargets () =
     // --------------------------------------------------------------------------------------
     // Set configuration mode based on target
 
-    Target.create "ConfigDebug" <| fun _ ->
-        FakeVar.set "configuration" "Debug"
+    Target.create "ConfigDebug" <| fun _ -> FakeVar.set "configuration" "Debug"
 
-    Target.create "ConfigRelease" <| fun _ ->
-        FakeVar.set "configuration" "Release"
+    Target.create "ConfigRelease" <| fun _ -> FakeVar.set "configuration" "Release"
 
     // --------------------------------------------------------------------------------------
     // Clean tasks
 
-    Target.create "Clean" <| fun _ ->
-        let clean() =
-            !! (rootDir  @@ "tests/**/bin")
-            ++ (rootDir  @@ "tests/**/obj")
-            ++ (rootDir  @@ "tools/bin")
-            ++ (rootDir  @@ "tools/obj")
-            ++ (rootDir  @@ "src/**/bin")
-            ++ (rootDir  @@ "src/**/obj")
+    Target.create "Clean"
+    <| fun _ ->
+        let clean () =
+            !!(rootDir @@ "tests/**/bin")
+            ++ (rootDir @@ "tests/**/obj")
+            ++ (rootDir @@ "tools/bin")
+            ++ (rootDir @@ "tools/obj")
+            ++ (rootDir @@ "src/**/bin")
+            ++ (rootDir @@ "src/**/obj")
             |> Seq.toList
             |> List.append [ bin ]
             |> Shell.cleanDirs
-        TaskRunner.runWithRetries clean 10
-
-    Target.create "CleanDocs" <| fun _ ->
-        let clean() =
-            !! (docs @@ "RELEASE_NOTES.md")
-            |> List.ofSeq
-            |> List.iter Shell.rm
 
         TaskRunner.runWithRetries clean 10
 
-    Target.create "CopyDocFiles" <| fun _ ->
+    Target.create "CleanDocs"
+    <| fun _ ->
+        let clean () =
+            !!(docs @@ "RELEASE_NOTES.md") |> List.ofSeq |> List.iter Shell.rm
+
+        TaskRunner.runWithRetries clean 10
+
+    Target.create "CopyDocFiles"
+    <| fun _ ->
         [ docs @@ "RELEASE_NOTES.md", rootDir @@ "RELEASE_NOTES.md" ]
         |> List.iter (fun (target, source) -> Shell.copyFile target source)
 
@@ -109,38 +110,32 @@ let initTargets () =
     // --------------------------------------------------------------------------------------
     // Restore tasks
 
-    let restoreSolution () =
-        solutionFile
-        |> DotNet.restore id
+    let restoreSolution () = solutionFile |> DotNet.restore id
 
-    Target.create "Restore" <| fun _ ->
-        TaskRunner.runWithRetries restoreSolution 5
+    Target.create "Restore" <| fun _ -> TaskRunner.runWithRetries restoreSolution 5
 
     // --------------------------------------------------------------------------------------
     // Build tasks
 
-    Target.create "Build" <| fun _ ->
+    Target.create "Build"
+    <| fun _ ->
         let setParams (defaults: DotNet.BuildOptions) =
             { defaults with
                 NoRestore = true
-                MSBuildParams = 
-                { defaults.MSBuildParams with
-                    Verbosity = Some(Quiet)
-                    Targets = ["Build"]
-                    Properties =
-                        [
-                            "Optimize", "True"
-                            "DebugSymbols", "True"
-                            "Configuration", configuration()
-                            "Version", release.AssemblyVersion
-                            "DependsOnNETStandard", "true"
-                        ]
-                }
-            }
-        restoreSolution()
+                MSBuildParams =
+                    { defaults.MSBuildParams with
+                        Verbosity = Some(Quiet)
+                        Targets = [ "Build" ]
+                        Properties =
+                            [ "Optimize", "True"
+                              "DebugSymbols", "True"
+                              "Configuration", configuration ()
+                              "Version", release.AssemblyVersion
+                              "DependsOnNETStandard", "true" ] } }
 
-        !! libGlob
-        ++ (examplesDir @@ "Flips.Examples.fsproj")
+        restoreSolution ()
+
+        !!libGlob ++ (examplesDir @@ "Flips.Examples.fsproj")
         |> List.ofSeq
         |> List.iter (DotNet.build setParams)
 
@@ -158,14 +153,15 @@ let initTargets () =
     // --------------------------------------------------------------------------------------
     // Run the unit tests
 
-    Target.create "RunTests" <| fun _ ->
-        DotNet.test id (rootDir @@ "Flips.Tests/Flips.Tests.fsproj")
+    Target.create "RunTests"
+    <| fun _ -> DotNet.test id (rootDir @@ "Flips.Tests/Flips.Tests.fsproj")
 
     // --------------------------------------------------------------------------------------
     // Build and release NuGet targets
 
-    Target.create "NuGet" <| fun _ ->
-        Paket.pack(fun p ->
+    Target.create "NuGet"
+    <| fun _ ->
+        Paket.pack (fun p ->
             { p with
                 OutputPath = bin
                 Version = release.NugetVersion
@@ -174,10 +170,11 @@ let initTargets () =
                 MinimumFromLockFile = true
                 IncludeReferencedProjects = true })
 
-    Target.create "NuGetPublish" <| fun _ ->
-        Paket.push(fun p ->
+    Target.create "NuGetPublish"
+    <| fun _ ->
+        Paket.push (fun p ->
             { p with
-                ApiKey = 
+                ApiKey =
                     match getEnvFromAllOrNone "NUGET_KEY" with
                     | Some key -> key
                     | None -> failwith "The NuGet API key must be set in a NUGET_KEY environment variable"
@@ -191,7 +188,8 @@ let initTargets () =
         Git.Commit.exec "" msg
         Git.Branches.push ""
 
-    Target.create "GitPush" <| fun p ->
+    Target.create "GitPush"
+    <| fun p ->
         p.Context.Arguments
         |> List.choose (fun s ->
             match s.StartsWith("--Msg=") with
@@ -199,11 +197,12 @@ let initTargets () =
             | false -> None)
         |> List.tryHead
         |> function
-        | Some(s) -> s
-        | None -> (sprintf "Bump version to %s" release.NugetVersion)
+            | Some(s) -> s
+            | None -> (sprintf "Bump version to %s" release.NugetVersion)
         |> gitPush
 
-    Target.create "GitTag" <| fun _ ->
+    Target.create "GitTag"
+    <| fun _ ->
         Git.Branches.tag "" release.NugetVersion
         Git.Branches.pushTag "" "origin" release.NugetVersion
 
@@ -215,36 +214,29 @@ let initTargets () =
     Target.create "Release" ignore
     Target.create "Publish" ignore
 
-    "Clean"
-        ==> "Restore"
-        ==> "Build" |> ignore
+    "Clean" ==> "Restore" ==> "Build" |> ignore
 
     "Build" ==> "RunTests" |> ignore
 
-    "All"
-        ==> "GitPush"
-        ?=> "GitTag" |> ignore
+    "All" ==> "GitPush" ?=> "GitTag" |> ignore
 
     "All" <== [ "RunTests" ]
 
-    "CleanDocs"
-        ==> "CopyDocFiles"
-        ==> "PrepDocs" |> ignore
+    "CleanDocs" ==> "CopyDocFiles" ==> "PrepDocs" |> ignore
 
-    "All"
-        ==> "NuGet"
-        ?=> "NuGetPublish" |> ignore
+    "All" ==> "NuGet" ?=> "NuGetPublish" |> ignore
 
     "All" ==> "PrepDocs" |> ignore
 
     "ConfigDebug" ?=> "Clean" |> ignore
     "ConfigRelease" ?=> "Clean" |> ignore
 
-    "Dev" <== ["All"; "ConfigDebug"; "PrepDocs"]
+    "Dev" <== [ "All"; "ConfigDebug"; "PrepDocs" ]
 
-    "Release" <== ["All"; "NuGet"; "ConfigRelease"]
+    "Release" <== [ "All"; "NuGet"; "ConfigRelease" ]
 
-    "Publish" <== ["Release"; "ConfigRelease"; "NuGetPublish"; "Build"; "GitTag"; "GitPush" ]
+    "Publish"
+    <== [ "Release"; "ConfigRelease"; "NuGetPublish"; "Build"; "GitTag"; "GitPush" ]
 
 [<EntryPoint>]
 let main argv =
