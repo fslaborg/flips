@@ -19,6 +19,12 @@
       "commands": [
         "sourcelink"
       ]
+    },
+    "fantomas": {
+      "version": "6.3.4",
+      "commands": [
+        "fantomas"
+      ]
     }
   }
 }
