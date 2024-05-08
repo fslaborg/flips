@@ -168,7 +168,8 @@ let initTargets () =
                 ReleaseNotes = Fake.Core.String.toLines release.Notes
                 ProjectUrl = repo
                 MinimumFromLockFile = true
-                IncludeReferencedProjects = true })
+                IncludeReferencedProjects = true
+                ToolType = ToolType.CreateCLIToolReference() })
 
     Target.create "NuGetPublish"
     <| fun _ ->
@@ -178,7 +179,8 @@ let initTargets () =
                     match getEnvFromAllOrNone "NUGET_KEY" with
                     | Some key -> key
                     | None -> failwith "The NuGet API key must be set in a NUGET_KEY environment variable"
-                WorkingDir = bin })
+                WorkingDir = bin
+                ToolType = ToolType.CreateCLIToolReference() })
 
     // --------------------------------------------------------------------------------------
     // Release Scripts
