@@ -217,28 +217,28 @@ let initTargets () =
 
     "Clean"
         ==> "Restore"
-        ==> "Build"
+        ==> "Build" |> ignore
 
-    "Build" ==> "RunTests"
+    "Build" ==> "RunTests" |> ignore
 
     "All"
         ==> "GitPush"
-        ?=> "GitTag"
+        ?=> "GitTag" |> ignore
 
     "All" <== [ "RunTests" ]
 
     "CleanDocs"
         ==> "CopyDocFiles"
-        ==> "PrepDocs"
+        ==> "PrepDocs" |> ignore
 
     "All"
         ==> "NuGet"
-        ?=> "NuGetPublish"
+        ?=> "NuGetPublish" |> ignore
 
-    "All" ==> "PrepDocs"
+    "All" ==> "PrepDocs" |> ignore
 
-    "ConfigDebug" ?=> "Clean"
-    "ConfigRelease" ?=> "Clean"
+    "ConfigDebug" ?=> "Clean" |> ignore
+    "ConfigRelease" ?=> "Clean" |> ignore
 
     "Dev" <== ["All"; "ConfigDebug"; "PrepDocs"]
 
