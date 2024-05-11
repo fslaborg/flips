@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net6.0; net462</TargetFrameworks>
     <Authors>Matthew Crews</Authors>
     <Company>Matthew Crews</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
