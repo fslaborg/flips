@@ -17,7 +17,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '6.x'
+        dotnet-version: '8.x'
     - name: Build solution and generate NuGet Package
       run: sudo bash build.sh -t Nuget
     - name: Push with dotnet

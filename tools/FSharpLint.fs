@@ -3,7 +3,7 @@ namespace Tools.Linting
 [<RequireQualifiedAccess>]
 module FSharpLinter =
     open Fake.IO.FileSystemOperators
-    open FSharp.Compiler.Range
+    open FSharp.Compiler.Text.Range
     open FSharpLint.Application
     open FSharpLint.Framework
     open System
@@ -31,12 +31,12 @@ module FSharpLinter =
 
     let mutable private collectWarning = List.empty<string>
 
-    let getErrorMessage (range:FSharp.Compiler.Range.range) =
+    let getErrorMessage (range:FSharp.Compiler.Text.Range) =
         let error = Resources.GetString("LintSourceError")
 
         String.Format(error, range.StartLine, range.StartColumn)
 
-    let highlightErrorText (range:range) (errorLine:string) =
+    let highlightErrorText (range:FSharp.Compiler.Text.Range) (errorLine:string) =
         let highlightColumnLine =
             if String.length errorLine = 0 then "^"
             else
