@@ -353,8 +353,8 @@ module UnitsOfMeasureTests =
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
                                                                                          d, float s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -372,8 +372,8 @@ module UnitsOfMeasureTests =
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
                                                                                          d, float s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -391,8 +391,8 @@ module UnitsOfMeasureTests =
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
                                                                                          d, float s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -410,8 +410,8 @@ module UnitsOfMeasureTests =
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
                                                                                          d, float s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -429,8 +429,8 @@ module UnitsOfMeasureTests =
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> let (Decision.Value d) = decisions.[n]
                                                                                          d, float s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 

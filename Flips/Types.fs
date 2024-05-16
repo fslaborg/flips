@@ -384,11 +384,14 @@ type Objective = {
 }
 
 /// The results of the optimization if it was successful
-type Solution = {
-    DecisionResults : Map<Decision,float>
-    [<Obsolete("Please use the Objective.evaluate function instead")>]
-    ObjectiveResult : float
+type Solution = internal {
+    DecisionResultsMap : Map<Decision,float>
+    ObjectiveValue : float
 }
+    with
+        [<Obsolete("Please use the Objective.evaluate function instead")>]
+        member this.ObjectiveResult: float = this.ObjectiveValue
+        member this.DecisionResults: Map<Decision,float> = this.DecisionResultsMap
 
 /// The type of underlying solver to use
 type SolverType = 

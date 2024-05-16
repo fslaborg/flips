@@ -107,8 +107,8 @@ module internal ORTools =
             |> Map.ofSeq
 
         {
-            DecisionResults = decisionMap
-            ObjectiveResult = Flips.Types.LinearExpression.Evaluate (fun d -> decisionMap.[d]) objective.Expression
+            DecisionResultsMap = decisionMap
+            ObjectiveValue = Flips.Types.LinearExpression.Evaluate (fun d -> decisionMap.[d]) objective.Expression
         }
 
 
@@ -313,8 +313,8 @@ module internal Optano =
             |> Map.ofSeq
 
         {
-            DecisionResults = decisionMap
-            ObjectiveResult = Flips.Types.LinearExpression.Evaluate (fun d -> decisionMap.[d]) objective.Expression
+            DecisionResultsMap = decisionMap
+            ObjectiveValue = Flips.Types.LinearExpression.Evaluate (fun d -> decisionMap.[d]) objective.Expression
         }
 
 
