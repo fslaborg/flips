@@ -3,6 +3,7 @@
 * Remove x64 restriction
 * Change to FAKE build project
 * Update to latest Google.OrTools package
+* Add methods to pretty print linear and constraint expressions
 
 ### 2.4.9 - Wednesday, October 19th, 2022
 * Fix problem with Units of Measure when multiplying float and LinearExpression
