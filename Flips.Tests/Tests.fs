@@ -328,6 +328,30 @@ module Types =
             let actual = -8.0 * x + 1.0000001 * y - 2.0 * z |> _.PrettyPrint()
             Assert.Equal("-8 * x + y - 2 * z", actual)
 
+    module ConstraintExpression =
+        [<Fact>]
+        let ``Pretty print equality uses equal sign`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -2.0 + y == x + 2.0 * z + 10.0 |> _.PrettyPrint()
+            Assert.Equal("-2 + y = 10 + x + 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print greater-or-equality uses greater-or-equal sign`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -2.0 + y >== x + 2.0 * z + 10.0 |> _.PrettyPrint()
+            Assert.Equal("-2 + y >= 10 + x + 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print less-or-equality uses less-or-equal sign`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -2.0 + y <== x + 2.0 * z + 10.0 |> _.PrettyPrint()
+            Assert.Equal("-2 + y <= 10 + x + 2 * z", actual)
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module ModelTests =

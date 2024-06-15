@@ -387,6 +387,16 @@ and
     ConstraintExpression = 
     | Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
     | Equality of LHS:LinearExpression * RHS:LinearExpression
+    member this.PrettyPrint() : string =
+        match this with
+        | Inequality(lhs, relation, rhs) ->
+            let ppRelation =
+                match relation with
+                | GreaterOrEqual -> ">="
+                | LessOrEqual -> "<="
+
+            lhs.PrettyPrint() + " " + ppRelation + " " + rhs.PrettyPrint()
+        | Equality(lhs, rhs) -> lhs.PrettyPrint() + " = " + rhs.PrettyPrint()
 
 /// A unique identified for a Constraint
 type ConstraintName = ConstraintName of string
