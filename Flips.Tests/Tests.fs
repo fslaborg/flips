@@ -255,6 +255,103 @@ module Types =
             LinearExpression.Empty.GetHashCode() |> ignore
             (LinearExpression.OfFloat 1.0).GetHashCode() |> ignore
 
+        [<Fact>]
+        let ``Pretty print zero expression yields zero`` () =
+            let actual = LinearExpression.Zero.PrettyPrint()
+            Assert.Equal("0", actual)
+
+        [<Fact>]
+        let ``Pretty print positive constant expression yields constant without sign`` () =
+            let actual = 23.0 + LinearExpression.Zero |> _.PrettyPrint()
+            Assert.Equal("23", actual)
+
+        [<Fact>]
+        let ``Pretty print negative constant expression yields constant with minus`` () =
+            let actual = -23.0 + LinearExpression.Zero |> _.PrettyPrint()
+            Assert.Equal("-23", actual)
+
+        [<Fact>]
+        let ``Pretty print constant addition yields constants`` () =
+            let actual = 10.0 + 13.0 + LinearExpression.Zero |> _.PrettyPrint()
+            Assert.Equal("23", actual)
+
+        [<Fact>]
+        let ``Pretty print constant close to zero yields zero`` () =
+            let actual = 1e-8 + LinearExpression.Zero |> _.PrettyPrint()
+            Assert.Equal("0", actual)
+
+        [<Fact>]
+        let ``Pretty print linear combination with constant yields normalized expression`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = 8.0 * x + 7.0 * y - 2.0 * z + 25.0 |> _.PrettyPrint()
+            Assert.Equal("25 + 8 * x + 7 * y - 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print linear combination without constants yields normalized expression`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = 8.0 * x + 7.0 * y - 2.0 * z |> _.PrettyPrint()
+            Assert.Equal("8 * x + 7 * y - 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print linear combination with leading negative coefficient yields normalized expression`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -8.0 * x + 7.0 * y - 2.0 * z |> _.PrettyPrint()
+            Assert.Equal("-8 * x + 7 * y - 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print linear combination with leading minus one coefficient omits one`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -1.0 * x + 7.0 * y - 2.0 * z |> _.PrettyPrint()
+            Assert.Equal("-x + 7 * y - 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print linear combination with middle coefficient one omits one`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -8.0 * x + 1.0 * y - 2.0 * z |> _.PrettyPrint()
+            Assert.Equal("-8 * x + y - 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print linear combination with coefficient close to one omits one`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -8.0 * x + 1.0000001 * y - 2.0 * z |> _.PrettyPrint()
+            Assert.Equal("-8 * x + y - 2 * z", actual)
+
+    module ConstraintExpression =
+        [<Fact>]
+        let ``Pretty print equality uses equal sign`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -2.0 + y == x + 2.0 * z + 10.0 |> _.PrettyPrint()
+            Assert.Equal("-2 + y = 10 + x + 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print greater-or-equality uses greater-or-equal sign`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -2.0 + y >== x + 2.0 * z + 10.0 |> _.PrettyPrint()
+            Assert.Equal("-2 + y >= 10 + x + 2 * z", actual)
+
+        [<Fact>]
+        let ``Pretty print less-or-equality uses less-or-equal sign`` () =
+            let x = Decision.createContinuous "x" 0.0 1.0
+            let y = Decision.createContinuous "y" 0.0 1.0
+            let z = Decision.createContinuous "z" 0.0 1.0
+            let actual = -2.0 + y <== x + 2.0 * z + 10.0 |> _.PrettyPrint()
+            Assert.Equal("-2 + y <= 10 + x + 2 * z", actual)
 
     [<Properties(Arbitrary = [| typeof<Types> |] )>]
     module ModelTests =
