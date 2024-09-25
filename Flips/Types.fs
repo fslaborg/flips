@@ -1,4 +1,4 @@
-﻿namespace Flips.Types
+namespace Flips.Types
 
 open System.Collections.Generic
 open System
@@ -349,12 +349,54 @@ and
     static member (>==) (lhs:LinearExpression, rhs:LinearExpression): ConstraintExpression =
         Inequality (lhs, GreaterOrEqual, rhs)
 
+    member this.PrettyPrint() : string =
+        let reduced = LinearExpression.Reduce this
+
+        let ppCoefficient (x: double) =
+            let c =
+                if Math.Abs x - 1.0 < 10e-4 then ""
+                else if x < 0 then (-x).ToString() + " * "
+                else x.ToString() + " * "
+
+            if x < 0 then " - " + c else " + " + c
+
+        let ppSummands =
+            [ for (DecisionName decision, coefficient) in (reduced.Coefficients |> Map.ofDictionary |> Map.toList) ->
+                  ppCoefficient coefficient + decision ]
+
+        let ppConstant =
+            if Math.Abs reduced.Offset < 10e-4 then
+                "0"
+            else
+                reduced.Offset.ToString()
+
+        let includedConstant =
+            if ppSummands.Length = 0 then ppConstant
+            elif ppConstant <> "0" then ppConstant
+            else ""
+
+        String.concat "" (includedConstant :: ppSummands)
+        |> fun output ->
+            if output.StartsWith(" + ") then output[3..]
+            else if output.StartsWith(" - ") then "-" + output[3..]
+            else output
+
 and 
     /// The representation of how two LinearExpressions must relate to one another
     [<NoComparison>]
     ConstraintExpression = 
     | Inequality of LHS:LinearExpression * Inequality * RHS:LinearExpression
     | Equality of LHS:LinearExpression * RHS:LinearExpression
+    member this.PrettyPrint() : string =
+        match this with
+        | Inequality(lhs, relation, rhs) ->
+            let ppRelation =
+                match relation with
+                | GreaterOrEqual -> ">="
+                | LessOrEqual -> "<="
+
+            lhs.PrettyPrint() + " " + ppRelation + " " + rhs.PrettyPrint()
+        | Equality(lhs, rhs) -> lhs.PrettyPrint() + " = " + rhs.PrettyPrint()
 
 /// A unique identified for a Constraint
 type ConstraintName = ConstraintName of string
