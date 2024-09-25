@@ -816,8 +816,8 @@ module Types =
             let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -982,8 +982,8 @@ module Types =
             let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap2
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -1246,8 +1246,8 @@ module Types =
             let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap3
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -1666,8 +1666,8 @@ module Types =
             let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap4
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
@@ -2356,8 +2356,8 @@ module Types =
             let decisions = DecisionBuilder "Test" { for n in names -> Boolean } |> SMap5
             let decisionResults = uniqueValues |> List.map (fun (n, (Scalar.Value s)) -> decisions.[n], s) |> Map.ofList
             let solution = {
-                ObjectiveResult = 0.0
-                DecisionResults = decisionResults
+                ObjectiveValue = 0.0
+                DecisionResultsMap = decisionResults
             }
 
             let resultValues = 
