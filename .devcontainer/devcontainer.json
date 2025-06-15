@@ -1,0 +1,20 @@
+{
+    "name": "dotnet9.0",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:9.0",
+    "postCreateCommand": "dotnet tool restore",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ionide.ionide-fsharp",
+                "tintoy.msbuild-project-tools",
+                "ms-dotnettools.csharp",
+                "github.vscode-github-actions",
+                "mhutchie.git-graph"
+            ]
+        }
+    },
+    "remoteEnv": {
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "true",
+        "DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK": "true"
+    }
+}
