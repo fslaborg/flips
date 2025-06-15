@@ -1,6 +1,6 @@
 {
-    "name": "dotnet9.0",
-    "image": "mcr.microsoft.com/devcontainers/dotnet:9.0",
+    "name": "dotnet8.0",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
     "postCreateCommand": "dotnet tool restore",
     "customizations": {
         "vscode": {
