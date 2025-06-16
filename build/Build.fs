@@ -108,7 +108,13 @@ let initTargets () =
     // --------------------------------------------------------------------------------------
     // Restore tasks
 
-    let restoreSolution () = solutionFile |> DotNet.restore id
+    let restoreSolution () =
+        solutionFile
+        |> DotNet.restore (fun c ->
+            { c with
+                MSBuildParams =
+                    { c.MSBuildParams with
+                        DisableInternalBinLog = true } })
 
     Target.create "Restore" <| fun _ -> TaskRunner.runWithRetries restoreSolution 5
 
@@ -124,6 +130,7 @@ let initTargets () =
                     { defaults.MSBuildParams with
                         Verbosity = Some(Quiet)
                         Targets = [ "Build" ]
+                        DisableInternalBinLog = true
                         Properties =
                             [ "Optimize", "True"
                               "DebugSymbols", "True"
@@ -141,7 +148,14 @@ let initTargets () =
     // Run the unit tests
 
     Target.create "RunTests"
-    <| fun _ -> DotNet.test id (rootDir @@ "Flips.Tests/Flips.Tests.fsproj")
+    <| fun _ ->
+        DotNet.test
+            (fun c ->
+                { c with
+                    MSBuildParams =
+                        { c.MSBuildParams with
+                            DisableInternalBinLog = true } })
+            (rootDir @@ "Flips.Tests/Flips.Tests.fsproj")
 
     // --------------------------------------------------------------------------------------
     // Build and release NuGet targets
