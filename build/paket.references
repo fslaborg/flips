@@ -10,5 +10,4 @@ group FakeBuild
   nuget Fake.JavaScript.Npm
   nuget Fake.Tools.Git
   nuget FSharp.Json
-  nuget FSharpLint.Core
   nuget NuGet.Packaging

@@ -16,13 +16,6 @@ nuget System.Memory
 nuget xunit ~> 2
 nuget xunit.runner.visualstudio ~> 2
 
-group Tooling
-  source https://api.nuget.org/v3/index.json
-
-  nuget Fake.IO.FileSystem ~> 6
-  nuget FSharp.Core
-  nuget FSharpLint.Core ~> 0
-
 group FakeBuild
   source https://api.nuget.org/v3/index.json
 
@@ -37,5 +30,4 @@ group FakeBuild
     nuget Fake.JavaScript.Npm ~> 6
     nuget Fake.Tools.Git ~> 6
     nuget FSharp.Json ~> 0
-    nuget FSharpLint.Core ~> 0
     nuget NuGet.Packaging ~> 6

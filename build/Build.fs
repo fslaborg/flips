@@ -83,8 +83,6 @@ let initTargets () =
         let clean () =
             !!(rootDir @@ "tests/**/bin")
             ++ (rootDir @@ "tests/**/obj")
-            ++ (rootDir @@ "tools/bin")
-            ++ (rootDir @@ "tools/obj")
             ++ (rootDir @@ "src/**/bin")
             ++ (rootDir @@ "src/**/obj")
             |> Seq.toList
@@ -138,17 +136,6 @@ let initTargets () =
         !!libGlob ++ (examplesDir @@ "Flips.Examples.fsproj")
         |> List.ofSeq
         |> List.iter (DotNet.build setParams)
-
-    // --------------------------------------------------------------------------------------
-    // Lint source code
-
-    // Target.create "Lint" <| fun _ ->
-    //     fsSrcAndTest
-    //     -- (rootDir  @@ "src/**/AssemblyInfo.*")
-    //     |> (fun fGlob -> [(false, fGlob)])
-    //     |> Seq.map (fun (b,glob) -> (b,glob |> List.ofSeq))
-    //     |> List.ofSeq
-    //     |> FSharpLinter.lintFiles
 
     // --------------------------------------------------------------------------------------
     // Run the unit tests
