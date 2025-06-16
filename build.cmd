@@ -2,4 +2,4 @@
 cls
 
 dotnet tool restore
-dotnet run --project build %*
+dotnet run --project build -- %*

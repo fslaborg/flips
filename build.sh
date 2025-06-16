@@ -4,4 +4,4 @@ set -eu
 set -o pipefail
 
 dotnet tool restore
-dotnet run --project build "$@"
+dotnet run --project build -- "$@"
