@@ -186,28 +186,38 @@ let initTargets () =
     // --------------------------------------------------------------------------------------
     // Release Scripts
 
-    let gitPush msg =
-        Git.Staging.stageAll ""
-        Git.Commit.exec "" msg
-        Git.Branches.push ""
-
-    Target.create "GitPush"
+    Target.create "Publish"
     <| fun p ->
-        p.Context.Arguments
-        |> List.choose (fun s ->
-            match s.StartsWith("--Msg=") with
-            | true -> Some(s.Substring 6)
-            | false -> None)
-        |> List.tryHead
-        |> function
-            | Some(s) -> s
-            | None -> (sprintf "Bump version to %s" release.NugetVersion)
-        |> gitPush
+        // Expect version to be released a argument as a sanity check to prevent releases by accident.
+        let announcedVersion =
+            match p.Context.Arguments |> List.tryHead with
+            | None -> failwithf "Please specify a version number, e.g. '... -t Publish 2.5.0'"
+            | Some version -> version
 
-    Target.create "GitTag"
-    <| fun _ ->
-        Git.Branches.tag "" release.NugetVersion
-        Git.Branches.pushTag "" "origin" release.NugetVersion
+        if announcedVersion <> release.NugetVersion then
+            failwithf
+                "Version '%s' does not match latest version in the RELEASE_NOTES '%s'"
+                announcedVersion
+                release.NugetVersion
+
+        let currentBranch = Git.Information.getBranchName ""
+
+        if not (Git.Information.isCleanWorkingCopy "") then
+            failwith "You must have a clean working copy to release. Please commit or stash your changes."
+
+        if currentBranch <> "main" then
+            failwithf "You must be on the 'main' branch to release. Current branch is '%s'" currentBranch
+
+        let local = Git.Information.getCurrentSHA1 ""
+        let remote = Git.Branches.getSHA1 "" ("origin/" + currentBranch)
+
+        if Git.Information.isAheadOf "" local remote then
+            failwithf
+                "Your local branch must not be ahead of the remote branch '%s'. Please push your changes before releasing."
+                currentBranch
+
+        let tagName = sprintf "v%s" release.NugetVersion
+        Git.Branches.tag "" tagName
 
     // --------------------------------------------------------------------------------------
     // Run all targets by default. Invoke 'build -t <Target>' to override
@@ -215,13 +225,10 @@ let initTargets () =
     Target.create "All" ignore
     Target.create "Dev" ignore
     Target.create "Release" ignore
-    Target.create "Publish" ignore
 
     "Clean" ==> "Restore" ==> "Build" |> ignore
 
     "Build" ==> "RunTests" |> ignore
-
-    "All" ==> "GitPush" ?=> "GitTag" |> ignore
 
     "All" <== [ "RunTests" ]
 
@@ -238,8 +245,7 @@ let initTargets () =
 
     "Release" <== [ "All"; "NuGet"; "ConfigRelease" ]
 
-    "Publish"
-    <== [ "Release"; "ConfigRelease"; "NuGetPublish"; "Build"; "GitTag"; "GitPush" ]
+    "Publish" <== [ "All"; "ConfigRelease" ]
 
 [<EntryPoint>]
 let main argv =
