@@ -1,14 +1,13 @@
 group FakeBuild
-  nuget Fake.Core.Target
-  nuget Fake.Core.ReleaseNotes
-  nuget Fake.DotNet.AssemblyInfoFile
-  nuget Fake.DotNet.Cli
-  nuget Fake.DotNet.MSBuild
-  nuget Fake.DotNet.Paket
-  nuget Fake.IO.FileSystem
-  nuget Fake.JavaScript.Yarn
-  nuget Fake.JavaScript.Npm
-  nuget Fake.Tools.Git
-  nuget FSharp.Json
-  nuget FSharpLint.Core
-  nuget NuGet.Packaging
+  Fake.Core.Target
+  Fake.Core.ReleaseNotes
+  Fake.DotNet.AssemblyInfoFile
+  Fake.DotNet.Cli
+  Fake.DotNet.MSBuild
+  Fake.DotNet.Paket
+  Fake.IO.FileSystem
+  Fake.JavaScript.Yarn
+  Fake.JavaScript.Npm
+  Fake.Tools.Git
+  FSharp.Json
+  NuGet.Packaging

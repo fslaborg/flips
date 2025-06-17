@@ -83,8 +83,6 @@ let initTargets () =
         let clean () =
             !!(rootDir @@ "tests/**/bin")
             ++ (rootDir @@ "tests/**/obj")
-            ++ (rootDir @@ "tools/bin")
-            ++ (rootDir @@ "tools/obj")
             ++ (rootDir @@ "src/**/bin")
             ++ (rootDir @@ "src/**/obj")
             |> Seq.toList
@@ -110,7 +108,13 @@ let initTargets () =
     // --------------------------------------------------------------------------------------
     // Restore tasks
 
-    let restoreSolution () = solutionFile |> DotNet.restore id
+    let restoreSolution () =
+        solutionFile
+        |> DotNet.restore (fun c ->
+            { c with
+                MSBuildParams =
+                    { c.MSBuildParams with
+                        DisableInternalBinLog = true } })
 
     Target.create "Restore" <| fun _ -> TaskRunner.runWithRetries restoreSolution 5
 
@@ -126,6 +130,7 @@ let initTargets () =
                     { defaults.MSBuildParams with
                         Verbosity = Some(Quiet)
                         Targets = [ "Build" ]
+                        DisableInternalBinLog = true
                         Properties =
                             [ "Optimize", "True"
                               "DebugSymbols", "True"
@@ -140,21 +145,17 @@ let initTargets () =
         |> List.iter (DotNet.build setParams)
 
     // --------------------------------------------------------------------------------------
-    // Lint source code
-
-    // Target.create "Lint" <| fun _ ->
-    //     fsSrcAndTest
-    //     -- (rootDir  @@ "src/**/AssemblyInfo.*")
-    //     |> (fun fGlob -> [(false, fGlob)])
-    //     |> Seq.map (fun (b,glob) -> (b,glob |> List.ofSeq))
-    //     |> List.ofSeq
-    //     |> FSharpLinter.lintFiles
-
-    // --------------------------------------------------------------------------------------
     // Run the unit tests
 
     Target.create "RunTests"
-    <| fun _ -> DotNet.test id (rootDir @@ "Flips.Tests/Flips.Tests.fsproj")
+    <| fun _ ->
+        DotNet.test
+            (fun c ->
+                { c with
+                    MSBuildParams =
+                        { c.MSBuildParams with
+                            DisableInternalBinLog = true } })
+            (rootDir @@ "Flips.Tests/Flips.Tests.fsproj")
 
     // --------------------------------------------------------------------------------------
     // Build and release NuGet targets

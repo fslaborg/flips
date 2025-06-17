@@ -1,27 +1,20 @@
 source https://api.nuget.org/v3/index.json
 
-nuget coverlet.collector ~> 1
-nuget CsvHelper
+nuget coverlet.collector ~> 6
+nuget CsvHelper ~> 33
 nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
 nuget FSharp.Core
-nuget FSharp.Data ~> 3
+nuget FSharp.Data ~> 6
 nuget Google.OrTools ~> 9
-nuget MathNet.Numerics ~> 4
+nuget MathNet.Numerics ~> 5
 nuget MathNet.Numerics.FSharp ~> 4
-nuget Microsoft.NET.Test.Sdk ~> 16
+nuget Microsoft.NET.Test.Sdk ~> 17
 nuget OPTANO.Modeling ~> 3
-nuget OPTANO.Modeling.Gurobi ~> 9
+nuget OPTANO.Modeling.Gurobi ~> 10
 nuget System.Memory
 nuget xunit ~> 2
-nuget xunit.runner.visualstudio ~> 2
-
-group Tooling
-  source https://api.nuget.org/v3/index.json
-
-  nuget Fake.IO.FileSystem ~> 6
-  nuget FSharp.Core
-  nuget FSharpLint.Core ~> 0
+nuget xunit.runner.visualstudio ~> 3
 
 group FakeBuild
   source https://api.nuget.org/v3/index.json
@@ -37,5 +30,4 @@ group FakeBuild
     nuget Fake.JavaScript.Npm ~> 6
     nuget Fake.Tools.Git ~> 6
     nuget FSharp.Json ~> 0
-    nuget FSharpLint.Core ~> 0
     nuget NuGet.Packaging ~> 6
