@@ -13,7 +13,7 @@ let rootDir = __SOURCE_DIRECTORY__ </> ".."
 let solutionFile = "Flips.sln"
 
 // Github repo
-let repo = "https://github.com/matthewcrews/flips"
+let repo = "https://github.com/fslaborg/flips"
 
 // Read additional information from the release notes document
 let release = ReleaseNotes.load (rootDir @@ "RELEASE_NOTES.md")
