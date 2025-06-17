@@ -245,7 +245,7 @@ let initTargets () =
 
     "Release" <== [ "All"; "NuGet"; "ConfigRelease" ]
 
-    "Publish" <== [ "All"; "ConfigRelease" ]
+    "Release" ==> "Publish" |> ignore
 
 [<EntryPoint>]
 let main argv =
