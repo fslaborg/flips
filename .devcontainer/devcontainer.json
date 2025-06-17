@@ -1,7 +1,7 @@
 {
     "name": "dotnet8.0",
-    "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
-    "postCreateCommand": "dotnet tool restore",
+    "dockerFile": "Dockerfile",
+    "postCreateCommand": "dotnet tool restore && cd docs && npm install --save-dev",
     "customizations": {
         "vscode": {
             "extensions": [
