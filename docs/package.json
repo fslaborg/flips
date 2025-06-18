@@ -4,13 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "live-server --port=8080"
+    "serve": "browser-sync start --server --files '**/*.md, **/*.html, **/*.css, **/*.js' --port 3000"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "live-server": "^1.2.1"
+    "browser-sync": "^3.0.4"
   }
 }
