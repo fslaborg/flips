@@ -1,9 +1,10 @@
-### 2.4.10 - Wednesday, May 8th, 2024
+### 2.4.10
 * Update to .NET 8
 * Remove x64 restriction
 * Change to FAKE build project
 * Update to latest Google.OrTools package
 * Add methods to pretty print linear and constraint expressions
+* Fix warning due to deprecation of Solution.ObjectiveResult
 
 ### 2.4.9 - Wednesday, October 19th, 2022
 * Fix problem with Units of Measure when multiplying float and LinearExpression
