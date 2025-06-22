@@ -218,6 +218,7 @@ let initTargets () =
 
         let tagName = sprintf "v%s" release.NugetVersion
         Git.Branches.tag "" tagName
+        Git.Branches.pushTag "" "origin" tagName
 
     // --------------------------------------------------------------------------------------
     // Run all targets by default. Invoke 'build -t <Target>' to override
