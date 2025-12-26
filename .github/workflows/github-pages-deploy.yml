@@ -27,7 +27,7 @@ jobs:
 
       - name: Copy files
         run: |
-          build.sh -t PrepDocs
+          ./build.sh -t PrepDocs
           mkdir -p dist
           cp -r ./docs/* ./dist/
           rm ./dist/package.json ./dist/package-lock.json
