@@ -4,7 +4,7 @@
 
 # Flips : **F**# **LI**near **P**rogramming **S**ystem
 
-> Full Documenation can be found [here](https://flipslibrary.com/).
+> Full Documenation can be found [here].
 
 Flips is an F# library for modeling and solving Linear Programming (LP) and Mixed-Integer Programming (MIP) problems. 
 It is inspired by the work of the PuLP library for Python and the excellent Gurobi Python library. It builds on the 
@@ -34,7 +34,7 @@ will need to get a separate license to use these libraries. The installation of 
 in this documentation since installation can depend on deployment and use case. Please refer to these vendors for commercial 
 support in using their product. Flips currently only supports the latest version of each of these libraries.
 
-[here]: http://matthewcrews.com/flips/#/
+[here]: https://fslab.org/flips/
 [Google OR-Tools library]: https://github.com/google/or-tools
 [OPTANO library]: https://optano.com/en/modeling/
 [nuget package]: https://www.nuget.org/packages/Flips/
