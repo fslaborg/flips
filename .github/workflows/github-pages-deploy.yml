@@ -20,8 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x'
+
       - name: Copy files
         run: |
+          build.sh -t PrepDocs
           mkdir -p dist
           cp -r ./docs/* ./dist/
           rm ./dist/package.json ./dist/package-lock.json
