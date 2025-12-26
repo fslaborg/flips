@@ -1,3 +1,7 @@
+### 2.4.11
+* Update to Google.OrTools 9.14
+* Update to OPTANO.Modeling 3.28
+
 ### 2.4.10
 * Update to .NET 8
 * Remove x64 restriction
