@@ -3,8 +3,7 @@ type project
 authors Matthew Crews
 owners Matthew Crews
 licenseExpression MIT
-licenseUrl https://licenses.nuget.org/MIT
-iconUrl https://raw.githubusercontent.com/matthewcrews/flips/master/Flips/Favicon.png
+icon icon.png
 requireLicenseAcceptance false
 description
     A F# library for creating and solving Linear Programming and Mixed Integer Programming Models
@@ -13,3 +12,5 @@ language
     F#
 tags
     F#, Optimization, Linear Programming, Mixed-Integer Programming
+files
+  icon.png => .
