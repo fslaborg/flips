@@ -1,1 +1,0 @@
-_Place holder, the proper release notes will be copied in the build GitHub action._
