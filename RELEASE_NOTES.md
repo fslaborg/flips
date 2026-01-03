@@ -1,4 +1,7 @@
-### 2.4.11
+### 2.4.12 - 03/01/2026
+* Net10 compatibility
+
+### 2.4.11 - 26/12/2025
 * Update to Google.OrTools 9.14
 * Update to OPTANO.Modeling 3.28
 

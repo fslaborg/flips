@@ -2,10 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net8.0; net462</TargetFrameworks>
-    <Authors>Matthew Crews</Authors>
-    <Company>Matthew Crews</Company>
+    <Authors>Matthew Crews and contributors</Authors>
+    <Company>https://fslab.org</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
-    <Copyright>2020</Copyright>
+    <Copyright>2026</Copyright>
     <PackageProjectUrl></PackageProjectUrl>
     <RepositoryUrl>https://github.com/fslaborg/flips</RepositoryUrl>
     <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
