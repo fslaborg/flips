@@ -4,7 +4,7 @@ nuget coverlet.collector ~> 6
 nuget CsvHelper ~> 33
 nuget FsCheck ~> 2
 nuget FsCheck.Xunit ~> 2
-nuget FSharp.Core ~> 8
+nuget FSharp.Core >= 8
 nuget FSharp.Data ~> 6
 nuget Google.OrTools ~> 9
 nuget MathNet.Numerics ~> 5
