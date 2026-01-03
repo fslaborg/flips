@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net8.0; net462</TargetFrameworks>
+    <!-- Note: Some of these properties are overridden by paket.template -->
     <Authors>Matthew Crews and contributors</Authors>
     <Company>https://fslab.org</Company>
     <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>

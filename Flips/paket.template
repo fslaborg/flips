@@ -1,13 +1,14 @@
 title Flips
 type project
-authors Matthew Crews
-owners Matthew Crews
+authors Matthew Crews and contributors
+owners https://fslab.org
 licenseExpression MIT
+licenseUrl https://licenses.nuget.org/MIT
 icon icon.png
 requireLicenseAcceptance false
 description
     A F# library for creating and solving Linear Programming and Mixed Integer Programming Models
-copyright 2020
+copyright 2026
 language
     F#
 tags
