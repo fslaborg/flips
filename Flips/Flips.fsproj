@@ -1,22 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- meta data for the NuGet package is defined in paket.template -->
   <PropertyGroup>
     <TargetFrameworks>net8.0; net462</TargetFrameworks>
-    <!-- Note: Some of these properties are overridden by paket.template -->
-    <Authors>Matthew Crews and contributors</Authors>
-    <Company>https://fslab.org</Company>
-    <Description>A F# library for creating and solving Linear Programming and Mixed Integer Programming Models</Description>
-    <Copyright>2026</Copyright>
-    <PackageProjectUrl></PackageProjectUrl>
-    <RepositoryUrl>https://github.com/fslaborg/flips</RepositoryUrl>
-    <PackageTags>F#, Optimization, Linear Programming, Mixed-Integer Programming</PackageTags>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>icon.png</PackageIcon>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
     <OtherFlags>$(OtherFlags) --warnon:3390</OtherFlags>
