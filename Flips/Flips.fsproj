@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- meta data for the NuGet package is defined in paket.template -->
   <PropertyGroup>
     <TargetFrameworks>net8.0; net462</TargetFrameworks>
     <DebugSymbols>true</DebugSymbols>
