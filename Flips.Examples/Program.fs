@@ -23,7 +23,7 @@ let main argv =
     SimpleExample.solve { settings with WriteLPFile = Some "simpleproblem.lp" }
     MapSlicingExample.solve { settings with WriteLPFile = Some "ConstraintBuilder.lp" }
     BinaryProgrammingExample.solve { settings with WriteLPFile = Some "ConstraintBuilderWithBinary.lp" }
-    StocksExample.solve  { settings with WriteLPFile = Some "stocks.lp" }
+    //StocksExample.solve  { settings with WriteLPFile = Some "stocks.lp" }
     CoffeeRoastingExample.solve  { settings with WriteLPFile = Some "coffeeroasting.lp" }
     MultiObjective.solve { settings with WriteMPSFile = Some "multiobjective.mps" }
     printfn "Press any key to close..."

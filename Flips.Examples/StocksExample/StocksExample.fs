@@ -9,6 +9,7 @@ open Flips.Types
 
 type YahooStocks = CsvProvider<"2020-01-01,1.11,1.22,1.33,1.44,1.55,5666777888", Schema = " Date (date), Open (float), High(float), Low(float), Close(float), Adj Close (float), Volume(int64)">
 
+// Note: this current no longer works as yahoo has shut down it's finance endpoint
 let solve settings =
 
     // Raw data preparation (downloaded directly from yahoo using CSV data provider)

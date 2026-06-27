@@ -4,6 +4,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <DisableMSBuildAssemblyCopyCheck>true</DisableMSBuildAssemblyCopyCheck>
+    <!-- .nuget/packages/microsoft.net.stringtools/18.6.3/buildTransitive/netcoreapp2.0/Microsoft.NET.StringTools.targets(4,5): warning : 
+         Microsoft.NET.StringTools 18.6.3 doesn't support net8.0 and has not been tested with it. 
+         Consider upgrading your TargetFramework to net10.0 or later. You may also set <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings> in the project file to ignore this warning and attempt to run in this unsupported configuration at your own risk. 
+     -->
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup>

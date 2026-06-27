@@ -879,10 +879,10 @@ NUGET
       NuGet.Common (>= 7.0.1) - restriction: || (>= net472) (>= net8.0)
       System.Security.Cryptography.ProtectedData (>= 9.0.6) - restriction: >= net8.0
     NuGet.Frameworks (7.0.1) - restriction: || (>= net472) (>= net8.0)
-    NuGet.Packaging (6.14)
+    NuGet.Packaging (6.14.3)
       Newtonsoft.Json (>= 13.0.3) - restriction: >= netstandard2.0
-      NuGet.Configuration (>= 6.14) - restriction: >= netstandard2.0
-      NuGet.Versioning (>= 6.14) - restriction: >= netstandard2.0
+      NuGet.Configuration (>= 6.14.3) - restriction: >= netstandard2.0
+      NuGet.Versioning (>= 6.14.3) - restriction: >= netstandard2.0
       System.Formats.Asn1 (>= 8.0.1) - restriction: && (< net472) (< net8.0) (>= netstandard2.0)
       System.Memory (>= 4.5.5) - restriction: >= net472
       System.Security.Cryptography.Pkcs (>= 6.0.4) - restriction: || (&& (< net472) (>= netstandard2.0)) (>= net8.0)
