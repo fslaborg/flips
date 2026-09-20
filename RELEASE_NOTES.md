@@ -1,6 +1,3 @@
-### 2.4.13-pre.1 - 20/09/2026
-* Change to Trusted Publishing
-
 ### 2.4.12 - 03/01/2026
 * Net10 compatibility
 
