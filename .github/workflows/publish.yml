@@ -31,4 +31,4 @@ jobs:
         user: ${{ secrets.NUGET_USER }}
 
     - name: Push with dotnet
-      run: dotnet nuget push bin/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY}}  --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push bin/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
