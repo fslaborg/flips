@@ -19,7 +19,7 @@ jobs:
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.x'
+        dotnet-version: '10.x'
 
     - name: Build solution and generate NuGet Package
       run: sudo bash build.sh -t Nuget
