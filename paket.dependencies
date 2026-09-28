@@ -31,3 +31,7 @@ group FakeBuild
     nuget Fake.Tools.Git ~> 6
     nuget FSharp.Json ~> 0
     nuget NuGet.Packaging ~> 6
+    nuget Microsoft.Build.Framework ~> 18.9.0
+    nuget Microsoft.Build.Utilities.Core ~> 18.9.0
+    nuget Microsoft.NET.StringTools ~> 18.9.0
+
