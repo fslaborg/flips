@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
     <WarningsAsErrors>3239;0044;</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
