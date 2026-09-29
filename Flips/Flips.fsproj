@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- meta data for the NuGet package is defined in paket.template -->
   <PropertyGroup>
-    <TargetFrameworks>net8.0; net462</TargetFrameworks>
+    <TargetFrameworks>net10.0; net462</TargetFrameworks>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
     <OtherFlags>$(OtherFlags) --warnon:3390</OtherFlags>

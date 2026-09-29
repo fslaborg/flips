@@ -1,5 +1,5 @@
 {
-    "name": "dotnet8.0",
+    "name": "Flips development",
     "dockerFile": "Dockerfile",
     "postCreateCommand": "dotnet tool restore && cd docs && npm install --save-dev",
     "customizations": {

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <PropertyGroup>
-    <NoWarn>NU1701;</NoWarn>
+    <NoWarn>$(NoWarn);NU1701;NU1510</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <WarningsAsErrors>3239;</WarningsAsErrors>
-    <NoWarn>0052;</NoWarn>
+    <NoWarn>$(NoWarn);0052;</NoWarn>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
